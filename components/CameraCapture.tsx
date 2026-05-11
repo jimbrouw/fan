@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, Check, RefreshCw, VideoOff } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CaptureOverlay } from "@/components/CaptureOverlay";
 import { Button } from "@/components/Button";
 import { validateImageBlob, type ClientValidationResult } from "@/lib/validation";
@@ -20,6 +20,9 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [validation, setValidation] = useState<ClientValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const countdownTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -54,11 +57,16 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
     return () => {
       mounted = false;
       streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
       if (capturedUrl) URL.revokeObjectURL(capturedUrl);
     };
   }, [capturedUrl]);
 
-  async function captureFrame() {
+  const captureFrame = useCallback(async () => {
     const video = videoRef.current;
     if (!video || !video.videoWidth || !video.videoHeight) return;
 
@@ -87,9 +95,40 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
       setValidation(result);
       setIsValidating(false);
     }, "image/jpeg", 0.92);
-  }
+  }, [capturedUrl]);
+
+  const clearCountdown = useCallback(() => {
+    if (countdownTimerRef.current !== null) {
+      window.clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setCountdown(null);
+  }, []);
+
+  const startCountdown = useCallback(() => {
+    if (countdownTimerRef.current !== null || !isCameraReady || capturedBlob || error || isValidating) return;
+
+    let nextCount = step.countdownSeconds ?? 3;
+    setCountdown(nextCount);
+
+    countdownTimerRef.current = window.setInterval(() => {
+      nextCount -= 1;
+
+      if (nextCount <= 0) {
+        clearCountdown();
+        setCountdown(null);
+        captureFrame();
+        return;
+      }
+
+      setCountdown(nextCount);
+    }, 1000);
+  }, [captureFrame, capturedBlob, clearCountdown, error, isCameraReady, isValidating, step.countdownSeconds]);
+
+  useEffect(() => clearCountdown, [clearCountdown]);
 
   function retake() {
+    clearCountdown();
     if (capturedUrl) URL.revokeObjectURL(capturedUrl);
     setCapturedUrl(null);
     setCapturedBlob(null);
@@ -116,6 +155,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
               autoPlay
               muted
               playsInline
+              onLoadedMetadata={() => setIsCameraReady(true)}
               className="h-full w-full scale-x-[-1] object-cover"
             />
             {capturedUrl && (
@@ -123,9 +163,22 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
               <img src={capturedUrl} alt="Captured pose" className="absolute inset-0 h-full w-full object-cover" />
             )}
             <CaptureOverlay overlay={step.overlay} />
+            {countdown !== null && (
+              <div className="absolute inset-0 grid place-items-center bg-black/36">
+                <div className="grid size-28 place-items-center rounded-full border border-white/28 bg-black/46 text-6xl font-semibold text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
+                  {countdown}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
+
+      {step.autoCapture && !capturedBlob && (
+        <div className="rounded-lg border border-[var(--accent-blue)]/24 bg-[var(--accent-blue)]/10 p-4 text-sm leading-6 text-white/72">
+          One-player mode: press the shutter, then move into position during the 5 second countdown.
+        </div>
+      )}
 
       {validation && (
         <div className="rounded-lg border border-white/12 bg-white/7 p-4 text-sm text-white/70">
@@ -139,9 +192,9 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
           Retake
         </Button>
         <button
-          aria-label="Capture photo"
-          onClick={captureFrame}
-          disabled={Boolean(error) || isValidating}
+          aria-label={step.autoCapture ? "Start countdown" : "Capture photo"}
+          onClick={step.autoCapture ? startCountdown : captureFrame}
+          disabled={Boolean(error) || isValidating || countdown !== null}
           className="grid size-[72px] place-items-center rounded-full border border-white/18 bg-white text-black shadow-[0_18px_44px_rgba(255,255,255,0.2)] transition active:scale-95 disabled:opacity-50"
         >
           <Camera size={26} />

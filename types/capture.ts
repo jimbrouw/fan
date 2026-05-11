@@ -21,6 +21,8 @@ export type CaptureStep = {
   instruction: string;
   purpose: string;
   overlay: "portrait" | "angle-left" | "angle-right" | "profile" | "body" | "action";
+  autoCapture?: boolean;
+  countdownSeconds?: number;
 };
 
 export type Capture = {
@@ -47,7 +49,7 @@ export type GenerationJob = {
   teamName: string;
   kitNotes: string;
   targetPosterUrl: string;
-  muapiRequestId?: string;
+  providerJobId?: string;
   status: "queued" | "processing" | "completed" | "failed";
   outputUrl?: string;
   error?: string;

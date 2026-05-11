@@ -1,6 +1,7 @@
 type MuapiJobPayload = {
   status?: string;
   output?: string | string[];
+  outputs?: string | string[];
   error?: string;
 };
 
@@ -19,5 +20,6 @@ export function normalizeMuapiStatus(status?: string): AppJobStatus {
 }
 
 export function getMuapiOutputUrl(payload: MuapiJobPayload) {
-  return Array.isArray(payload.output) ? payload.output[0] : payload.output;
+  const output = payload.output ?? payload.outputs;
+  return Array.isArray(output) ? output[0] : output;
 }

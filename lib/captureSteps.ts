@@ -39,7 +39,9 @@ export const captureSteps: CaptureStep[] = [
     shortLabel: "Profile",
     instruction: "Face the side and keep your full profile inside the frame.",
     purpose: "Nose silhouette and head shape",
-    overlay: "profile"
+    overlay: "profile",
+    autoCapture: true,
+    countdownSeconds: 5
   },
   {
     type: "full_body",
@@ -47,7 +49,9 @@ export const captureSteps: CaptureStep[] = [
     shortLabel: "Body",
     instruction: "Step back until your full body fits inside the guide.",
     purpose: "Body proportions and posture",
-    overlay: "body"
+    overlay: "body",
+    autoCapture: true,
+    countdownSeconds: 5
   },
   {
     type: "arms_folded",
@@ -55,7 +59,9 @@ export const captureSteps: CaptureStep[] = [
     shortLabel: "Folded",
     instruction: "Fold your arms and stand confidently.",
     purpose: "Footballer body language",
-    overlay: "body"
+    overlay: "body",
+    autoCapture: true,
+    countdownSeconds: 5
   },
   {
     type: "celebration",
@@ -63,6 +69,8 @@ export const captureSteps: CaptureStep[] = [
     shortLabel: "Celebrate",
     instruction: "Give a clean celebration pose with your face visible.",
     purpose: "Dynamic sports expression",
-    overlay: "action"
+    overlay: "action",
+    autoCapture: true,
+    countdownSeconds: 5
   }
 ];

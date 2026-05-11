@@ -64,16 +64,35 @@ export function ResultClient({ jobId }: { jobId: string }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Button type="button" variant="secondary" onClick={loadJob} disabled={isLoading}>
-          <RefreshCw size={17} />
-          {isLoading ? "Checking..." : "Check"}
-        </Button>
-        <Link href="/capture">
-          <Button className="w-full">
-            <RotateCcw size={17} />
-            New Scan
-          </Button>
-        </Link>
+        {job?.status === "completed" ? (
+          <>
+            <Button
+              className="w-full bg-[var(--accent-blue)] text-white hover:bg-[var(--accent-blue)]/80"
+              onClick={() => alert("Approved! This would trigger the high-res render and fulfilment pipeline.")}
+            >
+              Approve & Finalize
+            </Button>
+            <Link href="/create">
+              <Button variant="secondary" className="w-full">
+                <RotateCcw size={17} />
+                Regenerate
+              </Button>
+            </Link>
+          </>
+        ) : (
+          <>
+            <Button type="button" variant="secondary" onClick={loadJob} disabled={isLoading}>
+              <RefreshCw size={17} />
+              {isLoading ? "Checking..." : "Check Status"}
+            </Button>
+            <Link href="/capture">
+              <Button className="w-full">
+                <RotateCcw size={17} />
+                New Scan
+              </Button>
+            </Link>
+          </>
+        )}
       </div>
     </section>
   );

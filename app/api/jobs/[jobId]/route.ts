@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getMuapiPredictionResult } from "@/lib/muapi";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getMuapiOutputUrl, normalizeMuapiStatus } from "@/lib/jobs";
+import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
 
 type JobRow = {
   id: string;
@@ -9,7 +8,7 @@ type JobRow = {
   team_name: string;
   kit_notes: string;
   target_poster_url: string;
-  muapi_request_id: string | null;
+  provider_job_id: string | null;
   status: "queued" | "processing" | "completed" | "failed";
   output_url: string | null;
   error: string | null;
@@ -31,31 +30,34 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
       return NextResponse.json({ error: error?.message ?? "Job not found." }, { status: 404 });
     }
 
-    if (job.status === "completed" || job.status === "failed" || !job.muapi_request_id) {
+    if ((job.status === "completed" && job.output_url) || job.status === "failed" || !job.provider_job_id) {
       return NextResponse.json(toResponse(job));
     }
 
-    const muapi = await getMuapiPredictionResult(job.muapi_request_id);
-    const nextStatus = normalizeMuapiStatus(muapi.status);
-    const outputUrl = getMuapiOutputUrl(muapi) ?? job.output_url;
-    const nextError = muapi.error ?? job.error;
+    const provider = new MuapiGenerationProvider();
+    const providerStatus = await provider.getJobStatus(job.provider_job_id);
 
-    const { data: updatedJob, error: updateError } = await supabase
-      .from("generation_jobs")
-      .update({
-        status: nextStatus,
-        output_url: outputUrl,
-        error: nextError
-      })
-      .eq("id", job.id)
-      .select("*")
-      .single<JobRow>();
+    // Only update if something changed
+    if (providerStatus.status !== job.status || providerStatus.outputUrl || providerStatus.error) {
+      const { data: updatedJob, error: updateError } = await supabase
+        .from("generation_jobs")
+        .update({
+          status: providerStatus.status,
+          output_url: providerStatus.outputUrl ?? job.output_url,
+          error: providerStatus.error ?? job.error
+        })
+        .eq("id", job.id)
+        .select("*")
+        .single<JobRow>();
 
-    if (updateError || !updatedJob) {
-      return NextResponse.json({ error: updateError?.message ?? "Job update failed." }, { status: 500 });
+      if (updateError || !updatedJob) {
+        return NextResponse.json({ error: updateError?.message ?? "Job update failed." }, { status: 500 });
+      }
+
+      return NextResponse.json(toResponse(updatedJob));
     }
 
-    return NextResponse.json(toResponse(updatedJob));
+    return NextResponse.json(toResponse(job));
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Job lookup failed." },
@@ -71,7 +73,7 @@ function toResponse(job: JobRow) {
     teamName: job.team_name,
     kitNotes: job.kit_notes,
     targetPosterUrl: job.target_poster_url,
-    requestId: job.muapi_request_id,
+    requestId: job.provider_job_id,
     status: job.status,
     outputUrl: job.output_url,
     error: job.error,

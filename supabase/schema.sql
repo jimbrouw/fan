@@ -23,7 +23,7 @@ create table if not exists public.generation_jobs (
   team_name text not null,
   kit_notes text not null,
   target_poster_url text not null,
-  muapi_request_id text,
+  provider_job_id text,
   status text not null check (status in ('queued', 'processing', 'completed', 'failed')),
   output_url text,
   error text,
@@ -33,7 +33,7 @@ create table if not exists public.generation_jobs (
 
 create index if not exists captures_session_id_idx on public.captures(session_id);
 create index if not exists generation_jobs_session_id_idx on public.generation_jobs(session_id);
-create index if not exists generation_jobs_muapi_request_id_idx on public.generation_jobs(muapi_request_id);
+create index if not exists generation_jobs_provider_job_id_idx on public.generation_jobs(provider_job_id);
 
 create or replace function public.set_updated_at()
 returns trigger

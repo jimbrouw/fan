@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, RotateCcw } from "lucide-react";
+import { ArrowRight, Camera } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
@@ -11,6 +11,7 @@ import type { CaptureStepType } from "@/types/capture";
 type LocalCapture = {
   type: CaptureStepType;
   objectUrl: string;
+  imageUrl?: string;
 };
 
 export default function ReviewPage() {
@@ -46,6 +47,12 @@ export default function ReviewPage() {
                 <div className="p-3">
                   <p className="text-sm font-semibold">{step.title}</p>
                   <p className="mt-1 text-xs text-white/48">{step.purpose}</p>
+                  <Link href={`/capture?step=${step.type}`} className="mt-3 block">
+                    <Button variant="secondary" className="h-10 w-full text-xs">
+                      <Camera size={15} />
+                      Retake
+                    </Button>
+                  </Link>
                 </div>
               </div>
             );
@@ -53,10 +60,10 @@ export default function ReviewPage() {
         </div>
 
         <div className="mt-auto grid grid-cols-2 gap-3">
-          <Link href="/capture">
+          <Link href="/capture?step=neutral_front">
             <Button variant="secondary" className="w-full">
-              <RotateCcw size={17} />
-              Retake
+              <Camera size={17} />
+              New Scan
             </Button>
           </Link>
           <Link href="/create">
