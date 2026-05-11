@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "test:kits": "node --test --experimental-strip-types tests/kitSpecs.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

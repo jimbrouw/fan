@@ -1,64 +1,138 @@
-import { TeamProfile } from "@/lib/teamProfiles";
-import { PosterStyle } from "@/lib/posterTemplates";
+import type { KitSpec } from "../kitSpecs.ts";
+import type { PosterStyle } from "../posterTemplates.ts";
+import type { TeamProfile } from "../teamProfiles.ts";
+
+export type MatchSide = "home" | "away";
+
+export type MatchTeamPromptProfile = Pick<TeamProfile, "name" | "primary" | "accent" | "kitNotes" | "group"> & {
+  kitVariant: KitSpec["variant"];
+};
+
+export type MatchContext = {
+  homeTeam: MatchTeamPromptProfile;
+  awayTeam: MatchTeamPromptProfile;
+  userSide: MatchSide;
+  opponentMode: "club-players" | "another-person";
+  matchdayNotes?: string;
+};
+
+function compactKitSpec(spec: KitSpec) {
+  return [
+    `Maker: ${spec.manufacturer}`,
+    `Sponsor: ${spec.mainSponsor}`,
+    spec.sleeveSponsor ? `Sleeve: ${spec.sleeveSponsor}` : undefined,
+    `Base: ${spec.baseColor}`,
+    `Pattern: ${spec.pattern}`,
+    `Collar: ${spec.collar}`,
+    `Crest: ${spec.crestPlacement}`,
+    `Shorts: ${spec.shorts}`,
+    `Socks: ${spec.socks}`
+  ].filter(Boolean).join("; ");
+}
+
+function compactMatchdayNotes(notes?: string) {
+  return notes?.replace(/\s+/g, " ").trim().slice(0, 420);
+}
 
 export function buildPosterPrompt(input: {
-  teamProfile: Pick<TeamProfile, "name" | "primary" | "accent" | "kitNotes">;
+  teamProfile: Pick<TeamProfile, "name" | "primary" | "accent" | "kitNotes" | "trophy" | "group">;
   posterStyle: PosterStyle;
+  kitSpec?: KitSpec;
+  matchContext?: MatchContext;
 }): string {
-  return `Photorealistic modern Premier League / EFL promotional poster collage in the style of an official 2025–26 season campaign image. Clean bright off-white background with subtle gradient haze and soft atmospheric blending around the edges. High-end sports editorial aesthetic with layered cut-out portraits and dynamic overlapping composition.
-
-The image is built around the structure and composition of a modern football league poster:
-a large central silver trophy near the bottom centre, surrounded by multiple football players in different poses, expressions and kit colours. The overall layout should feel dense, energetic, celebratory and heroic.
-
-HOWEVER:
-Every professional footballer in the composition is replaced by the specific person in the reference image (img). The same person (img) appears repeatedly throughout the collage in different poses, angles, emotions and kit variations.
-
-Use the provided reference person (img) as the ONLY identity reference throughout the image. All faces must remain photorealistic and strictly resemble the reference person.
-
-Kit styling for team ${input.teamProfile.name}:
+  const isNationalTeam = input.teamProfile.group === "International" || input.teamProfile.group === "World Cup 2026";
+  const trophyDescription = input.teamProfile.trophy
+    ? `the official ${input.teamProfile.trophy} situated prominently in the composition`
+    : "a large central silver football trophy";
+  const matchContext = input.matchContext;
+  const userMatchTeam = matchContext?.userSide === "away" ? matchContext.awayTeam : matchContext?.homeTeam;
+  const opponentMatchTeam = matchContext
+    ? matchContext.userSide === "away"
+      ? matchContext.homeTeam
+      : matchContext.awayTeam
+    : undefined;
+  const matchdayNotes = compactMatchdayNotes(matchContext?.matchdayNotes);
+  const matchdaySection = matchdayNotes
+    ? `MATCHDAY SQUAD NOTES:
+${matchdayNotes}
+Do not depict recognizable real opposition players unless named in matchday notes.`
+    : "Do not depict recognizable real opposition players unless named in matchday notes; use anonymous current-squad-style opponents.";
+  const matchSection = matchContext && userMatchTeam && opponentMatchTeam
+    ? `VS MATCH CONTEXT:
+${matchContext.homeTeam.name} are the home side in ${matchContext.homeTeam.kitVariant} kit.
+${matchContext.awayTeam.name} are the away side in ${matchContext.awayTeam.kitVariant} kit.
+The reference person [img] plays for ${userMatchTeam.name}.
+The opposition is ${opponentMatchTeam.name}; opposition players must not use the reference face.
+${matchContext.opponentMode === "another-person"
+  ? "Include one distinct opposing feature player with a non-reference face."
+  : "Use a believable group of opposing club players with varied non-reference faces."}
+${matchdaySection}
+Opponent kit: ${opponentMatchTeam.kitNotes}
+Opponent colours: ${opponentMatchTeam.primary}, ${opponentMatchTeam.accent}`
+    : "";
+  const kitSection = input.kitSpec
+    ? `KIT ACCURACY MANDATE:
+Render the official ${input.kitSpec.season} ${input.kitSpec.team} ${input.kitSpec.variant} kit.
+Use the attached kit reference image as the source of truth.
+${compactKitSpec(input.kitSpec)}
+Do not change the season, sponsor, manufacturer, crest layout, pattern, shorts, or socks.`
+    : `Kit styling for ${input.teamProfile.name} (${input.teamProfile.group}):
 ${input.teamProfile.kitNotes}
 Colors: Primary ${input.teamProfile.primary}, Accent ${input.teamProfile.accent}
+Render as a modern football kit with realistic fabric, stitching, and emblems.`;
 
-Composition details:
-* Multiple layered figures positioned around the trophy
-* Some figures facing camera
-* Some shouting or celebrating
-* Some clapping
-* Some looking serious
-* Some side-profile poses
-* One rear-facing pose showing shirt number
-* One running pose
-* One close-up portrait near centre
-* One triumphant screaming pose
-* One thoughtful/captain-style pose
-* arms folded confidently
-* flexing muscles
+  const identityMandate = matchContext
+    ? `IDENTITY MANDATE:
+Every featured ${userMatchTeam?.name ?? input.teamProfile.name} player on the selected side must match the reference person [img]: bone structure, eyes, nose, and unique facial features. Use [img] only for the selected side. Do not apply [img] to the opposition.`
+    : `IDENTITY MANDATE:
+Every face must match the reference person [img]: bone structure, eyes, nose, and unique facial features. [img] is the only subject identity.`;
+
+  const compositionSection = matchContext
+    ? `Modern football league VS poster: ${trophyDescription}. Stage ${userMatchTeam?.name ?? input.teamProfile.name} and ${opponentMatchTeam?.name ?? "the opposition"} as opposing sides in a dramatic matchday composition.
+
+${matchSection}
+
+COMPOSITION & POSES:
+Use [img] repeatedly for ${userMatchTeam?.name ?? input.teamProfile.name}: close-up centre portrait, triumphant shouting pose, thoughtful captain pose. Opposing players stay on the other side with distinct non-reference faces.`
+    : `Modern football ${isNationalTeam ? "tournament" : "league"} poster: ${trophyDescription}, surrounded by multiple versions of [img] in different athletic poses and kit colours.
+
+COMPOSITION & POSES:
+Use the same [img] face in every pose: close-up centre portrait, triumphant shouting pose, thoughtful captain pose, running and celebrating figures.`;
+
+  return `${identityMandate}
+
+SCENE:
+Photorealistic ${isNationalTeam ? "National Team" : "League"} football poster collage. Off-white background, subtle haze, premium sports lighting, layered cut-out portraits, dynamic overlap.
+
+${compositionSection}
+
+${kitSection}
 
 Lighting:
-Bright premium stadium-commercial lighting with subtle rim light and clean facial definition.
+Bright stadium lighting, subtle rim light, clean facial definition on [img].
 
 Style:
-${input.posterStyle.name} - ${input.posterStyle.description}. Official Premier League launch poster meets high-end sportswear advertising campaign.
+${input.posterStyle.name} - ${input.posterStyle.description}. Official ${isNationalTeam ? "International Tournament" : "Premier League"} launch poster.
 
 Textures:
-Sharp fabric detail, realistic football shirts, authentic stitching, embroidered badges, sweat texture, skin pores, natural facial lighting.
+Realistic skin texture, sweat, sharp fabric, stitching, embroidered badges.
 
 Camera aesthetic:
-Mixture of medium portraits, action poses and telephoto sports photography compressed into one layered collage.
+Medium portraits, action poses, telephoto sports photography.
 
 Colour palette:
 * Kits from ${input.teamProfile.name}
-* subtle sky blue accents
+${matchContext && opponentMatchTeam ? `* Opposition colours from ${opponentMatchTeam.name}` : ""}
+* subtle ${input.teamProfile.primary} and ${input.teamProfile.accent} accents
 * silver trophy reflections
-* soft pink atmospheric haze
+* soft atmospheric haze matching team colors
 
-Important:
-* Keep the overall structure and energy of a football collage poster
-* Preserve the dense overlapping composition
-* No text except realistic shirt numbers/logos
-* No cartoon style
-* No AI-art distortion
-* Faces must remain strictly consistent across all appearances
-* Highly realistic sports photography aesthetic
-* 4K ultra-detailed finish`;
+CRITICAL RESTRICTIONS:
+* NO altering of the face from [img]
+${matchContext ? "* NO applying [img]'s face to opposition players" : ""}
+* NO "beautification" or generic AI face smoothing
+* NO text except realistic shirt numbers/logos
+* NO cartoon style
+* NO AI-art distortion
+* Realistic sports photography aesthetic`;
 }

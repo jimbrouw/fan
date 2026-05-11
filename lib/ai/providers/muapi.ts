@@ -1,4 +1,4 @@
-import { GenerationProvider, GenerationResponse, GenerationJobStatus } from "../types";
+import type { GenerationJobStatus, GenerationProvider, GenerationResponse } from "../types";
 
 const MUAPI_BASE_URL = "https://api.muapi.ai/api/v1";
 
@@ -9,6 +9,65 @@ type MuapiPredictionResponse = {
   outputs?: string[];
   error?: string;
 };
+
+type MuapiSubmitBody = {
+  prompt: string;
+  aspect_ratio: "3:4";
+  image_url?: string;
+  images_list?: string[];
+  quality?: "high";
+};
+
+export function buildMuapiSubmitRequest(input: {
+  prompt: string;
+  referenceImageUrls: string[];
+  model?: string;
+}): { endpoint: string; body: MuapiSubmitBody } {
+  const model = input.model || "wan2.7-image-edit";
+  const body: MuapiSubmitBody = {
+    prompt: input.prompt,
+    aspect_ratio: "3:4",
+  };
+
+  if (model === "wan2.7-image-edit") {
+    return {
+      endpoint: "wan2.7-image-edit",
+      body: {
+        ...body,
+        images_list: input.referenceImageUrls,
+      }
+    };
+  }
+
+  if (model === "nano-banana-2") {
+    return {
+      endpoint: "nano-banana-2-edit",
+      body: {
+        ...body,
+        images_list: input.referenceImageUrls,
+      }
+    };
+  }
+
+  if (model === "gpt-image-2") {
+    return {
+      endpoint: "gpt-image-2-image-to-image",
+      body: {
+        ...body,
+        images_list: input.referenceImageUrls,
+        quality: "high",
+      }
+    };
+  }
+
+  return {
+    endpoint: "flux-pulid",
+    body: {
+      ...body,
+      image_url: input.referenceImageUrls[0],
+    }
+  };
+}
 
 export class MuapiGenerationProvider implements GenerationProvider {
   private getApiKey() {
@@ -22,9 +81,12 @@ export class MuapiGenerationProvider implements GenerationProvider {
   async submitJob(input: {
     prompt: string;
     referenceImageUrls: string[];
+    model?: string;
     webhookUrl?: string;
   }): Promise<{ providerJobId: string }> {
-    const url = new URL(`${MUAPI_BASE_URL}/flux-pulid`);
+    const { endpoint, body } = buildMuapiSubmitRequest(input);
+
+    const url = new URL(`${MUAPI_BASE_URL}/${endpoint}`);
     if (input.webhookUrl) {
       url.searchParams.set("webhook", input.webhookUrl);
     }
@@ -35,11 +97,7 @@ export class MuapiGenerationProvider implements GenerationProvider {
         "Content-Type": "application/json",
         "x-api-key": this.getApiKey(),
       },
-      body: JSON.stringify({
-        prompt: input.prompt,
-        image_url: input.referenceImageUrls[0],
-        aspect_ratio: "3:4", // Matching our SVG poster dimensions (1200x1600)
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -65,15 +123,19 @@ export class MuapiGenerationProvider implements GenerationProvider {
       cache: "no-store",
     });
 
+    const body = await response.json().catch(() => ({}));
+    const payload = (body.detail || body) as MuapiPredictionResponse;
+
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`MuAPI status check failed: ${response.status} ${errorText}`);
+      return {
+        jobId: providerJobId,
+        status: "failed",
+        error: payload.error || `MuAPI status check failed: ${response.status}`,
+      };
     }
 
-    const payload = (await response.json()) as MuapiPredictionResponse;
-
     let mappedStatus: GenerationJobStatus = "processing";
-    const status = payload.status.toLowerCase();
+    const status = (payload.status || "failed").toLowerCase();
 
     if (status === "queued" || status === "pending") {
       mappedStatus = "queued";

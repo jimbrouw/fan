@@ -14,6 +14,7 @@ export interface GenerationProvider {
   submitJob(input: {
     prompt: string;
     referenceImageUrls: string[];
+    model?: string;
     webhookUrl?: string;
   }): Promise<{ providerJobId: string }>;
 

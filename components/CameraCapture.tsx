@@ -29,6 +29,16 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
 
     async function startCamera() {
       try {
+        if (!window.isSecureContext && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+          setError("Camera needs HTTPS on iPhone. Open the secure ngrok link, not the local network URL.");
+          return;
+        }
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setError("This browser does not expose camera access. Open the secure link in Safari and allow camera access.");
+          return;
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: "user",
@@ -47,7 +57,27 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-      } catch {
+      } catch (cameraError) {
+        if (cameraError instanceof DOMException) {
+          if (cameraError.name === "NotAllowedError") {
+            setError("Camera permission was denied. In Safari, allow camera access for this site, then reload.");
+            return;
+          }
+
+          if (cameraError.name === "NotFoundError") {
+            setError("No camera was found on this device or browser.");
+            return;
+          }
+
+          if (cameraError.name === "NotReadableError") {
+            setError("The camera is already in use by another app or browser tab. Close it, then reload.");
+            return;
+          }
+
+          setError(`Camera failed: ${cameraError.name}. Reload the secure Safari page and try again.`);
+          return;
+        }
+
         setError("Camera permission is needed to create your Fan Hero profile.");
       }
     }

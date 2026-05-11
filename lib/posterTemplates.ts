@@ -7,10 +7,14 @@ export type PosterStyle = {
 };
 
 export const posterStyles: PosterStyle[] = [
-  { id: "hero-card", name: "Hero Card", description: "Clean football card composition with club colours." },
-  { id: "matchday", name: "Matchday Poster", description: "Bold fixture-poster layout with stadium energy." },
-  { id: "player-reveal", name: "Player Reveal", description: "Editorial player announcement with strong lighting." }
+  { id: "hero-card", name: "Football Card", description: "A clean player-card look with club colours." },
+  { id: "matchday", name: "VS Match Poster", description: "A bold home-vs-away poster with matchday energy." },
+  { id: "player-reveal", name: "Star Player Poster", description: "A dramatic star-player poster with strong lighting." }
 ];
+
+export function getDefaultPosterStyleIdForCreateMode(mode: "single" | "vs") {
+  return mode === "vs" ? "matchday" : "hero-card";
+}
 
 export function getPosterStyle(id: string) {
   return posterStyles.find((style) => style.id === id) ?? posterStyles[0];
