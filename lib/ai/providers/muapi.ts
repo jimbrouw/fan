@@ -151,7 +151,7 @@ export class MuapiGenerationProvider implements GenerationProvider {
       jobId: providerJobId,
       status: mappedStatus,
       outputUrl: payload.outputs && payload.outputs.length > 0 ? payload.outputs[0] : undefined,
-      error: payload.error,
+      error: payload.error || (mappedStatus === "failed" ? "MuAPI processing failed without a specific error message." : undefined),
     };
   }
 }
