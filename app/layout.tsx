@@ -13,15 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fan Hero",
-  description: "Guided identity capture for personalised football artwork."
+  title: "Kitface",
+  description: "Create a personalised football keepsake poster from a few reference photos."
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#050609"
+  themeColor: "#f7f1e7"
 };
 
 export default function RootLayout({
@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} paper-grain`}>
         {children}
       </body>
     </html>

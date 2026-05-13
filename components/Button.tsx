@@ -8,12 +8,12 @@ export function Button({ className, variant = "primary", ...props }: ButtonProps
   return (
     <button
       className={clsx(
-        "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-[15px] px-5 text-sm font-semibold transition duration-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
         variant === "primary" &&
-          "bg-white text-black shadow-[0_18px_42px_rgba(255,255,255,0.18)] hover:bg-white/90",
+          "bg-[var(--accent)] text-white shadow-[0_18px_34px_rgba(119,47,50,0.22)] hover:bg-[var(--accent-strong)]",
         variant === "secondary" &&
-          "border border-white/14 bg-white/9 text-white hover:bg-white/14",
-        variant === "ghost" && "bg-transparent text-white/72 hover:text-white",
+          "border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[rgba(40,55,45,0.28)] hover:bg-white",
+        variant === "ghost" && "bg-transparent text-[var(--muted)] hover:text-[var(--foreground)]",
         className
       )}
       {...props}

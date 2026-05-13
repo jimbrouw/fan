@@ -1,5 +1,13 @@
 # Codex Project Instructions
 
+## Project Snapshot
+
+- Product: Kitface, a mobile-first football keepsake poster app.
+- Stack: Next.js 16, React 19, Tailwind CSS v4, lucide-react, Supabase, MUAPI/FAL image providers.
+- Current UI direction: warm editorial, inclusive, family-friendly football memory studio. Avoid dark gamer/sports-bro styling unless explicitly requested.
+- Primary flow: `/` -> `/capture` -> `/review` -> `/create` -> `/generating/[jobId]` -> `/result/[jobId]`.
+- Generated reference extraction output belongs in `design-extract-output/` and must stay ignored.
+
 ## Workflow Orchestration
 
 ### 1. Plan Before Non-Trivial Work

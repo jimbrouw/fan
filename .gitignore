@@ -8,3 +8,4 @@ npm-debug.log*
 *.tsbuildinfo
 fan-hero-*.png
 .claude/worktrees/
+design-extract-output/

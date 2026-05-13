@@ -4,8 +4,8 @@ import { captureSteps } from "@/lib/captureSteps";
 export function ProgressRail({ activeIndex }: { activeIndex: number }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs text-white/54">
-        <span>Identity scan</span>
+      <div className="flex items-center justify-between text-xs text-[var(--muted)]">
+        <span>Photo set</span>
         <span>
           {activeIndex + 1}/{captureSteps.length}
         </span>
@@ -16,7 +16,7 @@ export function ProgressRail({ activeIndex }: { activeIndex: number }) {
             key={step.type}
             className={clsx(
               "h-1.5 rounded-full",
-              index <= activeIndex ? "bg-white" : "bg-white/14"
+              index <= activeIndex ? "bg-[var(--accent-green)]" : "bg-[rgba(40,55,45,0.14)]"
             )}
           />
         ))}

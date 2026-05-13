@@ -71,7 +71,7 @@ export async function buildUsableReferenceImageUrls(input: {
   // but we still check it to be sure.
   const sourceIsUsable = await isUsableRemoteImageUrl(input.requiredSourceImageUrl);
   if (!sourceIsUsable) {
-    throw new Error("The selected face reference image is not a downloadable image. Please retake the scan.");
+    throw new Error("The selected face reference image is not a downloadable image. Please retake the photo.");
   }
 
   const optionalResults = await Promise.all(

@@ -50,23 +50,25 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
 
   return (
     <section className="flex flex-1 flex-col items-center justify-center gap-7 text-center">
-      <LoaderCircle size={44} className="animate-spin text-[var(--accent-blue)]" />
+      <div className="grid size-24 place-items-center rounded-full bg-[var(--mist)]/70">
+        <LoaderCircle size={42} className="animate-spin text-[var(--accent-green)]" />
+      </div>
       <div className="space-y-3">
-        <h1 className="text-4xl font-semibold tracking-[-0.03em]">Generating.</h1>
-        <p className="text-sm leading-6 text-white/62">
-          Job <span className="font-mono text-white">{jobId}</span> is {job.status ?? "processing"}.
+        <h1 className="font-display text-[35px] leading-none text-[var(--foreground)]">Making your poster.</h1>
+        <p className="text-sm leading-6 text-[var(--muted)]">
+          Poster <span className="font-mono text-[var(--foreground)]">{jobId.slice(0, 8)}</span> is {job.status ?? "processing"}.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-[var(--accent)]/30 bg-[var(--accent)]/10 p-4 text-sm leading-6 text-white/76">
+        <div className="rounded-[16px] border border-[var(--accent)]/30 bg-[var(--accent)]/10 p-4 text-sm leading-6 text-[var(--foreground)]">
           {error}
         </div>
       )}
 
       {job.status === "failed" && (
         <div className="space-y-4">
-          <p className="text-sm leading-6 text-white/62">{job.error ?? "The image swap failed."}</p>
+          <p className="text-sm leading-6 text-[var(--muted)]">{job.error ?? "The poster could not be made."}</p>
           <Button type="button" variant="secondary" onClick={() => router.push("/create")}>
             Try Again
           </Button>

@@ -3,7 +3,7 @@ import type { CaptureStep } from "@/types/capture";
 export const captureSteps: CaptureStep[] = [
   {
     type: "neutral_front",
-    title: "Neutral Front",
+    title: "Front photo",
     shortLabel: "Front",
     instruction: "Look straight ahead with a relaxed expression.",
     purpose: "Baseline facial structure",
@@ -11,7 +11,7 @@ export const captureSteps: CaptureStep[] = [
   },
   {
     type: "smiling_front",
-    title: "Natural Smile",
+    title: "Natural smile",
     shortLabel: "Smile",
     instruction: "Keep your head level and smile naturally.",
     purpose: "Smile lines and mouth structure",
@@ -19,7 +19,7 @@ export const captureSteps: CaptureStep[] = [
   },
   {
     type: "left_45",
-    title: "Left 45°",
+    title: "Left side",
     shortLabel: "Left",
     instruction: "Turn slightly left and keep your eyes on the guide.",
     purpose: "Facial depth and jawline",
@@ -27,7 +27,7 @@ export const captureSteps: CaptureStep[] = [
   },
   {
     type: "right_45",
-    title: "Right 45°",
+    title: "Right side",
     shortLabel: "Right",
     instruction: "Turn slightly right and keep your eyes on the guide.",
     purpose: "Facial depth and ear structure",
@@ -35,7 +35,7 @@ export const captureSteps: CaptureStep[] = [
   },
   {
     type: "side_profile",
-    title: "Side Profile",
+    title: "Side profile",
     shortLabel: "Profile",
     instruction: "Face the side and keep your full profile inside the frame.",
     purpose: "Nose silhouette and head shape",
@@ -45,7 +45,7 @@ export const captureSteps: CaptureStep[] = [
   },
   {
     type: "full_body",
-    title: "Full Body",
+    title: "Full body",
     shortLabel: "Body",
     instruction: "Step back until your full body fits inside the guide.",
     purpose: "Body proportions and posture",
@@ -55,7 +55,7 @@ export const captureSteps: CaptureStep[] = [
   },
   {
     type: "arms_folded",
-    title: "Arms Folded",
+    title: "Arms folded",
     shortLabel: "Folded",
     instruction: "Fold your arms and stand confidently.",
     purpose: "Footballer body language",

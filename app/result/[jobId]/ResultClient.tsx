@@ -39,7 +39,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
   }, [loadJob]);
 
   const shareUrl = job?.outputUrl ?? "";
-  const shareText = "I made myself the matchday poster.";
+  const shareText = "I made a Kitface matchday poster.";
   const encodedShareUrl = encodeURIComponent(shareUrl);
   const encodedShareText = encodeURIComponent(`${shareText} ${shareUrl}`);
 
@@ -60,7 +60,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Fan Hero poster",
+          title: "Kitface poster",
           text: shareText,
           url: shareUrl,
         });
@@ -77,17 +77,17 @@ export function ResultClient({ jobId }: { jobId: string }) {
   return (
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
-        <h1 className="text-4xl font-semibold leading-none tracking-[-0.03em]">Result.</h1>
-        <p className="text-sm leading-6 text-white/62">
-          Job <span className="font-mono text-white">{jobId}</span> is {job?.status ?? "loading"}.
+        <h1 className="font-display text-[35px] leading-none text-[var(--foreground)]">Your poster.</h1>
+        <p className="text-sm leading-6 text-[var(--muted)]">
+          Poster <span className="font-mono text-[var(--foreground)]">{jobId.slice(0, 8)}</span> is {job?.status ?? "loading"}.
         </p>
       </div>
 
-      <div className="grid flex-1 place-items-center overflow-hidden rounded-lg border border-white/10 bg-white/[0.06] text-center text-sm leading-6 text-white/54">
+      <div className="grid flex-1 place-items-center overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--surface)] text-center text-sm leading-6 text-[var(--muted)] shadow-[0_18px_40px_rgba(53,42,27,0.12)]">
         {job?.status === "completed" && job.outputUrl ? (
           <Image
             src={job.outputUrl}
-            alt="Generated fan hero poster"
+            alt="Generated Kitface poster"
             width={1200}
             height={1600}
             className="h-full max-h-[62vh] w-full object-contain"
@@ -103,9 +103,9 @@ export function ResultClient({ jobId }: { jobId: string }) {
       <div className="grid grid-cols-2 gap-3">
         {job?.status === "completed" ? (
           <>
-            <div className="col-span-2 space-y-3 rounded-lg border border-white/10 bg-black/24 p-4">
+            <div className="col-span-2 space-y-3 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
               <div className="grid grid-cols-2 gap-2">
-                <Button type="button" onClick={shareNative} className="col-span-2 w-full bg-[var(--accent-blue)] text-white hover:bg-[var(--accent-blue)]/80">
+                <Button type="button" onClick={shareNative} className="col-span-2 w-full">
                   <Share2 size={17} />
                   Share
                 </Button>
@@ -113,7 +113,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   href={`https://wa.me/?text=${encodedShareText}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-white/14 bg-white/9 px-4 text-sm font-semibold text-white transition hover:bg-white/14"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
                 >
                   <MessageCircle size={17} />
                   WhatsApp
@@ -122,7 +122,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodedShareUrl}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-white/14 bg-white/9 px-4 text-sm font-semibold text-white transition hover:bg-white/14"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
                 >
                   <Send size={17} />
                   X
@@ -136,10 +136,10 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   Copy Link
                 </Button>
               </div>
-              {shareStatus && <p className="text-xs leading-5 text-white/50">{shareStatus}</p>}
+              {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}
             </div>
             <Button
-              className="w-full bg-[var(--accent-blue)] text-white hover:bg-[var(--accent-blue)]/80"
+              className="w-full"
               onClick={() => alert("Approved! This would trigger the high-res render and fulfilment pipeline.")}
             >
               Approve & Finalize
@@ -160,7 +160,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
             <Link href="/capture">
               <Button className="w-full">
                 <RotateCcw size={17} />
-                New Scan
+                New photos
               </Button>
             </Link>
           </>

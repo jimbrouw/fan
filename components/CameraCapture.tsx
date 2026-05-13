@@ -41,9 +41,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: "user",
-            width: { ideal: 1280 },
-            height: { ideal: 1920 }
+            facingMode: { ideal: "user" }
           },
           audio: false
         });
@@ -78,7 +76,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
           return;
         }
 
-        setError("Camera permission is needed to create your Fan Hero profile.");
+        setError("Camera permission is needed to create your Kitface poster.");
       }
     }
 
@@ -167,14 +165,14 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
 
   return (
     <section className="flex flex-1 flex-col gap-5">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-semibold leading-none tracking-[-0.02em]">{step.title}</h1>
-        <p className="max-w-[29ch] text-sm leading-6 text-white/64">{step.instruction}</p>
+      <div className="space-y-2 text-center">
+        <h1 className="font-display text-[31px] leading-none text-[var(--foreground)]">{step.title}</h1>
+        <p className="mx-auto max-w-[29ch] text-sm leading-6 text-[var(--muted)]">{step.instruction}</p>
       </div>
 
-      <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-white/12 bg-black shadow-[0_32px_80px_rgba(0,0,0,0.45)]">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] border border-[var(--line)] bg-[#d7d6c8] shadow-[0_28px_55px_rgba(59,45,29,0.18)]">
         {error ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-white/70">
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-[var(--muted)]">
             <VideoOff size={34} className="text-[var(--accent)]" />
             <p className="text-sm leading-6">{error}</p>
           </div>
@@ -186,16 +184,16 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
               muted
               playsInline
               onLoadedMetadata={() => setIsCameraReady(true)}
-              className="h-full w-full scale-x-[-1] object-cover"
+              className="h-full w-full scale-x-[-1] object-contain"
             />
             {capturedUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={capturedUrl} alt="Captured pose" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={capturedUrl} alt="Captured pose" className="absolute inset-0 h-full w-full object-contain" />
             )}
             <CaptureOverlay overlay={step.overlay} />
             {countdown !== null && (
-              <div className="absolute inset-0 grid place-items-center bg-black/36">
-                <div className="grid size-28 place-items-center rounded-full border border-white/28 bg-black/46 text-6xl font-semibold text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
+              <div className="absolute inset-0 grid place-items-center bg-[rgba(23,61,44,0.28)]">
+                <div className="grid size-28 place-items-center rounded-full border border-white/36 bg-[var(--surface)] text-6xl font-semibold text-[var(--foreground)] shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
                   {countdown}
                 </div>
               </div>
@@ -205,13 +203,13 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
       </div>
 
       {step.autoCapture && !capturedBlob && (
-        <div className="rounded-lg border border-[var(--accent-blue)]/24 bg-[var(--accent-blue)]/10 p-4 text-sm leading-6 text-white/72">
-          One-player mode: press the shutter, then move into position during the 5 second countdown.
+        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--mist)]/55 p-4 text-sm leading-6 text-[var(--foreground)]">
+          Press the shutter, then move into position during the 5 second countdown.
         </div>
       )}
 
       {validation && (
-        <div className="rounded-lg border border-white/12 bg-white/7 p-4 text-sm text-white/70">
+        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--foreground)]">
           {validation.messages[0]}
         </div>
       )}
@@ -225,7 +223,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
           aria-label={step.autoCapture ? "Start countdown" : "Capture photo"}
           onClick={step.autoCapture ? startCountdown : captureFrame}
           disabled={Boolean(error) || isValidating || countdown !== null}
-          className="grid size-[72px] place-items-center rounded-full border border-white/18 bg-white text-black shadow-[0_18px_44px_rgba(255,255,255,0.2)] transition active:scale-95 disabled:opacity-50"
+          className="grid size-[72px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(53,42,27,0.16)] transition active:scale-95 disabled:opacity-50"
         >
           <Camera size={26} />
         </button>
@@ -235,7 +233,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
           onClick={() => capturedBlob && validation && onUsePhoto(capturedBlob, validation)}
         >
           <Check size={17} />
-          Use
+          Use photo
         </Button>
       </div>
     </section>

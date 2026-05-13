@@ -120,12 +120,12 @@ export function CaptureClient() {
           <button
             key={step.type}
             onClick={() => setActiveIndex(index)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs ${
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition ${
               index === activeIndex
-                ? "border-white bg-white text-black"
+                ? "border-[var(--accent-green)] bg-[var(--accent-green)] text-white"
                 : capturedTypes.has(step.type)
-                  ? "border-[var(--accent-blue)]/60 bg-[var(--accent-blue)]/10 text-white"
-                  : "border-white/12 bg-white/6 text-white/54"
+                  ? "border-[var(--accent-green)]/40 bg-[var(--accent-green)]/10 text-[var(--foreground)]"
+                  : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
             }`}
           >
             {step.shortLabel}
@@ -133,8 +133,8 @@ export function CaptureClient() {
         ))}
       </div>
       {isSaving && (
-        <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.07] p-3 text-sm text-white/62">
-          Saving capture...
+        <div className="mb-3 rounded-[14px] border border-[var(--line)] bg-[var(--mist)]/55 p-3 text-sm text-[var(--foreground)]">
+          Saving photo...
         </div>
       )}
       <CameraCapture key={activeStep.type} step={activeStep} onUsePhoto={handleUsePhoto} />

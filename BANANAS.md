@@ -1,5 +1,7 @@
 # BANANAS - Session Handover & Quality Loop Protocol
 
+Last reviewed: 2026-05-13 during the Kitface frontend redesign handover.
+
 > A "banana" is any mistake, inconsistency, leftover mess, or silent failure that could cause the next session to slip up. Named after the classic banana peel: invisible until someone falls.
 
 ## What This Is
