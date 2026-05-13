@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Shirt, WandSparkles } from "lucide-react";
+import { BadgeCheck, ImagePlus, Shirt, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppFrame } from "@/components/AppFrame";
@@ -8,10 +8,12 @@ import { Button } from "@/components/Button";
 import { getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
 import { getDefaultPosterStyleIdForCreateMode, posterStyles } from "@/lib/posterTemplates";
 import { customTeamId, getTeamProfile, teamProfiles } from "@/lib/teamProfiles";
+import { validateImageBlob } from "@/lib/validation";
 import type { CaptureStepType } from "@/types/capture";
 
 type LocalCapture = {
   type: CaptureStepType;
+  objectUrl?: string;
   imageUrl?: string;
 };
 
@@ -36,6 +38,11 @@ export default function CreatePage() {
   const [posterStyleId, setPosterStyleId] = useState(posterStyles[0].id);
   const [selectedModel, setSelectedModel] = useState("wan2.7-image-edit");
   const [captures, setCaptures] = useState<LocalCapture[]>([]);
+  const [opponentImageUrl, setOpponentImageUrl] = useState<string | undefined>();
+  const [opponentPreviewUrl, setOpponentPreviewUrl] = useState<string | undefined>();
+  const [isUploadingOpponent, setIsUploadingOpponent] = useState(false);
+  const [opponentUploadError, setOpponentUploadError] = useState<string | null>(null);
+  const [failedKitImages, setFailedKitImages] = useState<Record<string, true>>({});
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,6 +66,21 @@ export default function CreatePage() {
   const userKitSpec = getKitSpec(userTeamId, userKitVariant);
   const homeKitSpec = getKitSpec(homeTeamId, "home");
   const awayKitSpec = getKitSpec(awayTeamId, "away");
+  const kitPreviewTiles = createMode === "vs"
+    ? [
+        { label: "Home kit", team: homeTeam.name, base: homeTeam.primary, trim: homeTeam.accent, imageUrl: homeKitSpec?.referenceImageUrl },
+        { label: "Away kit", team: awayTeam.name, base: awayTeam.primary, trim: awayTeam.accent, imageUrl: awayKitSpec?.referenceImageUrl },
+        { label: "Your side", team: userTeam.name, base: userTeam.primary, trim: userTeam.accent, imageUrl: userKitSpec?.referenceImageUrl },
+      ]
+    : [
+        {
+          label: kitVariants.find((variant) => variant.id === kitVariant)?.label ?? "Selected kit",
+          team: isCustomTeam ? customTeamName.trim() || selectedTeam.name : selectedTeam.name,
+          base: selectedTeam.primary,
+          trim: selectedTeam.accent,
+          imageUrl: selectedKitSpec?.referenceImageUrl,
+        },
+      ];
 
   function describeTeamKit(teamId: string, variant: KitVariant) {
     const team = getTeamProfile(teamId);
@@ -80,23 +102,30 @@ export default function CreatePage() {
   const matchContext = createMode === "vs"
     ? {
         homeTeam: {
+          id: homeTeamId,
           name: homeTeam.name,
           primary: homeTeam.primary,
           accent: homeTeam.accent,
           kitNotes: describeTeamKit(homeTeamId, "home"),
           group: homeTeam.group,
+          nickname: homeTeam.nickname,
+          visualMotifs: homeTeam.visualMotifs,
           kitVariant: "home" as const
         },
         awayTeam: {
+          id: awayTeamId,
           name: awayTeam.name,
           primary: awayTeam.primary,
           accent: awayTeam.accent,
           kitNotes: describeTeamKit(awayTeamId, "away"),
           group: awayTeam.group,
+          nickname: awayTeam.nickname,
+          visualMotifs: awayTeam.visualMotifs,
           kitVariant: "away" as const
         },
         userSide,
         opponentMode,
+        opponentSourceImageUrl: opponentMode === "another-person" ? opponentImageUrl : undefined,
         matchdayNotes: matchdayNotes.trim().slice(0, 420) || undefined
       }
     : undefined;
@@ -115,12 +144,70 @@ export default function CreatePage() {
     [captures]
   );
   const hasValidMatch = createMode === "single" || homeTeamId !== awayTeamId;
-  const canSubmit = teamName && kitNotes && posterStyleId && sourceImageUrl && sessionId && hasValidMatch;
+  const needsOpponentImage = createMode === "vs" && opponentMode === "another-person";
+  const hasOpponentImage = !needsOpponentImage || Boolean(opponentImageUrl);
+  const canSubmit = teamName && kitNotes && posterStyleId && sourceImageUrl && sessionId && hasValidMatch && hasOpponentImage;
 
   useEffect(() => {
     setSessionId(localStorage.getItem("fan-hero-session-id"));
-    setCaptures(JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[]);
+    const storedCaptures = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
+    const storedOpponent = storedCaptures.find((capture) => capture.type === "opponent_front");
+    setCaptures(storedCaptures);
+    setOpponentImageUrl(storedOpponent?.imageUrl);
+    setOpponentPreviewUrl(storedOpponent?.imageUrl ?? storedOpponent?.objectUrl);
   }, []);
+
+  async function handleOpponentPhotoChange(fileList: FileList | null) {
+    const file = fileList?.[0];
+    if (!file || !sessionId) return;
+
+    setIsUploadingOpponent(true);
+    setOpponentUploadError(null);
+
+    const objectUrl = URL.createObjectURL(file);
+    let imageUrl: string | undefined;
+
+    try {
+      const validation = await validateImageBlob(file);
+      const form = new FormData();
+      form.append("file", file, "opponent_front.jpg");
+      form.append("sessionId", sessionId);
+      form.append("type", "opponent_front");
+      form.append("validationStatus", validation.status);
+      form.append("validationResults", JSON.stringify(validation.checks));
+
+      const response = await fetch("/api/captures", {
+        method: "POST",
+        body: form
+      });
+      const data = (await response.json()) as { imageUrl?: string; error?: string };
+
+      if (!response.ok || !data.imageUrl) {
+        throw new Error(data.error ?? "Other person photo upload failed.");
+      }
+
+      imageUrl = data.imageUrl;
+      const nextCapture: LocalCapture = { type: "opponent_front", objectUrl, imageUrl };
+      setOpponentImageUrl(imageUrl);
+      setOpponentPreviewUrl(objectUrl);
+      setCaptures((current) => [
+        ...current.filter((capture) => capture.type !== "opponent_front"),
+        nextCapture
+      ]);
+
+      const existing = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
+      const next = [
+        ...existing.filter((capture) => capture.type !== "opponent_front"),
+        nextCapture
+      ];
+      localStorage.setItem("fan-hero-captures", JSON.stringify(next));
+    } catch (uploadError) {
+      URL.revokeObjectURL(objectUrl);
+      setOpponentUploadError(uploadError instanceof Error ? uploadError.message : "Other person photo upload failed.");
+    } finally {
+      setIsUploadingOpponent(false);
+    }
+  }
 
   async function submitJob() {
     if (!canSubmit || !sourceImageUrl || !sessionId) return;
@@ -145,7 +232,9 @@ export default function CreatePage() {
               accent: userTeam.accent,
               kitNotes,
               trophy: userTeam.trophy,
-              group: userTeam.group
+              group: userTeam.group,
+              nickname: userTeam.nickname,
+              visualMotifs: userTeam.visualMotifs
             },
             teamName,
             kitNotes
@@ -180,12 +269,13 @@ export default function CreatePage() {
       const data = (await response.json()) as { notes?: string; error?: string };
 
       if (!response.ok || !data.notes) {
-        throw new Error(data.error ?? "Team news lookup failed.");
+        setTeamNewsError("Live squad data is unavailable right now. You can still write the match note manually.");
+        return;
       }
 
       setMatchdayNotes(data.notes);
-    } catch (teamNewsFetchError) {
-      setTeamNewsError(teamNewsFetchError instanceof Error ? teamNewsFetchError.message : "Team news lookup failed.");
+    } catch {
+      setTeamNewsError("Live squad data is unavailable right now. You can still write the match note manually.");
     } finally {
       setIsFetchingTeamNews(false);
     }
@@ -345,6 +435,44 @@ export default function CreatePage() {
                 </p>
               </label>
 
+              {opponentMode === "another-person" && (
+                <div className="space-y-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-[var(--line)] bg-[var(--mist)]">
+                      {opponentPreviewUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={opponentPreviewUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImagePlus size={22} className="text-[var(--muted)]" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[var(--foreground)]">
+                        {opponentImageUrl ? "Other person photo ready" : "Add other person photo"}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                        Use a clear front-facing photo. This becomes the opposing feature player.
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-[12px] border border-[var(--accent-green)] px-3 text-sm font-semibold text-[var(--accent-green)] transition hover:bg-[var(--accent-green)] hover:text-white">
+                    {isUploadingOpponent ? "Uploading..." : opponentImageUrl ? "Replace photo" : "Choose photo"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={isUploadingOpponent}
+                      onChange={(event) => handleOpponentPhotoChange(event.target.files)}
+                      className="sr-only"
+                    />
+                  </label>
+
+                  {opponentUploadError && (
+                    <p className="text-xs leading-5 text-[var(--accent)]">{opponentUploadError}</p>
+                  )}
+                </div>
+              )}
+
               <label className="block space-y-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Match note</span>
                 <textarea
@@ -394,8 +522,10 @@ export default function CreatePage() {
                 ))}
               </select>
               <p className="text-xs leading-5 text-[var(--muted)]">
-                {selectedKitSpec
+                {selectedKitSpec?.referenceImageUrl
                   ? `${selectedKitSpec.season} ${selectedKitSpec.variant} kit reference ready.`
+                  : selectedKitSpec
+                    ? `${selectedKitSpec.season} ${selectedKitSpec.variant} kit metadata ready; image reference still needed.`
                   : "No exact kit reference is curated yet for this team, so the app will use the written kit profile."}
               </p>
             </label>
@@ -424,35 +554,38 @@ export default function CreatePage() {
             </>
           )}
 
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              ["#1d4b34", "#f5ead8"],
-              ["#b9d3dc", "#173d2c"],
-              ["#772f32", "#f5ead8"],
-              ["#f5ead8", "#173d2c"]
-            ].map(([base, trim], index) => (
-              <div
-                key={`${base}-${trim}`}
-                className={`flex aspect-square items-center justify-center rounded-[14px] border bg-[var(--surface)] ${
-                  index === 0 ? "border-[var(--accent-green)] shadow-[0_8px_20px_rgba(29,75,52,0.14)]" : "border-[var(--line)]"
-                }`}
-              >
-                <div className="relative h-12 w-12" aria-hidden="true">
-                  <div
-                    className="absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 rounded-b-full"
-                    style={{ backgroundColor: trim }}
-                  />
-                  <div
-                    className="absolute left-1/2 top-2 h-10 w-9 -translate-x-1/2 rounded-t-[12px]"
-                    style={{ backgroundColor: base }}
-                  />
-                  <div
-                    className="absolute left-1/2 top-2 h-10 w-2 -translate-x-1/2"
-                    style={{ backgroundColor: trim }}
-                  />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {kitPreviewTiles.map(({ label, team, imageUrl }) => {
+              const visibleImageUrl = imageUrl && !failedKitImages[imageUrl] ? imageUrl : undefined;
+
+              return (
+                <div
+                  key={`${label}-${team}`}
+                  className="min-w-0 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-3"
+                >
+                  <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-[var(--line)] bg-[var(--mist)]" aria-hidden="true">
+                    {visibleImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={visibleImageUrl}
+                        alt=""
+                        className="h-full w-full object-contain object-center"
+                        onError={() => setFailedKitImages((current) => ({ ...current, [visibleImageUrl]: true }))}
+                      />
+                    ) : (
+                      <span className="px-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+                        No kit image yet
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{label}</p>
+                    <p className="mt-1 text-sm font-semibold leading-5 text-[var(--foreground)]">{team}</p>
+                    <p className="mt-1 text-xs leading-4 text-[var(--muted)]">{visibleImageUrl ? "Reference image" : "Kit image needed"}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">

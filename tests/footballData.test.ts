@@ -7,11 +7,13 @@ test("team news notes restrict generated opposition players to current squad nam
     opponent: {
       teamName: "Manchester United",
       squadNames: ["Bruno Fernandes", "Kobbie Mainoo", "Leny Yoro"],
-      latestMatch: "2026-05-10 Manchester United vs Chelsea"
+      latestMatch: "2026-05-10 Manchester United vs Chelsea",
+      source: "live"
     },
     selectedTeam: {
       teamName: "Nottingham Forest",
-      squadNames: ["Morgan Gibbs-White", "Murillo"]
+      squadNames: ["Morgan Gibbs-White", "Murillo"],
+      source: "live"
     }
   });
 

@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
-import { buildMatchdayNotesFromTeamNews, fetchTeamNewsSummary } from "@/lib/footballData";
+import { buildMatchdayNotesFromTeamNews, fetchTeamNewsSummaryWithFallback } from "@/lib/footballData";
 
 export async function GET(request: Request) {
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "Missing FOOTBALL_DATA_API_KEY environment variable." },
-      { status: 503 }
-    );
-  }
-
   const url = new URL(request.url);
   const selectedTeamId = url.searchParams.get("selectedTeamId");
   const opponentTeamId = url.searchParams.get("opponentTeamId");
@@ -23,18 +16,21 @@ export async function GET(request: Request) {
 
   try {
     const [selectedTeam, opponent] = await Promise.all([
-      fetchTeamNewsSummary(selectedTeamId, apiKey),
-      fetchTeamNewsSummary(opponentTeamId, apiKey),
+      fetchTeamNewsSummaryWithFallback(selectedTeamId, apiKey),
+      fetchTeamNewsSummaryWithFallback(opponentTeamId, apiKey),
     ]);
 
     return NextResponse.json({
       notes: buildMatchdayNotesFromTeamNews({ selectedTeam, opponent }),
       selectedTeam,
       opponent,
+      source: selectedTeam.source === "live" && opponent.source === "live" ? "live" : "fallback",
     });
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Team news lookup failed." },
+      { error: "Live squad data is temporarily unavailable." },
       { status: 502 }
     );
   }

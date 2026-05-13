@@ -1,3 +1,5 @@
+import { getTeamProfile } from "./teamProfiles.ts";
+
 export type FootballDataTeamId =
   | "arsenal"
   | "aston-villa"
@@ -65,6 +67,7 @@ export type TeamNewsSummary = {
   teamName: string;
   squadNames: string[];
   latestMatch?: string;
+  source: "live" | "fallback";
 };
 
 const footballDataBaseUrl = "https://api.football-data.org/v4";
@@ -110,7 +113,31 @@ export async function fetchTeamNewsSummary(teamId: string, apiKey: string): Prom
       .filter((name): name is string => Boolean(name))
       .slice(0, 24),
     latestMatch,
+    source: "live",
   };
+}
+
+export function buildFallbackTeamNewsSummary(teamId: string): TeamNewsSummary {
+  const team = getTeamProfile(teamId);
+
+  return {
+    teamName: team.name,
+    squadNames: [],
+    source: "fallback",
+  };
+}
+
+export async function fetchTeamNewsSummaryWithFallback(teamId: string, apiKey?: string): Promise<TeamNewsSummary> {
+  if (!apiKey || !footballDataTeamIds[teamId]) {
+    return buildFallbackTeamNewsSummary(teamId);
+  }
+
+  try {
+    return await fetchTeamNewsSummary(teamId, apiKey);
+  } catch (error) {
+    console.error(error);
+    return buildFallbackTeamNewsSummary(teamId);
+  }
 }
 
 export function buildMatchdayNotesFromTeamNews(input: {

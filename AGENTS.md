@@ -6,7 +6,9 @@
 - Stack: Next.js 16, React 19, Tailwind CSS v4, lucide-react, Supabase, MUAPI/FAL image providers.
 - Current UI direction: warm editorial, inclusive, family-friendly football memory studio. Avoid dark gamer/sports-bro styling unless explicitly requested.
 - Primary flow: `/` -> `/capture` -> `/review` -> `/create` -> `/generating/[jobId]` -> `/result/[jobId]`.
+- VS posters rely on home/away team ids, kit variants, optional second-person `opponent_front` capture, and strict prompt separation between `[img1]` and `[img2]`.
 - Generated reference extraction output belongs in `design-extract-output/` and must stay ignored.
+- Standard verification commands: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
 
 ## Workflow Orchestration
 

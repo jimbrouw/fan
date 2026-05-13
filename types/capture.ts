@@ -6,7 +6,8 @@ export type CaptureStepType =
   | "side_profile"
   | "full_body"
   | "arms_folded"
-  | "celebration";
+  | "celebration"
+  | "opponent_front";
 
 export type CaptureValidationStatus =
   | "pending"

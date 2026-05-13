@@ -25,6 +25,8 @@ type GenerateBody = {
     kitNotes: string;
     trophy?: string;
     group: TeamProfile["group"];
+    nickname?: string;
+    visualMotifs?: string[];
   };
 };
 
@@ -41,15 +43,32 @@ export async function POST(request: Request) {
     const posterStyle = getPosterStyle(body.posterStyleId ?? "hero-card");
     const kitVariant = body.kitVariant ?? "home";
     const kitSpec = body.teamId ? getKitSpec(body.teamId, kitVariant) : undefined;
+    const homeKitSpec = body.matchContext ? getKitSpec(body.matchContext.homeTeam.id, body.matchContext.homeTeam.kitVariant) : undefined;
+    const awayKitSpec = body.matchContext ? getKitSpec(body.matchContext.awayTeam.id, body.matchContext.awayTeam.kitVariant) : undefined;
+    if (body.matchContext?.opponentMode === "another-person" && !body.matchContext.opponentSourceImageUrl) {
+      return NextResponse.json(
+        { error: "Add the other person's photo before generating this VS poster." },
+        { status: 400 }
+      );
+    }
+
     const referenceImageUrls = await buildUsableReferenceImageUrls({
       requiredSourceImageUrl: body.sourceImageUrl,
-      optionalReferenceImageUrls: kitSpec?.referenceImageUrl ? [kitSpec.referenceImageUrl] : [],
+      optionalReferenceImageUrls: [
+        body.matchContext?.opponentSourceImageUrl,
+        kitSpec?.referenceImageUrl,
+        homeKitSpec?.referenceImageUrl,
+        awayKitSpec?.referenceImageUrl
+      ].filter((url): url is string => Boolean(url)),
     });
     const prompt = buildPosterPrompt({
       teamProfile: body.teamProfile,
       posterStyle,
       kitSpec,
+      homeKitSpec,
+      awayKitSpec,
       matchContext: body.matchContext,
+      model: body.model,
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;

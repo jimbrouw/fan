@@ -6,6 +6,8 @@ export type TeamProfile = {
   accent: string;
   kitNotes: string;
   trophy?: string;
+  nickname?: string;
+  visualMotifs?: string[];
 };
 
 export const customTeamId = "custom";
@@ -80,9 +82,9 @@ export const teamProfiles: TeamProfile[] = [
   { id: "leeds", name: "Leeds United", group: "Premier League", primary: "#ffffff", accent: "#ffcd00", kitNotes: "All-white home identity with blue and yellow accent details." },
   { id: "liverpool", name: "Liverpool", group: "Premier League", primary: "#c8102e", accent: "#f6eb61", kitNotes: "Full red home kit, yellow or white accent trim, strong Anfield identity." },
   { id: "man-city", name: "Manchester City", group: "Premier League", primary: "#6cabdd", accent: "#ffffff", kitNotes: "2024/25 Home Kit: Traditional sky blue with navy and white accents, featuring '0161' graffiti-inspired pattern on the collar and cuffs. Premier League badge on sleeve.", trophy: "Premier League Trophy" },
-  { id: "man-united", name: "Manchester United", group: "Premier League", primary: "#da291c", accent: "#111111", kitNotes: "2024/25 Home Kit: Red shirt with deep gradient pattern, white shorts, black socks. Premier League badge on sleeve.", trophy: "Premier League Trophy" },
+  { id: "man-united", name: "Manchester United", group: "Premier League", primary: "#da291c", accent: "#111111", kitNotes: "2025/26 home kit: red adidas shirt with black-and-white V-neck collar and sleeve cuffs, white Snapdragon sponsor, white shorts, black socks, Premier League badge on sleeve.", trophy: "Premier League Trophy" },
   { id: "newcastle", name: "Newcastle United", group: "Premier League", primary: "#111111", accent: "#ffffff", kitNotes: "Black and white striped shirt, black shorts, high-contrast Tyneside identity." },
-  { id: "nottingham-forest", name: "Nottingham Forest", group: "Premier League", primary: "#dd0000", accent: "#ffffff", kitNotes: "Red shirt, white shorts, clean Forest crest placement and simple trim." },
+  { id: "nottingham-forest", name: "Nottingham Forest", group: "Premier League", primary: "#dd0000", accent: "#ffffff", kitNotes: "Red shirt, white shorts, clean Forest crest placement and simple trim.", nickname: "Tricky Trees", visualMotifs: ["subtle tree silhouettes", "playful forest hints", "red-and-white supporter flags"] },
   { id: "sunderland", name: "Sunderland", group: "Premier League", primary: "#eb172b", accent: "#ffffff", kitNotes: "Red and white striped home identity, black shorts, Wearside club palette." },
   { id: "tottenham", name: "Tottenham Hotspur", group: "Premier League", primary: "#ffffff", accent: "#132257", kitNotes: "White shirt, navy shorts, minimal navy detailing, clean Spurs home identity." },
   { id: "west-ham", name: "West Ham United", group: "Premier League", primary: "#7a263a", accent: "#1bb1e7", kitNotes: "Claret shirt with blue sleeves or blue accents, white shorts." },
