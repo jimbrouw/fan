@@ -170,7 +170,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
         <p className="mx-auto max-w-[29ch] text-sm leading-6 text-[var(--muted)]">{step.instruction}</p>
       </div>
 
-      <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] border border-[var(--line)] bg-[#d7d6c8] shadow-[0_28px_55px_rgba(59,45,29,0.18)]">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--surface-soft)] shadow-[0_28px_55px_rgba(42,0,79,0.12)]">
         {error ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-[var(--muted)]">
             <VideoOff size={34} className="text-[var(--accent)]" />
@@ -192,7 +192,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
             )}
             <CaptureOverlay overlay={step.overlay} />
             {countdown !== null && (
-              <div className="absolute inset-0 grid place-items-center bg-[rgba(23,61,44,0.28)]">
+              <div className="absolute inset-0 grid place-items-center bg-[rgba(42,0,79,0.25)]">
                 <div className="grid size-28 place-items-center rounded-full border border-white/36 bg-[var(--surface)] text-6xl font-semibold text-[var(--foreground)] shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
                   {countdown}
                 </div>
@@ -203,7 +203,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
       </div>
 
       {step.autoCapture && !capturedBlob && (
-        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--mist)]/55 p-4 text-sm leading-6 text-[var(--foreground)]">
+        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/70 p-4 text-sm leading-6 text-[var(--foreground)]">
           Press the shutter, then move into position during the 5 second countdown.
         </div>
       )}
@@ -223,7 +223,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
           aria-label={step.autoCapture ? "Start countdown" : "Capture photo"}
           onClick={step.autoCapture ? startCountdown : captureFrame}
           disabled={Boolean(error) || isValidating || countdown !== null}
-          className="grid size-[72px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(53,42,27,0.16)] transition active:scale-95 disabled:opacity-50"
+          className="grid size-[72px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(42,0,79,0.12)] transition active:scale-95 disabled:opacity-50"
         >
           <Camera size={26} />
         </button>

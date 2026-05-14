@@ -297,7 +297,7 @@ export default function CreatePage() {
             <select
               value={selectedModel}
               onChange={(event) => setSelectedModel(event.target.value)}
-              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent-green)]"
+              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
             >
               {models.map((m) => (
                 <option key={m.id} value={m.id} className="bg-[var(--surface)] text-[var(--foreground)]">
@@ -326,8 +326,8 @@ export default function CreatePage() {
                   }}
                   className={`h-12 rounded-[14px] border px-3 text-sm font-semibold transition ${
                     createMode === mode
-                      ? "border-[var(--accent-green)] bg-[var(--accent-green)] text-white"
-                      : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent-green)] hover:text-[var(--foreground)]"
+                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
+                      : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--foreground)]"
                   }`}
                 >
                   {label}
@@ -342,7 +342,7 @@ export default function CreatePage() {
               <select
                 value={selectedTeamId}
                 onChange={(event) => setSelectedTeamId(event.target.value)}
-                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent-green)]"
+                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
               >
                 {Object.entries(groupedTeams).map(([group, teams]) => (
                   <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
@@ -365,7 +365,7 @@ export default function CreatePage() {
                   <select
                     value={homeTeamId}
                     onChange={(event) => setHomeTeamId(event.target.value)}
-                    className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent-green)]"
+                    className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                   >
                     {matchTeams.map((team) => (
                       <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
@@ -380,7 +380,7 @@ export default function CreatePage() {
                   <select
                     value={awayTeamId}
                     onChange={(event) => setAwayTeamId(event.target.value)}
-                    className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent-green)]"
+                    className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                   >
                     {matchTeams.map((team) => (
                       <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
@@ -404,8 +404,8 @@ export default function CreatePage() {
                       onClick={() => setUserSide(side)}
                       className={`min-h-12 rounded-[14px] border px-3 text-sm font-semibold transition ${
                         userSide === side
-                          ? "border-[var(--accent-green)] bg-[var(--accent-green)] text-white"
-                          : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent-green)] hover:text-[var(--foreground)]"
+                          ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
+                          : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--foreground)]"
                       }`}
                     >
                       {label}
@@ -419,7 +419,7 @@ export default function CreatePage() {
                 <select
                   value={opponentMode}
                   onChange={(event) => setOpponentMode(event.target.value as OpponentMode)}
-                  className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent-green)]"
+                  className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                 >
                   <option value="club-players" className="bg-[var(--surface)] text-[var(--foreground)]">
                     Use their players
@@ -438,7 +438,7 @@ export default function CreatePage() {
               {opponentMode === "another-person" && (
                 <div className="space-y-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-[var(--line)] bg-[var(--mist)]">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)]">
                       {opponentPreviewUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={opponentPreviewUrl} alt="" className="h-full w-full object-cover" />
@@ -456,7 +456,7 @@ export default function CreatePage() {
                     </div>
                   </div>
 
-                  <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-[12px] border border-[var(--accent-green)] px-3 text-sm font-semibold text-[var(--accent-green)] transition hover:bg-[var(--accent-green)] hover:text-white">
+                  <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-[12px] border border-[var(--accent)] px-3 text-sm font-semibold text-[var(--accent)] transition hover:bg-[var(--accent)] hover:text-[var(--foreground)]">
                     {isUploadingOpponent ? "Uploading..." : opponentImageUrl ? "Replace photo" : "Choose photo"}
                     <input
                       type="file"
@@ -480,7 +480,7 @@ export default function CreatePage() {
                   onChange={(event) => setMatchdayNotes(event.target.value)}
                   maxLength={420}
                   placeholder="First home game of the season. Unforgettable."
-                  className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(111,103,93,0.55)] focus:border-[var(--accent-green)]"
+                  className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
                 />
                 <p className="text-xs leading-5 text-[var(--muted)]">
                   {matchdayNotes.length}/420
@@ -513,7 +513,7 @@ export default function CreatePage() {
               <select
                 value={kitVariant}
                 onChange={(event) => setKitVariant(event.target.value as KitVariant)}
-                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent-green)]"
+                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
               >
                 {kitVariants.map((variant) => (
                   <option key={variant.id} value={variant.id} className="bg-[var(--surface)] text-[var(--foreground)]">
@@ -539,7 +539,7 @@ export default function CreatePage() {
                   value={customTeamName}
                   onChange={(event) => setCustomTeamName(event.target.value)}
                   placeholder="Your club or country"
-                  className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(111,103,93,0.55)] focus:border-[var(--accent-green)]"
+                  className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
                 />
               </label>
               <label className="block space-y-2">
@@ -548,7 +548,7 @@ export default function CreatePage() {
                   value={customKitNotes}
                   onChange={(event) => setCustomKitNotes(event.target.value)}
                   placeholder="Home colours, away colours, badge direction, shirt number ideas"
-                  className="min-h-28 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(111,103,93,0.55)] focus:border-[var(--accent-green)]"
+                  className="min-h-28 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
                 />
               </label>
             </>
@@ -563,7 +563,7 @@ export default function CreatePage() {
                   key={`${label}-${team}`}
                   className="min-w-0 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-3"
                 >
-                  <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-[var(--line)] bg-[var(--mist)]" aria-hidden="true">
+                  <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-[var(--line)] bg-[var(--surface-soft)]" aria-hidden="true">
                     {visibleImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -619,7 +619,7 @@ export default function CreatePage() {
             <select
               value={posterStyleId}
               onChange={(event) => setPosterStyleId(event.target.value)}
-              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent-green)]"
+              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
             >
               {posterStyles.map((style) => (
                 <option key={style.id} value={style.id} className="bg-[var(--surface)] text-[var(--foreground)]">
@@ -639,14 +639,16 @@ export default function CreatePage() {
                 type="button"
                 onClick={() => setPosterStyleId(style.id)}
                 className={`rounded-[14px] border bg-[var(--surface)] p-2 text-left transition ${
-                  posterStyleId === style.id ? "border-[var(--accent-green)]" : "border-[var(--line)]"
+                  posterStyleId === style.id ? "border-[var(--accent)]" : "border-[var(--line)]"
                 }`}
               >
-                <div className={`aspect-[3/4] rounded-[10px] p-3 ${index === 0 ? "bg-[var(--mist)]" : "bg-[var(--surface-soft)]"}`}>
+                <div className="relative aspect-[3/4] overflow-hidden rounded-[10px] bg-[var(--surface-soft)] p-3">
+                  <div className="kitface-ramp absolute -left-10 top-10 h-12 w-48 rotate-[-18deg] opacity-35" />
+                  <div className="kitface-ramp absolute -right-12 bottom-8 h-10 w-44 rotate-[-18deg] opacity-25" />
                   <p className="font-display text-2xl leading-none text-[var(--foreground)]">
                     {index === 0 ? "Kitface" : "Matchday"}
                   </p>
-                  <div className="mt-6 h-20 rounded-t-full bg-[var(--accent-green)]/85" />
+                  <div className="relative mt-6 h-20 rounded-t-full bg-[var(--foreground)]/90" />
                 </div>
                 <p className="mt-2 text-center text-xs font-semibold text-[var(--foreground)]">{style.name}</p>
               </button>
@@ -654,9 +656,9 @@ export default function CreatePage() {
           </div>
         </form>
 
-        <div className="rounded-[16px] border border-[var(--line)] bg-[var(--mist)]/55 p-4 text-sm leading-6 text-[var(--foreground)]">
+        <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/55 p-4 text-sm leading-6 text-[var(--foreground)]">
           <div className="flex gap-3">
-            <BadgeCheck size={18} className={sourceImageUrl ? "mt-1 text-[var(--accent-green)]" : "mt-1 text-[var(--muted)]"} />
+            <BadgeCheck size={18} className={sourceImageUrl ? "mt-1 text-[var(--accent)]" : "mt-1 text-[var(--muted)]"} />
             <span>
               {sourceImageUrl
                 ? "Your photo set is ready for the poster."

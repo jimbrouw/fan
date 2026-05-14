@@ -50,8 +50,8 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
 
   return (
     <section className="flex flex-1 flex-col items-center justify-center gap-7 text-center">
-      <div className="grid size-24 place-items-center rounded-full bg-[var(--mist)]/70">
-        <LoaderCircle size={42} className="animate-spin text-[var(--accent-green)]" />
+      <div className="grid size-24 place-items-center rounded-full bg-[var(--surface-soft)]/70">
+        <LoaderCircle size={42} className="animate-spin text-[var(--accent)]" />
       </div>
       <div className="space-y-3">
         <h1 className="font-display text-[35px] leading-none text-[var(--foreground)]">Making your poster.</h1>

@@ -2,17 +2,20 @@
 
 :root {
   color-scheme: light;
-  --background: #f7f1e7;
-  --foreground: #173d2c;
-  --muted: #6f675d;
-  --line: rgba(40, 55, 45, 0.16);
-  --surface: #fffaf0;
-  --surface-soft: #efe4d2;
-  --mist: #c8d9df;
-  --accent: #772f32;
-  --accent-strong: #642528;
-  --accent-green: #1d4b34;
-  --paper-shadow: 0 22px 55px rgba(53, 42, 27, 0.14);
+  --background: #F5F5F7;
+  --foreground: #2A004F;
+  --foreground-soft: #2A1767;
+  --muted: #8C86A3;
+  --line: #E9E7EF;
+  --surface: #FFFFFF;
+  --surface-soft: #EDEAF4;
+  --accent: #31F0D5;
+  --accent-strong: #1dcfba;
+  --accent-lime: #D7FF2F;
+  --accent-blue: #4B7CFF;
+  --accent-violet: #7B2CFF;
+  --ramp: linear-gradient(100deg, #D7FF2F 0%, #31F0D5 34%, #4B7CFF 68%, #7B2CFF 100%);
+  --paper-shadow: 0 22px 55px rgba(42, 0, 79, 0.10);
 }
 
 * {
@@ -27,9 +30,7 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background:
-    radial-gradient(circle at 16% 0%, rgba(200, 217, 223, 0.5), transparent 28rem),
-    linear-gradient(180deg, #fffaf0 0%, #f7f1e7 48%, #efe6d7 100%);
+  background: #F5F5F7;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, sans-serif;
 }
@@ -45,36 +46,64 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Heavy display type — replaces the old Georgia serif */
 .font-display {
-  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 900;
+  letter-spacing: -0.03em;
 }
 
+/* Light canvas with translucent electric-ramp beam graphics */
 .kitface-shell {
   background:
-    linear-gradient(120deg, rgba(255, 255, 255, 0.55), transparent 32%),
-    radial-gradient(circle at 80% 16%, rgba(119, 47, 50, 0.08), transparent 20rem);
+    linear-gradient(135deg, rgba(215, 255, 47, 0.14) 0%, rgba(49, 240, 213, 0.10) 35%, transparent 60%),
+    linear-gradient(315deg, rgba(123, 44, 255, 0.10) 0%, rgba(75, 124, 255, 0.07) 35%, transparent 60%),
+    #F5F5F7;
 }
 
+/* Clean white panel on the light canvas */
 .paper-panel {
-  border: 1px solid rgba(40, 55, 45, 0.14);
-  background: rgba(255, 250, 240, 0.86);
+  border: 1px solid rgba(42, 0, 79, 0.07);
+  background: rgba(255, 255, 255, 0.97);
   box-shadow: var(--paper-shadow);
 }
 
-.paper-grain {
-  position: relative;
+/* Electric gradient ramp — use as fill */
+.kitface-ramp {
+  background: var(--ramp);
 }
 
-.paper-grain::before {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
+/* Ramp as text fill — for expressive wordmark moments */
+.kitface-ramp-text {
+  background: var(--ramp);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.kitface-gradient-border {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--ramp) border-box;
+}
+
+/* Primary button — animated gradient sweep on hover */
+.kitface-btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.kitface-btn-primary::before {
   content: "";
-  opacity: 0.24;
-  background-image:
-    radial-gradient(rgba(23, 61, 44, 0.12) 0.5px, transparent 0.5px),
-    radial-gradient(rgba(119, 47, 50, 0.08) 0.5px, transparent 0.5px);
-  background-position: 0 0, 12px 14px;
-  background-size: 28px 28px;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(215, 255, 47, 0.28), rgba(75, 124, 255, 0.22));
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.kitface-btn-primary:hover::before {
+  opacity: 1;
 }

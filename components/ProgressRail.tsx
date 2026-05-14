@@ -16,7 +16,7 @@ export function ProgressRail({ activeIndex }: { activeIndex: number }) {
             key={step.type}
             className={clsx(
               "h-1.5 rounded-full",
-              index <= activeIndex ? "bg-[var(--accent-green)]" : "bg-[rgba(40,55,45,0.14)]"
+              index <= activeIndex ? "bg-[var(--accent)]" : "bg-[var(--line)]"
             )}
           />
         ))}

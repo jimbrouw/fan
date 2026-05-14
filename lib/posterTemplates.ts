@@ -9,7 +9,7 @@ export type PosterStyle = {
 export const posterStyles: PosterStyle[] = [
   { id: "hero-card", name: "Football Card", description: "A clean player-card look with club colours." },
   { id: "matchday", name: "VS Match Poster", description: "A bold home-vs-away poster with matchday energy." },
-  { id: "player-reveal", name: "Star Player Poster", description: "A dramatic star-player poster with strong lighting." }
+  { id: "player-reveal", name: "Star Player Poster", description: "A bold media-day poster with official campaign lighting." }
 ];
 
 export function getDefaultPosterStyleIdForCreateMode(mode: "single" | "vs") {
@@ -33,17 +33,23 @@ export function buildTargetPosterSvg(input: {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${primary}"/>
-      <stop offset="58%" stop-color="#090b10"/>
-      <stop offset="100%" stop-color="${accent}"/>
+      <stop offset="0%" stop-color="${primary}" stop-opacity="0.18"/>
+      <stop offset="50%" stop-color="#F5F5F7"/>
+      <stop offset="100%" stop-color="${accent}" stop-opacity="0.15"/>
     </linearGradient>
-    <radialGradient id="light" cx="50%" cy="24%" r="62%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity=".34"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="ramp" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D7FF2F" stop-opacity="0.32"/>
+      <stop offset="40%" stop-color="#31F0D5" stop-opacity="0.22"/>
+      <stop offset="70%" stop-color="#4B7CFF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#7B2CFF" stop-opacity="0.16"/>
+    </linearGradient>
   </defs>
+  <rect width="1200" height="1600" fill="#F5F5F7"/>
   <rect width="1200" height="1600" fill="url(#bg)"/>
-  <rect width="1200" height="1600" fill="url(#light)"/>
+  <g opacity=".9">
+    <path d="M-210 380 1210 -80 1340 250 -80 710z" fill="url(#ramp)"/>
+    <path d="M-170 1260 1270 780 1390 1055 -40 1530z" fill="url(#ramp)" opacity=".72"/>
+  </g>
   <g opacity=".16" stroke="#fff" stroke-width="2">
     <path d="M120 230h960M120 1370h960M190 120v1360M1010 120v1360"/>
     <circle cx="600" cy="800" r="270" fill="none"/>
@@ -59,10 +65,10 @@ export function buildTargetPosterSvg(input: {
     <path d="M-154 362h116l-18 366h-126zM38 362h116l28 366H56z" fill="#14161d"/>
     <path d="M-198 733h156v52h-180c-20 0-30-25-15-38 12-10 25-14 39-14zM42 733h156c14 0 27 4 39 14 15 13 5 38-15 38H42z" fill="${accent}"/>
   </g>
-  <text x="96" y="148" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800" fill="#fff" letter-spacing="10">${styleName}</text>
-  <text x="96" y="1420" font-family="Inter, Arial, sans-serif" font-size="84" font-weight="900" fill="#fff">${teamName}</text>
+  <text x="96" y="148" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800" fill="#2A004F" letter-spacing="10">${styleName}</text>
+  <text x="96" y="1420" font-family="Inter, Arial, sans-serif" font-size="84" font-weight="900" fill="#2A004F">${teamName}</text>
   <foreignObject x="96" y="1460" width="1008" height="74">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter,Arial,sans-serif;font-size:26px;line-height:1.35;color:rgba(255,255,255,.78);">${kitNotes}</div>
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter,Arial,sans-serif;font-size:26px;line-height:1.35;color:rgba(42,0,79,.74);">${kitNotes}</div>
   </foreignObject>
 </svg>`;
 }

@@ -122,9 +122,9 @@ export function CaptureClient() {
             onClick={() => setActiveIndex(index)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition ${
               index === activeIndex
-                ? "border-[var(--accent-green)] bg-[var(--accent-green)] text-white"
+                ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
                 : capturedTypes.has(step.type)
-                  ? "border-[var(--accent-green)]/40 bg-[var(--accent-green)]/10 text-[var(--foreground)]"
+                  ? "border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--foreground)]"
                   : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
             }`}
           >
@@ -133,7 +133,7 @@ export function CaptureClient() {
         ))}
       </div>
       {isSaving && (
-        <div className="mb-3 rounded-[14px] border border-[var(--line)] bg-[var(--mist)]/55 p-3 text-sm text-[var(--foreground)]">
+        <div className="mb-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/55 p-3 text-sm text-[var(--foreground)]">
           Saving photo...
         </div>
       )}

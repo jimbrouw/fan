@@ -2,12 +2,13 @@
 
 ## Project Snapshot
 
-- Product: Kitface, a mobile-first football keepsake poster app.
+- Product: Kitface, a mobile-first football poster app that turns personal photos into official-style football media.
 - Stack: Next.js 16, React 19, Tailwind CSS v4, lucide-react, Supabase, MUAPI/FAL image providers.
-- Current UI direction: warm editorial, inclusive, family-friendly football memory studio. Avoid dark gamer/sports-bro styling unless explicitly requested.
+- Current UI direction: official, electric, playful football broadcast media. Use a light `#F5F5F7` canvas, deep indigo ink, cyan CTAs, white panels, and translucent lime/cyan/blue/violet gradient beams. Avoid the old ivory/sage/burgundy/serif keepsake direction and avoid dark gamer/sports-bro styling unless explicitly requested.
 - Primary flow: `/` -> `/capture` -> `/review` -> `/create` -> `/generating/[jobId]` -> `/result/[jobId]`.
 - VS posters rely on home/away team ids, kit variants, optional second-person `opponent_front` capture, and strict prompt separation between `[img1]` and `[img2]`.
 - Generated reference extraction output belongs in `design-extract-output/` and must stay ignored.
+- Generated demo prompt output belongs in `Prompts-vs/` and `test-images/` and must stay ignored.
 - Standard verification commands: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
 
 ## Workflow Orchestration

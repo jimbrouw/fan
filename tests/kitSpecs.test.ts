@@ -70,7 +70,7 @@ test("poster prompt does not claim an image reference for metadata-only kits", (
   assert.match(prompt, /No kit reference image is attached/i);
 });
 
-test("Nano Banana prompt uses joyful stadium keepsake direction", () => {
+test("Nano Banana prompt uses joyful broadcast media-day direction", () => {
   const kitSpec = getKitSpec("newcastle", "home");
   assert.ok(kitSpec);
 
@@ -89,15 +89,15 @@ test("Nano Banana prompt uses joyful stadium keepsake direction", () => {
   });
 
   assert.match(prompt, /NANO BANANA MODEL DIRECTION/i);
-  assert.match(prompt, /joyful, funny, celebratory fan keepsake/i);
+  assert.match(prompt, /joyful, funny, celebratory fan media-day poster/i);
   assert.match(prompt, /Identity accuracy is more important than the smile or pose/i);
   assert.match(prompt, /KIND ATHLETIC PRESENTATION/i);
   assert.match(prompt, /Do not make them unrealistically ripped/i);
   assert.match(prompt, /NO generic replacement face/i);
   assert.match(prompt, /NO unrealistic body transformation/i);
   assert.match(prompt, /exact logo style from the kit reference/i);
-  assert.match(prompt, /full stadium scene/i);
-  assert.match(prompt, /No empty cream, white, beige, or plain studio background/i);
+  assert.match(prompt, /premium football broadcast environment/i);
+  assert.match(prompt, /No plain studio background/i);
   assert.match(prompt, /NO stern blank central expression/i);
 });
 

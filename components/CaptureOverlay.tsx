@@ -12,7 +12,7 @@ export function CaptureOverlay({ overlay }: { overlay: CaptureStep["overlay"] })
 
       <div
         className={clsx(
-          "absolute left-1/2 border border-white/60 shadow-[0_20px_55px_rgba(23,61,44,0.14)]",
+          "absolute left-1/2 border border-white/60 shadow-[0_20px_55px_rgba(42,0,79,0.14)]",
           isBody
             ? "top-[8%] h-[78%] w-[56%] -translate-x-1/2 rounded-[42%]"
             : "top-[18%] h-[38%] w-[46%] -translate-x-1/2 rounded-[50%]",

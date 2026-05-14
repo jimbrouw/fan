@@ -4,7 +4,8 @@ import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"]
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"]
 });
 
 const geistMono = Geist_Mono({
@@ -14,14 +15,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Kitface",
-  description: "Create a personalised football keepsake poster from a few reference photos."
+  description: "Create official-looking football poster art from your photo in minutes."
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#f7f1e7"
+  themeColor: "#F5F5F7"
 };
 
 export default function RootLayout({
@@ -31,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} paper-grain`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {children}
       </body>
     </html>

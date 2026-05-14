@@ -7,6 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "demo:prompts": "node --experimental-strip-types scratch/make_demo_prompts.ts",
+    "demo:prompts:vs": "node --experimental-strip-types scratch/make_vs_demo_prompts.ts",
     "lint": "eslint .",
     "test": "node --test --experimental-strip-types tests/*.test.ts",
     "test:kits": "node --test --experimental-strip-types tests/kitSpecs.test.ts",

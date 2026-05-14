@@ -9,3 +9,5 @@ npm-debug.log*
 fan-hero-*.png
 .claude/worktrees/
 design-extract-output/
+Prompts-vs/
+test-images/

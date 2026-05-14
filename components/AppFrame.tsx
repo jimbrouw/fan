@@ -11,7 +11,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-3 text-[var(--foreground)]">
             <div className="hidden items-center gap-2 rounded-full bg-[var(--surface-soft)] px-3 py-2 text-[11px] text-[var(--muted)] sm:flex">
-              <ShieldCheck size={14} className="text-[var(--accent-green)]" />
+              <ShieldCheck size={14} className="text-[var(--accent)]" />
               Private photos
             </div>
             <Menu size={23} strokeWidth={1.75} />

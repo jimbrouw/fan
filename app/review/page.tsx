@@ -31,9 +31,9 @@ export default function ReviewPage() {
           </p>
         </div>
 
-        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--mist)]/65 p-4">
+        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/65 p-4">
           <div className="flex gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--accent-green)] text-white">
+            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-[var(--foreground)]">
               <CheckCircle2 size={20} />
             </div>
             <div>
@@ -64,7 +64,7 @@ export default function ReviewPage() {
                     <p className="text-sm font-semibold text-[var(--foreground)]">{step.shortLabel}</p>
                   </div>
                   <p className="mt-2 flex items-center gap-2 text-xs text-[var(--muted)]">
-                    <span className={`size-2 rounded-full ${capture ? "bg-[var(--accent-green)]" : "bg-[var(--accent)]"}`} />
+                    <span className={`size-2 rounded-full ${capture ? "bg-[var(--accent)]" : "bg-[var(--muted)]"}`} />
                     {capture ? "Ready" : "Retake"}
                   </p>
                   <Link href={`/capture?step=${step.type}`} className="mt-3 block">

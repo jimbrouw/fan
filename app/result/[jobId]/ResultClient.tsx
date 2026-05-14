@@ -18,6 +18,8 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [pageUrl, setPageUrl] = useState("");
+  const [fulfillmentStatus, setFulfillmentStatus] = useState<string | null>(null);
+  const [isSendingToPrintful, setIsSendingToPrintful] = useState(false);
 
   const loadJob = useCallback(async () => {
     setIsLoading(true);
@@ -109,6 +111,34 @@ export function ResultClient({ jobId }: { jobId: string }) {
     await copyShareLink(absoluteImageShareUrl, "Native sharing is not available here. Image link copied.");
   }
 
+  async function sendToPrintful() {
+    if (job?.status !== "completed") return;
+
+    setIsSendingToPrintful(true);
+    setFulfillmentStatus(null);
+
+    try {
+      const response = await fetch("/api/fulfillment/printful", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ jobId })
+      });
+      const data = (await response.json()) as { orderId?: string; status?: string; error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Printful draft order failed.");
+      }
+
+      setFulfillmentStatus(`Printful draft order ${data.orderId} created (${data.status ?? "draft"}).`);
+    } catch (sendError) {
+      setFulfillmentStatus(sendError instanceof Error ? sendError.message : "Printful draft order failed.");
+    } finally {
+      setIsSendingToPrintful(false);
+    }
+  }
+
   return (
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
@@ -118,7 +148,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
         </p>
       </div>
 
-      <div className="grid flex-1 place-items-center overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--surface)] text-center text-sm leading-6 text-[var(--muted)] shadow-[0_18px_40px_rgba(53,42,27,0.12)]">
+      <div className="kitface-gradient-border grid flex-1 place-items-center overflow-hidden rounded-[18px] text-center text-sm leading-6 text-[var(--muted)] shadow-[0_18px_40px_rgba(42,0,79,0.08)]">
         {job?.status === "completed" && job.outputUrl ? (
           <div className="relative grid h-full max-h-[62vh] w-full place-items-center">
             <Image
@@ -130,7 +160,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
               unoptimized
             />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4">
-              <div className="flex items-center gap-2 rounded-full border border-white/35 bg-[rgba(23,61,44,0.78)] px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-white shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-md sm:text-xs">
+              <div className="flex items-center gap-2 rounded-full border border-white/35 bg-[rgba(42,0,79,0.85)] px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-white shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-md sm:text-xs">
                 <span className="font-display text-sm leading-none tracking-normal sm:text-base">Kitface</span>
                 <span className="h-1 w-1 rounded-full bg-white/75" aria-hidden="true" />
                 <span>kitface.app</span>
@@ -184,6 +214,15 @@ export function ResultClient({ jobId }: { jobId: string }) {
                 Regenerate
               </Button>
             </Link>
+            <div className="col-span-2 space-y-2 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">
+              <Button type="button" variant="secondary" className="w-full" onClick={sendToPrintful} disabled={isSendingToPrintful}>
+                {isSendingToPrintful ? "Sending..." : "Send draft to Printful"}
+              </Button>
+              <p className="text-xs leading-5 text-[var(--muted)]">
+                Creates a draft Printful order using the current poster image. It does not confirm, charge, or send the order to production.
+              </p>
+              {fulfillmentStatus && <p className="text-xs font-semibold leading-5 text-[var(--foreground)]">{fulfillmentStatus}</p>}
+            </div>
           </>
         ) : (
           <>

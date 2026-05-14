@@ -36,6 +36,16 @@ function compactKitSpec(spec: KitSpec, options: { includeLogoPlacement?: boolean
   return parts.filter(Boolean).join("; ");
 }
 
+function compactMatchKitSpec(spec: KitSpec) {
+  return [
+    `${spec.season} ${spec.team} ${spec.variant}`,
+    spec.manufacturer,
+    `sponsor ${spec.mainSponsor}`,
+    spec.baseColor,
+    spec.pattern
+  ].join("; ");
+}
+
 function compactMatchdayNotes(notes?: string) {
   return notes?.replace(/\s+/g, " ").trim().slice(0, 420);
 }
@@ -94,8 +104,8 @@ ${matchContext.opponentMode === "another-person"
   ? `Secondary reference person [img2] plays for ${opponentMatchTeam.name}; use [img2] for exactly one opposing feature player only.`
   : "Opposing club players have varied non-reference faces."}
 ${matchdaySection}
-Home kit: ${input.homeKitSpec ? compactKitSpec(input.homeKitSpec) : matchContext.homeTeam.kitNotes}
-Away kit: ${input.awayKitSpec ? compactKitSpec(input.awayKitSpec) : matchContext.awayTeam.kitNotes}
+Home kit: ${input.homeKitSpec ? compactMatchKitSpec(input.homeKitSpec) : matchContext.homeTeam.kitNotes}
+Away kit: ${input.awayKitSpec ? compactMatchKitSpec(input.awayKitSpec) : matchContext.awayTeam.kitNotes}
 Opponent colours: ${opponentMatchTeam.primary}, ${opponentMatchTeam.accent}`
     : "";
   const kitSection = input.kitSpec
@@ -133,12 +143,12 @@ The first attached image is the identity source for [img]. ${kitReferencePhrase}
 Preserve the person's recognisable build, age, and identity, but present them kindly in a football-poster way: confident upright posture, slightly athletic stance, flattering kit fit, clean neckline, strong shoulders, natural chin angle, and dynamic action poses. Avoid unflattering compression, slouching, awkward double-chin emphasis, squeezed shirt fabric, or harsh low-angle body distortion. Do not make them unrealistically ripped, skinny, young, or transformed into a professional athlete.`;
 
   const compositionSection = matchContext
-    ? `Photorealistic ${isPremierLeagueMatch ? "Premier League" : "football league"} VS poster: ${trophyDescription}. Home team LEFT, away team RIGHT.
+    ? `Photorealistic ${isPremierLeagueMatch ? "Premier League" : "football league"} VS poster: ${trophyDescription}. Home LEFT, away RIGHT.
 
 ${matchSection}
 
 COMPOSITION & POSES:
-Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action/captain poses. Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player on the opposition side." : ""} Do not swap sides.`
+Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player." : ""} Do not swap sides.`
     : `Modern football ${isNationalTeam ? "tournament" : "league"} poster: ${trophyDescription}, surrounded by multiple versions of [img] in different athletic poses and kit colours.
 
 COMPOSITION & POSES:
@@ -146,14 +156,14 @@ Use the same [img] face in every pose: close-up centre portrait, triumphant shou
 
   const modelDirection = isNanoBanana
     ? `NANO BANANA MODEL DIRECTION:
-Make this a joyful, funny, celebratory fan keepsake, not a stern professional media-day collage. Identity accuracy is more important than the smile or pose: preserve the reference person's head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, and body type. The central hero should have a natural proud smile that still looks exactly like the reference person, not a generic smiling replacement face. Supporting poses can be playful and over-the-top: laughing, roaring with joy, arms raised, fist pump, kneeslide, or cheeky badge-kiss energy. If exact identity would suffer, use fewer supporting figures rather than inventing a new face.
+Make this a joyful, funny, celebratory fan media-day poster, not a stern professional lineup collage. Identity accuracy is more important than the smile or pose: preserve the reference person's head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, and body type. The central hero should have a natural proud smile that still looks exactly like the reference person, not a generic smiling replacement face. Supporting poses can be playful and over-the-top: laughing, roaring with joy, arms raised, fist pump, kneeslide, or cheeky badge-kiss energy. If exact identity would suffer, use fewer supporting figures rather than inventing a new face.
 
 ${flatteringAthleticDirection}
 
-Use a full stadium scene with curved stands, crowd texture, floodlights, smoke, low fog, grass, dark turf, and dirt particles. The people, trophy, pitch, smoke, lights, and crowd must feel integrated in one scene. Reproduce the shirt sponsor as the exact logo style from the kit reference, not plain typed text or a generic font. No empty cream, white, beige, or plain studio background. No large poster title text, slogan text, fake readable banners, random advertising boards, old sponsors, unrelated trophies, or isolated cutout collage.`
+Use a premium football broadcast environment: bright stadium atmosphere with curved stands and crowd texture, clean floodlit pitch, vibrant matchday energy, electric gradient light forms across the environment. The composition should feel like official sports campaign photography — sharp, premium, broadcast-quality. The people, trophy, pitch, lights, and crowd must feel integrated in one scene. Reproduce the shirt sponsor as the exact logo style from the kit reference, not plain typed text or a generic font. No plain studio background. No dark moody fog. No shadowy back-lit cinema look. No large poster title text, slogan text, fake readable banners, random advertising boards, old sponsors, unrelated trophies, or isolated cutout collage.`
     : isGptImage
       ? `GPT IMAGE 2 DIRECTION:
-Use GPT Image 2's stronger prompt adherence to build a premium but intentionally funny football keepsake poster. The mood should feel like the best day of the fan's life, as if they have just won the biggest match of their life: joyful, comedic, over-the-top, broad grins, laughing, arms raised, playful fist pumps, kneeslide celebration, badge-kiss pride, confetti-like atmosphere, warm internet-football humour, and a tiny controlled dose of lovable AI absurdity. Keep it family-friendly, polished, and emotionally light.
+Use GPT Image 2's stronger prompt adherence to build a premium but intentionally funny football media-day poster. The mood should feel like the best day of the fan's life, as if they have just won the biggest match of their life: joyful, comedic, over-the-top, broad grins, laughing, arms raised, playful fist pumps, kneeslide celebration, badge-kiss pride, confetti-like atmosphere, warm internet-football humour, and a tiny controlled dose of lovable AI absurdity. Keep it family-friendly, polished, and emotionally light.
 
 IDENTITY LOCK:
 The reference person is the hero. Preserve the reference person's recognisable likeness across every repeated version: head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, and body type. Expressions may become happier and more theatrical, but the person must still clearly look like the source photo. Do not average the face with professional players, kit-reference models, or generic footballer faces.
@@ -185,7 +195,7 @@ ${motifNotes ? `Club personality: ${motifNotes} Subtle background cues only.` : 
   return `${identityMandate}
 
 SCENE:
-Photorealistic ${isNationalTeam ? "National Team" : "League"} football poster collage. ${isNanoBanana || isGptImage ? "Filled stadium, premium sports lighting." : "Off-white background, premium sports lighting."}
+Photorealistic ${isNationalTeam ? "National Team" : "League"} football poster collage. ${isNanoBanana || isGptImage ? "Bright premium broadcast stadium, clean floodlit pitch, vibrant crowd energy, light editorial composition with translucent electric gradient forms." : "Premium football broadcast graphics, clean light editorial layout, electric lime-to-cyan energy forms, translucent diagonal beams, white/light-grey sports campaign background."}
 
 ${compositionSection}
 
