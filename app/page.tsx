@@ -5,7 +5,7 @@ import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
 
 const valueProps: Array<[string, string, LucideIcon]> = [
-  ["Private photos", "Your reference photos are used only to make your poster.", LockKeyhole]
+  ["Used for posters", "Your reference photos power the poster generation flow.", LockKeyhole]
 ];
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
             <p className="mt-5 max-w-[28ch] text-[15px] leading-6 text-[var(--muted)]">
               Turn your photos into official-style football posters.
             </p>
-            <Link href="/capture" className="mt-6 inline-block">
+            <Link href={{ pathname: "/login", query: { next: "/capture" } }} className="mt-6 inline-block">
               <Button className="min-w-40">
                 Start now
                 <ArrowRight size={17} />

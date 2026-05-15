@@ -6,6 +6,7 @@ import { AppFrame } from "@/components/AppFrame";
 import { CameraCapture } from "@/components/CameraCapture";
 import { ProgressRail } from "@/components/ProgressRail";
 import { captureSteps } from "@/lib/captureSteps";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { ClientValidationResult } from "@/lib/validation";
 import type { CaptureStepType } from "@/types/capture";
 
@@ -23,6 +24,7 @@ export function CaptureClient() {
   const [captures, setCaptures] = useState<LocalCapture[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const activeStep = captureSteps[activeIndex];
 
   const capturedTypes = useMemo(() => new Set(captures.map((capture) => capture.type)), [captures]);
@@ -42,15 +44,33 @@ export function CaptureClient() {
       }
     }
 
-    const existing = localStorage.getItem("fan-hero-session-id");
-    const existingCaptures = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
-    setCaptures(existingCaptures);
+    async function bootCapture() {
+      const supabase = createBrowserSupabaseClient();
+      if (!supabase) {
+        window.location.href = "/login?next=/capture";
+        return;
+      }
 
-    if (existing) {
-      setSessionId(existing);
-    } else {
-      createSession();
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "/login?next=/capture";
+        return;
+      }
+
+      const existing = localStorage.getItem("fan-hero-session-id");
+      const existingCaptures = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
+      setCaptures(existingCaptures);
+
+      if (existing) {
+        setSessionId(existing);
+      } else {
+        await createSession();
+      }
+
+      setIsCheckingAuth(false);
     }
+
+    bootCapture();
   }, []);
 
   useEffect(() => {
@@ -112,6 +132,12 @@ export function CaptureClient() {
 
   return (
     <AppFrame>
+      {isCheckingAuth ? (
+        <section className="grid flex-1 place-items-center text-center text-sm leading-6 text-[var(--muted)]">
+          Checking sign-in...
+        </section>
+      ) : (
+      <>
       <div className="mb-6">
         <ProgressRail activeIndex={activeIndex} />
       </div>
@@ -138,6 +164,8 @@ export function CaptureClient() {
         </div>
       )}
       <CameraCapture key={activeStep.type} step={activeStep} onUsePhoto={handleUsePhoto} />
+      </>
+      )}
     </AppFrame>
   );
 }

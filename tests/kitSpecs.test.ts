@@ -48,6 +48,32 @@ test("poster prompt includes kit reference and 2025/26 kit mandate", () => {
   assert.match(prompt, /attached kit reference image/i);
 });
 
+test("poster prompt can replace the main shirt sponsor with Kitface branding", () => {
+  const kitSpec = getKitSpec("nottingham-forest", "home");
+  assert.ok(kitSpec);
+
+  const prompt = buildPosterPrompt({
+    teamProfile: {
+      name: "Nottingham Forest",
+      group: "Premier League",
+      primary: "#dd0000",
+      accent: "#ffffff",
+      kitNotes: "Red shirt, white shorts, clean Forest crest placement and simple trim.",
+      trophy: "Premier League Trophy"
+    },
+    posterStyle,
+    kitSpec,
+    brandPlacementMode: "kitface"
+  });
+
+  assert.match(prompt, /BRAND PLACEMENT MODE: Kitface sponsor experiment/i);
+  assert.match(prompt, /replace the real main chest sponsor with exact text "kitface\.app"/i);
+  assert.match(prompt, /pitch-side LED advertising boards reading exactly "kitface\.app"/i);
+  assert.match(prompt, /Do not show the original main sponsor text/i);
+  assert.match(prompt, /Preserve crest, manufacturer logo, sleeve sponsor, kit pattern/i);
+  assert.match(prompt, /NO text except .*exact "kitface\.app" text/i);
+});
+
 test("poster prompt does not claim an image reference for metadata-only kits", () => {
   const kitSpec = getKitSpec("arsenal", "home");
   assert.ok(kitSpec);
@@ -243,6 +269,51 @@ test("poster prompt can assign a second person reference to the opposition featu
   assert.match(prompt, /Use \[img2\] for one opposing feature player/i);
   assert.match(prompt, /NO applying \[img2\]'s face to the selected side/i);
   assert.ok(prompt.length <= 3000, `prompt length ${prompt.length} exceeds MuAPI limit`);
+});
+
+test("VS poster prompt can apply Kitface sponsor and billboard mode to both kits", () => {
+  const prompt = buildPosterPrompt({
+    teamProfile: {
+      name: "Nottingham Forest",
+      group: "Premier League",
+      primary: "#dd0000",
+      accent: "#ffffff",
+      kitNotes: "Off-white away kit with dark navy details.",
+      trophy: "Premier League Trophy"
+    },
+    posterStyle,
+    homeKitSpec: getKitSpec("man-united", "home"),
+    awayKitSpec: getKitSpec("nottingham-forest", "away"),
+    matchContext: {
+      homeTeam: {
+        id: "man-united",
+        name: "Manchester United",
+        group: "Premier League",
+        primary: "#da291c",
+        accent: "#111111",
+        kitNotes: "Red shirt with white shorts and black socks.",
+        kitVariant: "home"
+      },
+      awayTeam: {
+        id: "nottingham-forest",
+        name: "Nottingham Forest",
+        group: "Premier League",
+        primary: "#dd0000",
+        accent: "#ffffff",
+        kitNotes: "Off-white away kit with dark navy details.",
+        kitVariant: "away"
+      },
+      userSide: "away",
+      opponentMode: "another-person",
+      opponentSourceImageUrl: "https://example.com/opponent.jpg"
+    },
+    brandPlacementMode: "kitface"
+  });
+
+  assert.match(prompt, /kitface\.app" on both home and away kits/i);
+  assert.match(prompt, /Stadium boards:/i);
+  assert.match(prompt, /Do not invent other readable brand names/i);
+  assert.match(prompt, /NO text except .*subtle pitch-side LED boards/i);
 });
 
 test("VS create mode defaults to the VS Match Poster style", () => {

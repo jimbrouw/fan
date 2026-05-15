@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { notifyUser } from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
 
 type JobRow = {
   id: string;
   session_id: string;
+  user_id: string | null;
   team_name: string;
   kit_notes: string;
   target_poster_url: string;
@@ -16,22 +18,45 @@ type JobRow = {
   updated_at: string;
 };
 
+type VideoSummaryRow = {
+  id: string;
+  status: "queued" | "processing" | "completed" | "failed";
+  output_url: string | null;
+  error: string | null;
+};
+
+function isMissingSchemaColumn(error: { message?: string }, column: string) {
+  return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
+}
+
 export async function GET(_request: Request, { params }: { params: Promise<{ jobId: string }> }) {
   try {
     const { jobId } = await params;
     const supabase = createServerSupabaseClient();
-    const { data: job, error } = await supabase
+    let jobQuery = await supabase
       .from("generation_jobs")
       .select("*")
       .eq("id", jobId)
       .single<JobRow>();
+    if (jobQuery.error && isMissingSchemaColumn(jobQuery.error, "user_id")) {
+      const fallback = await supabase
+        .from("generation_jobs")
+        .select("id,session_id,team_name,kit_notes,target_poster_url,provider_job_id,status,output_url,error,created_at,updated_at")
+        .eq("id", jobId)
+        .single<Omit<JobRow, "user_id">>();
+      jobQuery = {
+        ...fallback,
+        data: fallback.data ? { ...fallback.data, user_id: null } : null,
+      } as typeof jobQuery;
+    }
+    const { data: job, error } = jobQuery;
 
     if (error || !job) {
       return NextResponse.json({ error: error?.message ?? "Job not found." }, { status: 404 });
     }
 
     if ((job.status === "completed" && job.output_url) || job.status === "failed" || !job.provider_job_id) {
-      return NextResponse.json(toResponse(job));
+      return NextResponse.json(await toResponse(job, supabase));
     }
 
     const provider = new MuapiGenerationProvider();
@@ -54,10 +79,22 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
         return NextResponse.json({ error: updateError?.message ?? "Job update failed." }, { status: 500 });
       }
 
-      return NextResponse.json(toResponse(updatedJob));
+      if (providerStatus.status !== job.status && ["completed", "failed"].includes(providerStatus.status)) {
+        const isCompleted = providerStatus.status === "completed";
+        await notifyUser({
+          userId: updatedJob.user_id,
+          type: isCompleted ? "image_completed" : "image_failed",
+          title: isCompleted ? "Your Kitface poster is ready" : "Your Kitface poster needs another try",
+          body: isCompleted ? "Your static football poster has finished generating." : providerStatus.error ?? "The poster generation failed.",
+          actionUrl: `/result/${job.id}`,
+          eventKey: `generation:${job.id}:${providerStatus.status}`,
+        });
+      }
+
+      return NextResponse.json(await toResponse(updatedJob, supabase));
     }
 
-    return NextResponse.json(toResponse(job));
+    return NextResponse.json(await toResponse(job, supabase));
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Job lookup failed." },
@@ -66,10 +103,19 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
   }
 }
 
-function toResponse(job: JobRow) {
+async function toResponse(job: JobRow, supabase: ReturnType<typeof createServerSupabaseClient>) {
+  const { data: videoJob } = await supabase
+    .from("video_jobs")
+    .select("id,status,output_url,error")
+    .eq("generation_job_id", job.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<VideoSummaryRow>();
+
   return {
     id: job.id,
     sessionId: job.session_id,
+    userId: job.user_id,
     teamName: job.team_name,
     kitNotes: job.kit_notes,
     targetPosterUrl: job.target_poster_url,
@@ -78,6 +124,14 @@ function toResponse(job: JobRow) {
     outputUrl: job.output_url,
     error: job.error,
     createdAt: job.created_at,
-    updatedAt: job.updated_at
+    updatedAt: job.updated_at,
+    videoJob: videoJob
+      ? {
+          id: videoJob.id,
+          status: videoJob.status,
+          outputUrl: videoJob.output_url,
+          error: videoJob.error,
+        }
+      : null,
   };
 }

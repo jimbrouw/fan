@@ -2,7 +2,6 @@
 
 import { BadgeCheck, ImagePlus, Shirt, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
 import { getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
@@ -22,7 +21,6 @@ type MatchSide = "home" | "away";
 type OpponentMode = "club-players" | "another-person";
 
 export default function CreatePage() {
-  const router = useRouter();
   const [createMode, setCreateMode] = useState<CreateMode>("single");
   const [selectedTeamId, setSelectedTeamId] = useState("mansfield");
   const [customTeamName, setCustomTeamName] = useState("");
@@ -50,6 +48,7 @@ export default function CreatePage() {
   const models = [
     { id: "wan2.7-image-edit", name: "WAN 2.7 Edit", description: "Newer image-edit model with multi-image references. Good test default." },
     { id: "nano-banana-2", name: "Nano Banana 2", description: "Google image-edit model with strong character consistency." },
+    { id: "gpt-image-2-fast", name: "GPT Image 2 Fast Test", description: "Low-res 1K, low-quality MUAPI test run to save time and credits." },
     { id: "gpt-image-2", name: "GPT Image 2", description: "Advanced prompt adherence using GPT Image 2." },
     { id: "flux-pulid", name: "Flux PuLID", description: "Legacy face-reference model. Use only as a fallback." },
   ];
@@ -243,10 +242,14 @@ export default function CreatePage() {
 
       const data = (await response.json()) as { jobId?: string; error?: string };
       if (!response.ok || !data.jobId) {
+        if (response.status === 401) {
+          window.location.href = "/login?next=/create";
+          return;
+        }
         throw new Error(data.error ?? "Poster job failed.");
       }
 
-      router.push(`/generating/${data.jobId}`);
+      window.location.href = `/generating/${data.jobId}`;
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Poster job failed.");
       setIsSubmitting(false);

@@ -15,7 +15,8 @@ type MuapiSubmitBody = {
   aspect_ratio: "3:4";
   image_url?: string;
   images_list?: string[];
-  quality?: "high";
+  resolution?: "1K" | "2K";
+  quality?: "low" | "high";
 };
 
 export function buildMuapiSubmitRequest(input: {
@@ -24,6 +25,7 @@ export function buildMuapiSubmitRequest(input: {
   model?: string;
 }): { endpoint: string; body: MuapiSubmitBody } {
   const model = input.model || "wan2.7-image-edit";
+  const isFastGptImage = model === "gpt-image-2-fast";
   const body: MuapiSubmitBody = {
     prompt: input.prompt,
     aspect_ratio: "3:4",
@@ -49,13 +51,14 @@ export function buildMuapiSubmitRequest(input: {
     };
   }
 
-  if (model === "gpt-image-2") {
+  if (model === "gpt-image-2" || isFastGptImage) {
     return {
       endpoint: "gpt-image-2-image-to-image",
       body: {
         ...body,
         images_list: input.referenceImageUrls,
-        quality: "high",
+        resolution: isFastGptImage ? "1K" : "2K",
+        quality: isFastGptImage ? "low" : "high",
       }
     };
   }

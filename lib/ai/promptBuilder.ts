@@ -1,6 +1,7 @@
 import type { KitSpec } from "../kitSpecs.ts";
 import type { PosterStyle } from "../posterTemplates.ts";
 import type { TeamProfile } from "../teamProfiles.ts";
+import { formatCorrectionInstructions, parseCorrectionPrompt } from "./corrections.ts";
 
 export type MatchSide = "home" | "away";
 
@@ -18,17 +19,47 @@ export type MatchContext = {
   matchdayNotes?: string;
 };
 
-function compactKitSpec(spec: KitSpec, options: { includeLogoPlacement?: boolean } = {}) {
+export type KitBrandPlacementMode = "original" | "kitface";
+
+export function normalizeKitBrandPlacementMode(value?: string | null): KitBrandPlacementMode {
+  return value === "kitface" ? "kitface" : "original";
+}
+
+function sponsorSummary(spec: KitSpec, mode: KitBrandPlacementMode) {
+  return mode === "kitface"
+    ? "main chest sponsor replaced with exact text kitface.app"
+    : `sponsor ${spec.mainSponsor}`;
+}
+
+function sponsorPlacementSummary(spec: KitSpec, mode: KitBrandPlacementMode) {
+  if (mode === "original") return spec.sponsorPlacement;
+  if (spec.sponsorPlacement === "unknown") return "kitface.app sponsor centered on the shirt front in authentic football sponsor style";
+  return `${spec.sponsorPlacement}; replace only the main sponsor artwork/text with kitface.app`;
+}
+
+function kitfaceBrandPlacementInstruction(mode: KitBrandPlacementMode, matchContext?: MatchContext) {
+  if (mode === "original") {
+    return "BRAND PLACEMENT MODE: Original kit sponsors. Keep the real main shirt sponsor from the kit reference or written kit profile.";
+  }
+
+  return `BRAND PLACEMENT MODE: Kitface sponsor experiment.
+Shirt sponsor: replace the real main chest sponsor with exact text "kitface.app"${matchContext ? " on both home and away kits" : " on every visible kit front"}. Match the original sponsor's placement, scale, colour treatment, material, and logo style so it looks like an authentic football shirt sponsor integrated into the fabric. Preserve crest, manufacturer logo, sleeve sponsor, kit pattern, collar, shorts, socks, and team colours. Do not show the original main sponsor text.
+Stadium boards: add a few realistic pitch-side LED advertising boards reading exactly "kitface.app". Keep them small, background-level, and integrated into the stadium; they must not become poster titles, foreground banners, or text over faces.
+Do not invent other readable brand names, slogans, or random advertising text.`;
+}
+
+function compactKitSpec(spec: KitSpec, options: { includeLogoPlacement?: boolean; brandPlacementMode?: KitBrandPlacementMode } = {}) {
+  const brandPlacementMode = options.brandPlacementMode ?? "original";
   const parts = [
     `${spec.season} ${spec.team} ${spec.variant}`,
     spec.manufacturer,
-    `sponsor ${spec.mainSponsor}`,
+    sponsorSummary(spec, brandPlacementMode),
     spec.sleeveSponsor ? `Sleeve: ${spec.sleeveSponsor}` : undefined,
     spec.baseColor,
     spec.pattern,
     spec.collar,
     options.includeLogoPlacement ? `crest ${spec.crestPlacement}` : undefined,
-    options.includeLogoPlacement ? `sponsor placement ${spec.sponsorPlacement}` : undefined,
+    options.includeLogoPlacement ? `sponsor placement ${sponsorPlacementSummary(spec, brandPlacementMode)}` : undefined,
     spec.shorts,
     spec.socks
   ];
@@ -36,11 +67,11 @@ function compactKitSpec(spec: KitSpec, options: { includeLogoPlacement?: boolean
   return parts.filter(Boolean).join("; ");
 }
 
-function compactMatchKitSpec(spec: KitSpec) {
+function compactMatchKitSpec(spec: KitSpec, brandPlacementMode: KitBrandPlacementMode) {
   return [
     `${spec.season} ${spec.team} ${spec.variant}`,
     spec.manufacturer,
-    `sponsor ${spec.mainSponsor}`,
+    sponsorSummary(spec, brandPlacementMode),
     spec.baseColor,
     spec.pattern
   ].join("; ");
@@ -64,9 +95,12 @@ export function buildPosterPrompt(input: {
   awayKitSpec?: KitSpec;
   matchContext?: MatchContext;
   model?: string;
+  correctionPrompt?: string;
+  brandPlacementMode?: KitBrandPlacementMode;
 }): string {
+  const brandPlacementMode = input.brandPlacementMode ?? "original";
   const isNanoBanana = input.model === "nano-banana-2";
-  const isGptImage = input.model === "gpt-image-2";
+  const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
   const isNationalTeam = input.teamProfile.group === "International" || input.teamProfile.group === "World Cup 2026";
   const matchContext = input.matchContext;
   const isPremierLeagueMatch = matchContext?.homeTeam.group === "Premier League" && matchContext.awayTeam.group === "Premier League";
@@ -104,20 +138,21 @@ ${matchContext.opponentMode === "another-person"
   ? `Secondary reference person [img2] plays for ${opponentMatchTeam.name}; use [img2] for exactly one opposing feature player only.`
   : "Opposing club players have varied non-reference faces."}
 ${matchdaySection}
-Home kit: ${input.homeKitSpec ? compactMatchKitSpec(input.homeKitSpec) : matchContext.homeTeam.kitNotes}
-Away kit: ${input.awayKitSpec ? compactMatchKitSpec(input.awayKitSpec) : matchContext.awayTeam.kitNotes}
+Home kit: ${input.homeKitSpec ? compactMatchKitSpec(input.homeKitSpec, brandPlacementMode) : matchContext.homeTeam.kitNotes}
+Away kit: ${input.awayKitSpec ? compactMatchKitSpec(input.awayKitSpec, brandPlacementMode) : matchContext.awayTeam.kitNotes}
 Opponent colours: ${opponentMatchTeam.primary}, ${opponentMatchTeam.accent}`
     : "";
   const kitSection = input.kitSpec
     ? `KIT ACCURACY MANDATE:
 Render the official ${input.kitSpec.season} ${input.kitSpec.team} ${input.kitSpec.variant} kit.
 ${kitReferenceInstruction(input.kitSpec)}
-${compactKitSpec(input.kitSpec, { includeLogoPlacement: !matchContext || isNanoBanana })}
-Do not change season, sponsor, maker, pattern, shorts, or socks.`
+${compactKitSpec(input.kitSpec, { includeLogoPlacement: !matchContext || isNanoBanana, brandPlacementMode })}
+Do not change season, ${brandPlacementMode === "kitface" ? "Kitface sponsor replacement" : "sponsor"}, maker, pattern, shorts, or socks.`
     : `Kit styling for ${input.teamProfile.name} (${input.teamProfile.group}):
 ${input.teamProfile.kitNotes}
 Colors: Primary ${input.teamProfile.primary}, Accent ${input.teamProfile.accent}
 Render as a modern football kit with realistic fabric, stitching, and emblems.`;
+  const brandPlacementSection = kitfaceBrandPlacementInstruction(brandPlacementMode, matchContext);
 
   const identityMandate = matchContext
     ? matchContext.opponentMode === "another-person"
@@ -192,6 +227,10 @@ Joyful, funny, best-day-of-your-life winning energy; proud warm expressions, pre
 ${motifNotes ? `Club personality: ${motifNotes} Subtle background cues only.` : ""}`
     : "";
 
+  const correctionSection = input.correctionPrompt
+    ? `\n\n${formatCorrectionInstructions(parseCorrectionPrompt(input.correctionPrompt))}`
+    : "";
+
   return `${identityMandate}
 
 SCENE:
@@ -204,6 +243,8 @@ ${referencePriority}
 ${moodSection}
 
 ${kitSection}
+
+${brandPlacementSection}
 
 ${modelDirection}
 
@@ -218,8 +259,10 @@ ${matchContext ? "* NO applying [img1]'s face to opposition players" : ""}
 ${matchContext?.opponentMode === "another-person" ? "* NO applying [img2]'s face to the selected side" : ""}
 ${matchContext ? "* NO swapping home and away sides; home is left, away is right" : ""}
 ${isPremierLeagueMatch ? "* NO Champions League trophy, European Cup trophy, FA Cup trophy, World Cup trophy, or UEFA badges" : ""}
-* NO text except exact realistic shirt numbers, crests, maker logos, and sponsor logos from the kit reference
+${brandPlacementMode === "kitface"
+  ? '* NO text except realistic shirt numbers, crests, maker logos, sleeve sponsor logos, and exact "kitface.app" text on shirt sponsors and subtle pitch-side LED boards'
+  : "* NO text except exact realistic shirt numbers, crests, maker logos, and sponsor logos from the kit reference"}
 * NO cartoon style
 ${isNanoBanana ? "* NO stern blank central expression; make the fan joyful, proud, and celebratory" : ""}
-* Realistic sports photography aesthetic`;
+* Realistic sports photography aesthetic${correctionSection}`;
 }
