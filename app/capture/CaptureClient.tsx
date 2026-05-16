@@ -1,10 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AppFrame } from "@/components/AppFrame";
 import { CameraCapture } from "@/components/CameraCapture";
-import { ProgressRail } from "@/components/ProgressRail";
 import { captureSteps } from "@/lib/captureSteps";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { ClientValidationResult } from "@/lib/validation";
@@ -131,41 +130,58 @@ export function CaptureClient() {
   }
 
   return (
-    <AppFrame>
+    // Fixed full-viewport layout — no scroll, camera fills available height
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[var(--surface)]">
+
+      {/* Header — always visible, never shifts */}
+      <header className="shrink-0 flex items-center justify-between px-5 pt-5 pb-3">
+        <Link href="/" className="font-display text-[26px] leading-none text-[var(--foreground)]">
+          Kitface
+        </Link>
+        <div className="text-right">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Photo {activeIndex + 1} of {captureSteps.length}
+          </p>
+          {/* Dot progress */}
+          <div className="mt-1.5 flex items-center justify-end gap-1.5">
+            {captureSteps.map((step, i) => (
+              <button
+                key={step.type}
+                onClick={() => setActiveIndex(i)}
+                aria-label={`Go to step ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === activeIndex
+                    ? "w-4 bg-[var(--accent)]"
+                    : capturedTypes.has(step.type)
+                      ? "w-1.5 bg-[var(--accent)]/50"
+                      : "w-1.5 bg-[var(--line)]"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </header>
+
       {isCheckingAuth ? (
-        <section className="grid flex-1 place-items-center text-center text-sm leading-6 text-[var(--muted)]">
-          Checking sign-in...
-        </section>
+        <div className="flex flex-1 items-center justify-center text-sm text-[var(--muted)]">
+          One moment...
+        </div>
       ) : (
-      <>
-      <div className="mb-6">
-        <ProgressRail activeIndex={activeIndex} />
-      </div>
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {captureSteps.map((step, index) => (
-          <button
-            key={step.type}
-            onClick={() => setActiveIndex(index)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition ${
-              index === activeIndex
-                ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
-                : capturedTypes.has(step.type)
-                  ? "border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--foreground)]"
-                  : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
-            }`}
-          >
-            {step.shortLabel}
-          </button>
-        ))}
-      </div>
-      {isSaving && (
-        <div className="mb-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/55 p-3 text-sm text-[var(--foreground)]">
-          Saving photo...
+        <div className="flex flex-1 flex-col min-h-0 px-4 pb-safe">
+          {/* Step title + instruction — compact, always above camera */}
+          <div className="shrink-0 pb-3 text-center">
+            <h1 className="font-display text-[26px] leading-tight text-[var(--foreground)]">
+              {activeStep.title}
+            </h1>
+            <p className="mt-1 text-sm leading-5 text-[var(--muted)]">
+              {activeStep.instruction}
+            </p>
+          </div>
+
+          {/* Camera + controls — fills remaining height */}
+          <CameraCapture key={activeStep.type} step={activeStep} onUsePhoto={handleUsePhoto} isSaving={isSaving} />
         </div>
       )}
-      <CameraCapture key={activeStep.type} step={activeStep} onUsePhoto={handleUsePhoto} />
-      </>
-      )}
-    </AppFrame>
+    </div>
   );
 }

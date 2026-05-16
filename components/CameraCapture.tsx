@@ -10,9 +10,10 @@ import type { CaptureStep } from "@/types/capture";
 type CameraCaptureProps = {
   step: CaptureStep;
   onUsePhoto: (blob: Blob, validation: ClientValidationResult) => void;
+  isSaving?: boolean;
 };
 
-export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
+export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -174,13 +175,9 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
   }
 
   return (
-    <section className="flex flex-1 flex-col gap-5">
-      <div className="space-y-2 text-center">
-        <h1 className="font-display text-[31px] leading-none text-[var(--foreground)]">{step.title}</h1>
-        <p className="mx-auto max-w-[29ch] text-sm leading-6 text-[var(--muted)]">{step.instruction}</p>
-      </div>
-
-      <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--surface-soft)] shadow-[0_28px_55px_rgba(42,0,79,0.12)]">
+    <section className="flex flex-1 flex-col min-h-0">
+      {/* Camera view — fills all remaining space */}
+      <div className="relative flex-1 min-h-0 overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--surface-soft)] shadow-[0_28px_55px_rgba(42,0,79,0.12)]">
         {error ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-[var(--muted)]">
             <VideoOff size={34} className="text-[var(--accent)]" />
@@ -194,8 +191,15 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
               muted
               playsInline
               onLoadedMetadata={() => setIsCameraReady(true)}
-              className={`h-full w-full object-contain${facingMode === "user" ? " scale-x-[-1]" : ""}`}
+              className={`h-full w-full object-cover${facingMode === "user" ? " scale-x-[-1]" : ""}`}
             />
+            {capturedUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={capturedUrl} alt="Captured pose" className="absolute inset-0 h-full w-full object-cover" />
+            )}
+            <CaptureOverlay overlay={step.overlay} />
+
+            {/* Flip camera button */}
             <button
               aria-label="Flip camera"
               onClick={flipCamera}
@@ -204,11 +208,8 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
             >
               <RotateCcw size={18} />
             </button>
-            {capturedUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={capturedUrl} alt="Captured pose" className="absolute inset-0 h-full w-full object-contain" />
-            )}
-            <CaptureOverlay overlay={step.overlay} />
+
+            {/* Countdown overlay */}
             {countdown !== null && (
               <div className="absolute inset-0 grid place-items-center bg-[rgba(42,0,79,0.25)]">
                 <div className="grid size-28 place-items-center rounded-full border border-white/36 bg-[var(--surface)] text-6xl font-semibold text-[var(--foreground)] shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
@@ -216,29 +217,28 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
                 </div>
               </div>
             )}
+
+            {/* Saving / validation / hint toast — inside camera, never shifts layout */}
+            {(isSaving || validation?.messages[0] || (step.autoCapture && !capturedBlob)) && (
+              <div className="absolute inset-x-3 bottom-3 rounded-[12px] bg-black/50 px-4 py-2.5 text-center text-sm leading-5 text-white backdrop-blur-sm">
+                {isSaving
+                  ? "Saving…"
+                  : validation?.messages[0]
+                    ?? "Hit the button then step into position — you have 5 seconds!"}
+              </div>
+            )}
           </>
         )}
       </div>
 
-      {step.autoCapture && !capturedBlob && (
-        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/70 p-4 text-sm leading-6 text-[var(--foreground)]">
-          Press the shutter, then move into position during the 5 second countdown.
-        </div>
-      )}
-
-      {validation && (
-        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--foreground)]">
-          {validation.messages[0]}
-        </div>
-      )}
-
-      <div className="mt-auto grid grid-cols-[1fr_auto_1fr] items-center gap-3 pb-2">
+      {/* Controls — always pinned, never shift */}
+      <div className="shrink-0 grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-4">
         <Button variant="secondary" onClick={retake} disabled={!capturedBlob}>
           <RefreshCw size={17} />
           Retake
         </Button>
         <button
-          aria-label={step.autoCapture ? "Start countdown" : "Capture photo"}
+          aria-label={step.autoCapture ? "Start countdown" : "Take photo"}
           onClick={step.autoCapture ? startCountdown : captureFrame}
           disabled={Boolean(error) || isValidating || countdown !== null}
           className="grid size-[72px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(42,0,79,0.12)] transition active:scale-95 disabled:opacity-50"
