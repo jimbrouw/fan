@@ -14,7 +14,27 @@ const BUCKET = "kit-images";
 
 // Populated after running the URL-collection step
 // Format: { teamId, variant, imageUrl }
-const KIT_URLS: Array<{ teamId: string; variant: string; imageUrl: string }> = [];
+const KIT_URLS: Array<{ teamId: string; variant: string; imageUrl: string }> = [
+  { teamId: "arsenal",       variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/11/18/Z5U71ocitVEydDn/arsenal-fc-2025-26-home-kit.jpg" },
+  { teamId: "aston-villa",   variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/07/19/oHl9m2AVpKx9AcP/aston-villa-2025-26-home-kit.jpg" },
+  { teamId: "bournemouth",   variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/07/15/cqZWpPeYuqhb0S1/afc-bournemouth-2025-26-home-kit.jpg" },
+  { teamId: "brentford",     variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/07/04/Ss8OoroRbWUUZBo/brentford-fc-2025-26-home-kit.jpg" },
+  { teamId: "brighton",      variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/07/01/JlDs4PKkAbkYe7h/brighton-hove-albion-2025-26-home-kit.jpg" },
+  { teamId: "burnley",       variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/07/02/AF63bL91Xam5qXU/burnley-fc-2025-26-home-kit.jpg" },
+  { teamId: "chelsea",       variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/09/22/Wj8ki6qeOusGzIo/chelsea-fc-2025-26-home-kit.jpg" },
+  { teamId: "crystal-palace",variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/08/18/VRMHHKKzF9YYwUM/crystal-palace-2025-26-home-kit.jpg" },
+  { teamId: "everton",       variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/06/26/NHEJvpsYXD0iSm3/everton-fc-2025-26-home-kit.jpg" },
+  { teamId: "fulham",        variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/08/18/KglXjDxam2HrNN6/fulham-fc-2025-26-home-kit.jpg" },
+  { teamId: "leeds",         variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/07/04/eBTdg9Sl8IOp0Uj/leeds-united-2025-26-home-kit.jpg" },
+  { teamId: "liverpool",     variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/08/06/kIvg6aRbsdiv12A/liverpool-fc-2025-26-home-kit.jpg" },
+  { teamId: "man-city",      variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/05/13/gewy1MN5rMVUaTX/manchester-city-2025-26-home-kit.jpg" },
+  { teamId: "man-united",    variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/11/18/RdjHzn4ULniPu0Z/manchester-united-2025-26-home-kit.jpg" },
+  { teamId: "newcastle",     variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/06/12/iuRDJNGMm7vZyUg/newcastle-united-2025-26-home-kit.jpg" },
+  { teamId: "sunderland",    variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/07/29/OpJJd0WOcfoMae2/sunderland-afc-2025-26-home-kit.jpg" },
+  { teamId: "tottenham",     variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/06/03/AjKuLXeetr2zHNt/tottenham-hotspur-2025-26-home-kit.jpg" },
+  { teamId: "west-ham",      variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/09/17/yqkFgKPTnE2kHpY/west-ham-united-2025-26-home-kit.jpg" },
+  { teamId: "wolves",        variant: "home", imageUrl: "https://www.footballkitarchive.com/cdn/2025/06/27/wKi1rTZkD8iNPcV/wolverhampton-wanderers-2025-26-home-kit.jpg" },
+];
 
 async function ensureBucket(supabase: ReturnType<typeof createClient>) {
   const { error } = await supabase.storage.createBucket(BUCKET, {

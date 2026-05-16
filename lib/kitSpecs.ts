@@ -48,6 +48,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/arsenal/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/arsenal-fc-2025-26-home-kit-362997/"
     ],
@@ -70,6 +71,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/aston-villa/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/aston-villa-2025-26-home-kit-375022/"
     ],
@@ -92,6 +94,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "black shorts",
     socks: "black socks",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/bournemouth/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/afc-bournemouth-2025-26-home-kit-389299/"
     ],
@@ -114,6 +117,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/brentford/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/brentford-fc-2025-26-home-kit-384099/"
     ],
@@ -136,6 +140,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/brighton/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/brighton-hove-albion-2025-26-home-kit-384793/"
     ],
@@ -158,6 +163,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/burnley/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/burnley-fc-2025-26-home-kit-384949/"
     ],
@@ -180,6 +186,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/chelsea/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/chelsea-fc-2025-26-home-kit-402045/"
     ],
@@ -202,6 +209,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/crystal-palace/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/crystal-palace-2025-26-home-kit-387542/"
     ],
@@ -224,6 +232,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/everton/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/everton-fc-2025-26-home-kit-370187/"
     ],
@@ -246,6 +255,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "white shorts with black piping",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/fulham/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/fulham-fc-2025-26-home-kit-393305/"
     ],
@@ -268,6 +278,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/leeds/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/leeds-united-2025-26-home-kit-384063/"
     ],
@@ -290,6 +301,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/liverpool/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/liverpool-fc-2025-26-home-kit-329216/"
     ],
@@ -312,6 +324,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/man-city/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/manchester-city-2025-26-home-kit-349847/"
     ],
@@ -334,6 +347,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/man-united/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/manchester-united-2025-26-home-kit-365645/"
     ],
@@ -356,6 +370,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/newcastle/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/newcastle-united-2025-26-home-kit-370607/"
     ],
@@ -403,6 +418,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/sunderland/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/sunderland-afc-2025-26-home-kit-376009/"
     ],
@@ -425,6 +441,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/tottenham/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/tottenham-hotspur-2025-26-home-kit-329780/"
     ],
@@ -447,6 +464,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/west-ham/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/west-ham-united-2025-26-home-kit-385259/"
     ],
@@ -469,6 +487,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "unknown",
     shorts: "unknown",
     socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/wolves/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/wolverhampton-wanderers-2025-26-home-kit-365548/"
     ],
