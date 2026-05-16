@@ -22,21 +22,36 @@
 
 ## Next
 
-1. Test an end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
-2. Apply the latest `supabase/schema.sql` to the live Supabase project so `users`, `user_notification_preferences`, `notifications`, `video_jobs`, and `generation_jobs.user_id` exist without compatibility fallbacks.
-3. Verify webhook completion updates, `/result/[jobId]`, native image/video sharing, notification records, and the Printful draft-order path on a deployed URL.
-4. Smoke test `/create` VS mode with an uploaded `opponent_front` image and confirm the generated payload contains the correct home/away teams, kit variants, and second-person source.
-5. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` against real generations and compare with `original` sponsor mode before making a product decision. Use `gpt-image-2-fast` for cheap proofing where quality is not the target.
-6. Do a live camera walkthrough on an actual phone against a secure local or deployed URL to check camera permissions, framing, and capture ergonomics.
-7. Tighten photo privacy before using strong “private photos” claims: move captures to a private Supabase bucket, send providers short-lived signed URLs, and consider deleting captures after generation or a retention window.
-8. Redesign the abstract homepage/flow icon artwork, especially the kit preview graphic, because the current icons feel too abstract and do not match the official electric football broadcast design brief. Replace with clearer football-media visuals that feel integrated with the Kitface UI.
-9. Redesign the `/capture` camera page for iPhone-sized screens: clean up the shutter/retake/use-photo controls, keep the camera button fixed and visible as UI state changes, prevent layout jumps when preview/status elements update, and make the full capture workflow fit without forcing the user to scroll to reach the camera icon.
-10. Make the generating-page email and push notifications actually work instead of showing unavailable/off states: wire up user preferences, browser permission flow, push subscription handling, email delivery provider, completion triggers, and failure feedback.
-11. Fix result downloads so the saved poster image includes the Kitface watermark/branding overlay, not just the raw provider output.
-12. Fix WhatsApp/result sharing so it shares a usable public image or public result URL, not a `localhost` URL that only works on the developer machine.
-13. Add an inclusive option for disabled people: support accessibility-aware capture guidance, UI controls, and prompt language so disabled fans can be represented naturally in posters without being excluded, distorted, or forced into unrealistic athletic poses.
-14. Decide whether the CSS hero poster preview should remain or be replaced with a generated/photographic brand asset.
-15. Add Facebook login as an optional Supabase auth provider: configure the Meta app, add the Supabase callback URL, enable Facebook in Supabase, and add a Facebook sign-in button on `/login`.
+### UI fixes (high priority — broken or confusing)
+1. **Fix kit preview on homepage** — kit preview graphic is broken; replace abstract icon with a working visual that matches the electric football broadcast look.
+2. **Fix camera layout on iPhone** — `/capture` is too tall for phone screens and layout jumps as state changes. Pin shutter button to bottom, lock viewport height, prevent scroll, keep controls stable throughout capture → retake → use-photo flow.
+3. **Simplify onboarding** — flow must be understandable to a first-timer with no context. Audit every screen for jargon, reduce steps, add plain-language labels and hints. Target: a 6-year-old could follow it.
+
+### Notifications
+4. **Pick email provider and wire up** — no provider chosen yet. Options: Resend (simple, good Next.js DX), SendGrid, Postmark. Pick one, add API key to env, send a real completion email when generation finishes. Hook into existing notification record insert.
+5. **Pick push provider and wire up** — no push service chosen. Options: web-native Push API + VAPID keys (free, no third party), or OneSignal/Notix (managed). VAPID approach: generate keys, store subscription in `user_notification_preferences`, send push from server on job completion.
+
+### Analytics
+6. **Add generation analytics** — log each poster generation to an analytics table or service: user id, team, model, kit variant, timestamp, success/fail. Goal: know which teams and modes get used. Options: Supabase table (already available) or Vercel Analytics + custom events. Use Supabase table first — no extra service needed.
+7. **User history page** — Google login exists; add a `/history` page showing the logged-in user's past generations with thumbnail, team, and date. Data already in `generation_jobs` table filtered by `user_id`.
+
+### Rate limiting
+8. **Rate limit `/api/generate` per user** — tie to Google login (user id). Limit: e.g. 5 generations per hour per user while testing. Use Supabase to count recent jobs for the user before accepting new submission. Return 429 with clear message if exceeded.
+
+### Monetization groundwork
+9. **Design credit/paywall model** — still in testing phase, but define: free tier limit (e.g. 3 free posters), paid tier unlock mechanism, where credit balance lives (Supabase `users` table), and which flow enforces it. No Stripe integration yet — just document the model and add the balance field to schema so it's ready.
+
+### Existing backlog
+10. Test end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
+11. Apply latest `supabase/schema.sql` to live project so notifications, video_jobs, and generation_jobs.user_id exist without fallbacks.
+12. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
+13. Smoke test VS mode with uploaded opponent photo.
+14. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
+15. Live camera walkthrough on real phone on secure URL.
+16. Tighten photo privacy: private Supabase bucket, signed URLs to providers, retention window.
+17. Fix result downloads to include Kitface watermark overlay.
+18. Fix WhatsApp sharing to use public URL, not localhost.
+19. Decide: keep CSS hero poster preview or replace with real generated image.
 
 ## Blockers
 
