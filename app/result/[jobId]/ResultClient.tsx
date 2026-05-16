@@ -11,6 +11,7 @@ type JobResponse = {
   status?: "queued" | "processing" | "completed" | "failed";
   outputUrl?: string | null;
   error?: string | null;
+  kitNotes?: string | null;
   videoJob?: VideoJobResponse | null;
 };
 
@@ -277,6 +278,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
     setShareStatus(null);
 
     try {
+      const posterType = job?.kitNotes?.includes("Match:") ? "vs" : "single";
       const response = await fetch("/api/video-jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -284,6 +286,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
           generationJobId: jobId,
           videoModel: selectedVideoModel,
           testSourceImagePath: videoSourceMode === "supabase" ? selectedTestImagePath : undefined,
+          posterType,
         }),
       });
       const data = (await response.json()) as {

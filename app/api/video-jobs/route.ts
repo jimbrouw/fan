@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDefaultMuapiVideoModel, isMuapiVideoModelId } from "@/lib/ai/providers/muapiVideo";
 import { createVideoProvider } from "@/lib/ai/providers/videoProvider";
 import { isMissingVideoJobsTable, saveMemoryVideoJob } from "@/lib/ai/videoJobMemory";
-import { KITFACE_VIDEO_PROMPT_4_SECONDS, type VideoJobStatus } from "@/lib/ai/videoTypes";
+import { KITFACE_VIDEO_PROMPT_4_SECONDS, KITFACE_VS_VIDEO_PROMPT_4_SECONDS, type VideoJobStatus } from "@/lib/ai/videoTypes";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { createServerSupabaseClient, videoTestBucket } from "@/lib/supabase/server";
 import {
@@ -15,6 +15,7 @@ type CreateVideoBody = {
   generationJobId?: string;
   videoModel?: string;
   testSourceImagePath?: string;
+  posterType?: "single" | "vs";
 };
 
 type GenerationJobRow = {
@@ -116,9 +117,10 @@ export async function POST(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/video` : undefined;
+    const videoPrompt = body.posterType === "vs" ? KITFACE_VS_VIDEO_PROMPT_4_SECONDS : KITFACE_VIDEO_PROMPT_4_SECONDS;
     const { providerJobId } = await provider.submitVideoJob({
       sourceImageUrl,
-      prompt: KITFACE_VIDEO_PROMPT_4_SECONDS,
+      prompt: videoPrompt,
       durationSeconds: 5,
       model: videoModel,
       webhookUrl,

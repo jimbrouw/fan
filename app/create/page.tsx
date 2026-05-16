@@ -19,7 +19,6 @@ type LocalCapture = {
 type CreateMode = "single" | "vs";
 type MatchSide = "home" | "away";
 type OpponentMode = "club-players" | "another-person";
-type GptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high";
 
 export default function CreatePage() {
   const [createMode, setCreateMode] = useState<CreateMode>("single");
@@ -37,8 +36,6 @@ export default function CreatePage() {
   const [isFetchingTeamNews, setIsFetchingTeamNews] = useState(false);
   const [teamNewsError, setTeamNewsError] = useState<string | null>(null);
   const [posterStyleId, setPosterStyleId] = useState(posterStyles[0].id);
-  const [selectedModel, setSelectedModel] = useState("wan2.7-image-edit");
-  const [gptImageTestMode, setGptImageTestMode] = useState<GptImageTestMode>("fast-1k-low");
   const [captures, setCaptures] = useState<LocalCapture[]>([]);
   const [opponentImageUrl, setOpponentImageUrl] = useState<string | undefined>();
   const [opponentPreviewUrl, setOpponentPreviewUrl] = useState<string | undefined>();
@@ -54,17 +51,6 @@ export default function CreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRetryingUploads, setIsRetryingUploads] = useState(false);
 
-  const models = [
-    { id: "wan2.7-image-edit", name: "WAN 2.7 Edit", description: "Newer image-edit model with multi-image references. Good test default." },
-    { id: "nano-banana-2", name: "Nano Banana 2", description: "Google image-edit model with strong character consistency." },
-    { id: "gpt-image-2", name: "GPT Image 2", description: "Advanced prompt adherence using GPT Image 2." },
-    { id: "flux-pulid", name: "Flux PuLID", description: "Legacy face-reference model. Use only as a fallback." },
-  ];
-  const gptImageTestModes = [
-    { id: "fast-1k-low", label: "Fast 1K", detail: "Smallest and quickest: 1K / low quality." },
-    { id: "draft-1k-medium", label: "Draft 1K", detail: "Still small, with medium quality for better proofing." },
-    { id: "final-2k-high", label: "Final 2K", detail: "Slower and larger: 2K / high quality." },
-  ] as const;
 
   const selectedTeam = getTeamProfile(selectedTeamId);
   const isCustomTeam = selectedTeamId === customTeamId;
@@ -275,8 +261,8 @@ export default function CreatePage() {
             sourceImageUrl,
             teamId: userTeamId,
             posterStyleId,
-            model: selectedModel,
-            gptImageTestMode,
+            model: "gpt-image-2",
+            gptImageTestMode: "fast-1k-low",
             kitVariant: userKitVariant,
             matchContext,
             teamProfile: {
@@ -352,48 +338,6 @@ export default function CreatePage() {
         </div>
 
         <form className="space-y-4">
-          <label className="block space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster maker</span>
-            <select
-              value={selectedModel}
-              onChange={(event) => setSelectedModel(event.target.value)}
-              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-            >
-              {models.map((m) => (
-                <option key={m.id} value={m.id} className="bg-[var(--surface)] text-[var(--foreground)]">
-                  {m.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs leading-5 text-[var(--muted)]">
-              {models.find((m) => m.id === selectedModel)?.description}
-            </p>
-          </label>
-
-          {selectedModel === "gpt-image-2" && (
-            <fieldset className="space-y-2 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-3">
-              <legend className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Testing output</legend>
-              <div className="grid grid-cols-3 gap-2">
-                {gptImageTestModes.map((mode) => (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => setGptImageTestMode(mode.id)}
-                    className={`min-h-11 rounded-[12px] border px-2 text-xs font-semibold transition ${
-                      gptImageTestMode === mode.id
-                        ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
-                        : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--foreground)]"
-                    }`}
-                  >
-                    {mode.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs leading-5 text-[var(--muted)]">
-                {gptImageTestModes.find((mode) => mode.id === gptImageTestMode)?.detail}
-              </p>
-            </fieldset>
-          )}
 
           <fieldset className="space-y-2">
             <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster type</legend>
