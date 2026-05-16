@@ -29,6 +29,8 @@ export default function CreatePage() {
   const [kitVariant, setKitVariant] = useState<KitVariant>("home");
   const [homeTeamId, setHomeTeamId] = useState("man-united");
   const [awayTeamId, setAwayTeamId] = useState("nottingham-forest");
+  const [homeKitVariant, setHomeKitVariant] = useState<KitVariant>("home");
+  const [awayKitVariant, setAwayKitVariant] = useState<KitVariant>("away");
   const [userSide, setUserSide] = useState<MatchSide>("away");
   const [opponentMode, setOpponentMode] = useState<OpponentMode>("club-players");
   const [matchdayNotes, setMatchdayNotes] = useState("");
@@ -71,10 +73,10 @@ export default function CreatePage() {
   const matchTeams = teamProfiles.filter((team) => team.id !== customTeamId);
   const userTeamId = createMode === "vs" ? (userSide === "home" ? homeTeamId : awayTeamId) : selectedTeamId;
   const userTeam = createMode === "vs" ? getTeamProfile(userTeamId) : selectedTeam;
-  const userKitVariant: KitVariant = createMode === "vs" ? (userSide === "home" ? "home" : "away") : kitVariant;
+  const userKitVariant: KitVariant = createMode === "vs" ? (userSide === "home" ? homeKitVariant : awayKitVariant) : kitVariant;
   const userKitSpec = getKitSpec(userTeamId, userKitVariant);
-  const homeKitSpec = getKitSpec(homeTeamId, "home");
-  const awayKitSpec = getKitSpec(awayTeamId, "away");
+  const homeKitSpec = getKitSpec(homeTeamId, homeKitVariant);
+  const awayKitSpec = getKitSpec(awayTeamId, awayKitVariant);
   const kitPreviewTiles = createMode === "vs"
     ? [
         { label: "Home kit", team: homeTeam.name, base: homeTeam.primary, trim: homeTeam.accent, imageUrl: homeKitSpec?.referenceImageUrl },
@@ -115,22 +117,22 @@ export default function CreatePage() {
           name: homeTeam.name,
           primary: homeTeam.primary,
           accent: homeTeam.accent,
-          kitNotes: describeTeamKit(homeTeamId, "home"),
+          kitNotes: describeTeamKit(homeTeamId, homeKitVariant),
           group: homeTeam.group,
           nickname: homeTeam.nickname,
           visualMotifs: homeTeam.visualMotifs,
-          kitVariant: "home" as const
+          kitVariant: homeKitVariant
         },
         awayTeam: {
           id: awayTeamId,
           name: awayTeam.name,
           primary: awayTeam.primary,
           accent: awayTeam.accent,
-          kitNotes: describeTeamKit(awayTeamId, "away"),
+          kitNotes: describeTeamKit(awayTeamId, awayKitVariant),
           group: awayTeam.group,
           nickname: awayTeam.nickname,
           visualMotifs: awayTeam.visualMotifs,
-          kitVariant: "away" as const
+          kitVariant: awayKitVariant
         },
         userSide,
         opponentMode,
@@ -409,35 +411,55 @@ export default function CreatePage() {
           {createMode === "vs" && (
             <div className="space-y-4 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Home team</span>
-                  <select
-                    value={homeTeamId}
-                    onChange={(event) => setHomeTeamId(event.target.value)}
-                    className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-                  >
-                    {matchTeams.map((team) => (
-                      <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
-                        {team.name}
-                      </option>
+                <div className="space-y-2">
+                  <label className="block space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Home team</span>
+                    <select
+                      value={homeTeamId}
+                      onChange={(event) => setHomeTeamId(event.target.value)}
+                      className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                    >
+                      {matchTeams.map((team) => (
+                        <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {kitVariants.map((v) => (
+                      <button key={v.id} type="button" onClick={() => setHomeKitVariant(v.id)}
+                        className={`h-9 rounded-[10px] border text-xs font-semibold transition ${homeKitVariant === v.id ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]" : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"}`}>
+                        {v.label}
+                      </button>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                </div>
 
-                <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Away team</span>
-                  <select
-                    value={awayTeamId}
-                    onChange={(event) => setAwayTeamId(event.target.value)}
-                    className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-                  >
-                    {matchTeams.map((team) => (
-                      <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
-                        {team.name}
-                      </option>
+                <div className="space-y-2">
+                  <label className="block space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Away team</span>
+                    <select
+                      value={awayTeamId}
+                      onChange={(event) => setAwayTeamId(event.target.value)}
+                      className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                    >
+                      {matchTeams.map((team) => (
+                        <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {kitVariants.map((v) => (
+                      <button key={v.id} type="button" onClick={() => setAwayKitVariant(v.id)}
+                        className={`h-9 rounded-[10px] border text-xs font-semibold transition ${awayKitVariant === v.id ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]" : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"}`}>
+                        {v.label}
+                      </button>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                </div>
               </div>
 
               <fieldset className="space-y-2">
