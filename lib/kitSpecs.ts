@@ -393,7 +393,7 @@ const kitSpecs: KitSpec[] = [
     sponsorPlacement: "white Bally's script sponsor large across the centre chest",
     shorts: "white shorts with red adidas detailing",
     socks: "red socks with white adidas striping",
-    referenceImageUrl: "https://cdn.footballkitarchive.com/2025/08/05/du0Arc2gsNuIftL.jpg",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/nottingham-forest/home.jpg",
     sourceUrls: [
       "https://www.footballkitarchive.com/nottingham-forest-2025-26-home-kit-397475/",
       "https://www.premierleague.com/en/news/4353461",
