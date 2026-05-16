@@ -1,11 +1,32 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import sharp from "sharp";
 
 type JobImageRow = {
   id: string;
   status: "queued" | "processing" | "completed" | "failed";
   output_url: string | null;
 };
+
+function buildWatermarkSvg(width: number, height: number): Buffer {
+  const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="wm" x="0" y="0" width="300" height="180"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(-40 ${width / 2} ${height / 2})">
+        <text x="10" y="120"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="34"
+          font-weight="bold"
+          fill="white"
+          fill-opacity="0.32"
+          letter-spacing="3">kitface.app</text>
+      </pattern>
+    </defs>
+    <rect width="${width}" height="${height}" fill="url(#wm)"/>
+  </svg>`;
+  return Buffer.from(svg);
+}
 
 export async function GET(_request: Request, { params }: { params: Promise<{ jobId: string }> }) {
   try {
@@ -35,11 +56,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
       return NextResponse.json({ error: "Poster output is not an image." }, { status: 502 });
     }
 
-    return new Response(imageResponse.body, {
+    const rawBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    const image = sharp(rawBuffer);
+    const { width = 1200, height = 1600 } = await image.metadata();
+
+    const watermarked = await image
+      .composite([{ input: buildWatermarkSvg(width, height), blend: "over" }])
+      .png()
+      .toBuffer();
+
+    return new Response(watermarked.buffer as ArrayBuffer, {
       headers: {
         "Cache-Control": "private, no-store",
         "Content-Disposition": `inline; filename="kitface-${job.id}.png"`,
-        "Content-Type": contentType,
+        "Content-Type": "image/png",
       },
     });
   } catch (error) {

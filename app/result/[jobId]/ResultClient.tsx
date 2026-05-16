@@ -152,7 +152,6 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const absoluteVideoShareUrl = videoShareUrl && pageUrl ? new URL(videoShareUrl, pageUrl).href : videoShareUrl;
   const pageShareUrl = pageUrl;
   const shareText = "I made a Kitface matchday poster.";
-  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${pageShareUrl || absoluteImageShareUrl}`.trim())}`;
   const selectedTestImage = testImages.find((image) => image.path === selectedTestImagePath);
   const videoIsBusy = isStartingVideo || videoJob?.status === "processing" || videoJob?.status === "queued";
 
@@ -359,7 +358,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
         {job?.status === "completed" && job.outputUrl ? (
           <div className="relative grid h-full max-h-[62vh] w-full place-items-center">
             <Image
-              src={job.outputUrl}
+              src={`/api/jobs/${jobId}/image`}
               alt="Generated Kitface poster"
               width={1200}
               height={1600}
@@ -563,15 +562,10 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   <Copy size={17} />
                   Copy page link
                 </Button>
-                <a
-                  href={whatsappShareUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
-                >
+                <Button type="button" variant="secondary" className="col-span-2" onClick={shareNative}>
                   <MessageCircle size={17} />
                   WhatsApp
-                </a>
+                </Button>
               </div>
               {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}
             </div>

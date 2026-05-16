@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Download, Package, RefreshCw, Sparkles } from "lucide-react";
+import { Check, Download, Gift, Package, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -19,32 +19,34 @@ type UpgradeOption = {
   icon: typeof Download;
   description: string;
   includes: string[];
+  badge?: string;
 };
 
 const upgradeOptions: UpgradeOption[] = [
   {
     id: "download",
-    name: "High-res download",
+    name: "Download — no watermark",
     price: "£7.99",
     icon: Download,
-    description: "Upscaled private file with no Kitface watermark.",
-    includes: ["A3-ready image target", "No watermark", "Private download link"],
+    description: "Full-resolution private file, yours to keep and share forever.",
+    includes: ["High-res file (A3-ready)", "No Kitface watermark", "Private download link"],
   },
   {
     id: "poster",
-    name: "A3 poster delivered",
+    name: "A3 poster — delivered",
     price: "£29.99",
     icon: Package,
-    description: "Print-ready file sent to fulfilment after payment.",
-    includes: ["High-res upscale", "A3 print file", "UK delivery flow"],
+    description: "Printed and sent to your door. Frame it, gift it, done.",
+    includes: ["High-res upscale", "Professional A3 print", "Delivered to your door"],
+    badge: "Most popular",
   },
   {
     id: "bundle",
-    name: "Digital + A3 poster",
-    price: "£34.99",
-    icon: Sparkles,
-    description: "Best future bundle once Stripe and fulfilment are live.",
-    includes: ["Download copy", "A3 poster", "Best margin product"],
+    name: "The gift set",
+    price: "£89.99",
+    icon: Gift,
+    description: "Everything in one box, ready to give. Free postage included.",
+    includes: ["Framed A3 print", "Personalised mug", "Greeting card", "Free postage"],
   },
 ];
 
@@ -87,17 +89,17 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
   return (
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Upgrade poster</p>
-        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Make it print-ready.</h1>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Make it theirs</p>
+        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">This poster belongs on a wall.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          Free preview stays branded. Paid upgrade creates private high-res file for download or print.
+          The free preview has a watermark. Remove it, print it A3, and give them something they&apos;ll actually keep.
         </p>
       </div>
 
       <div className="grid grid-cols-[92px_1fr] gap-4 rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-3">
         <div className="relative aspect-[3/4] overflow-hidden rounded-[12px] bg-[var(--surface-soft)]">
           {job?.status === "completed" && job.outputUrl ? (
-            <Image src={job.outputUrl} alt="Kitface poster preview" fill className="object-cover" unoptimized />
+            <Image src={`/api/jobs/${jobId}/image`} alt="Kitface poster preview" fill className="object-cover" unoptimized />
           ) : (
             <div className="grid h-full place-items-center p-2 text-center text-xs leading-4 text-[var(--muted)]">
               {error ?? job?.error ?? "Preview loading"}
@@ -140,8 +142,15 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-bold text-[var(--foreground)]">{option.name}</p>
-                    <p className="text-sm font-bold text-[var(--accent)]">{option.price}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-bold text-[var(--foreground)]">{option.name}</p>
+                      {option.badge && (
+                        <span className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+                          {option.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="shrink-0 text-sm font-bold text-[var(--accent)]">{option.price}</p>
                   </div>
                   <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{option.description}</p>
                   <div className="mt-3 grid gap-1">
@@ -161,16 +170,16 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
 
       <div className="space-y-3 rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
         <Button type="button" className="w-full" disabled={!canContinue} onClick={handleContinue}>
-          Continue
+          Order — {selectedOption.price}
         </Button>
         <p className="text-xs leading-5 text-[var(--muted)]">
-          Checkout is not live yet. This page now owns future Stripe, upscale, and Printful/Gelato fulfilment flow.
+          Secure checkout. Delivered to your door or sent as a private download link.
         </p>
         {status && <p className="text-xs font-semibold leading-5 text-[var(--foreground)]">{status}</p>}
       </div>
 
-      <Link href={`/result/${jobId}`} className="text-center text-sm font-semibold text-[var(--muted)] underline-offset-4 hover:underline">
-        Back to poster
+      <Link href={`/result/${jobId}`} className="text-center text-sm text-[var(--muted)] underline-offset-4 hover:underline">
+        Keep the free preview
       </Link>
     </section>
   );
