@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ShieldCheck, UserCircle } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { AccountButton } from "@/components/AccountButton";
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
   return (
@@ -10,15 +10,9 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
           <Link href="/" className="font-display text-[34px] leading-none text-[var(--foreground)]">
             Kitface
           </Link>
-          <div className="flex items-center gap-3 text-[var(--foreground)]">
-            <div className="hidden items-center gap-2 rounded-full bg-[var(--surface-soft)] px-3 py-2 text-[11px] text-[var(--muted)] sm:flex">
-              <ShieldCheck size={14} className="text-[var(--accent)]" />
-              Used for posters
-            </div>
+          <div className="flex items-center gap-2 text-[var(--foreground)]">
             <NotificationBell />
-            <Link href={{ pathname: "/login" }} className="grid size-9 place-items-center rounded-full bg-[var(--surface-soft)]" title="Account">
-              <UserCircle size={20} strokeWidth={1.75} />
-            </Link>
+            <AccountButton />
           </div>
         </header>
         {children}

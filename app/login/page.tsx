@@ -89,12 +89,11 @@ export default function LoginPage() {
     <AppFrame>
       <section className="flex flex-1 flex-col justify-center gap-6 pb-4">
         {isCheckingSession ? (
-          <div className="space-y-4">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Opening Kitface</p>
-            <h1 className="font-display text-[48px] leading-none text-[var(--foreground)]">Getting things ready.</h1>
-            <p className="max-w-[18rem] text-base leading-6 text-[var(--muted)]">
-              Checking your session so you can carry on creating.
-            </p>
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <span className="inline-block size-4 rounded-full bg-[var(--accent)] animate-pulse" />
+              <p className="text-sm text-[var(--muted)]">Signing you in…</p>
+            </div>
           </div>
         ) : (
           <>
