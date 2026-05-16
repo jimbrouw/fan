@@ -2,7 +2,6 @@
 
 import { BadgeCheck, ImagePlus, Shirt, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
 import { getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
@@ -20,9 +19,9 @@ type LocalCapture = {
 type CreateMode = "single" | "vs";
 type MatchSide = "home" | "away";
 type OpponentMode = "club-players" | "another-person";
+type GptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high";
 
 export default function CreatePage() {
-  const router = useRouter();
   const [createMode, setCreateMode] = useState<CreateMode>("single");
   const [selectedTeamId, setSelectedTeamId] = useState("mansfield");
   const [customTeamName, setCustomTeamName] = useState("");
@@ -37,6 +36,7 @@ export default function CreatePage() {
   const [teamNewsError, setTeamNewsError] = useState<string | null>(null);
   const [posterStyleId, setPosterStyleId] = useState(posterStyles[0].id);
   const [selectedModel, setSelectedModel] = useState("wan2.7-image-edit");
+  const [gptImageTestMode, setGptImageTestMode] = useState<GptImageTestMode>("fast-1k-low");
   const [captures, setCaptures] = useState<LocalCapture[]>([]);
   const [opponentImageUrl, setOpponentImageUrl] = useState<string | undefined>();
   const [opponentPreviewUrl, setOpponentPreviewUrl] = useState<string | undefined>();
@@ -44,6 +44,10 @@ export default function CreatePage() {
   const [opponentUploadError, setOpponentUploadError] = useState<string | null>(null);
   const [failedKitImages, setFailedKitImages] = useState<Record<string, true>>({});
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [shirtName, setShirtName] = useState("");
+  const [teamSlogan, setTeamSlogan] = useState("");
+  const [usesMobilityAid, setUsesMobilityAid] = useState(false);
+  const [accessibilityNote, setAccessibilityNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,6 +57,11 @@ export default function CreatePage() {
     { id: "gpt-image-2", name: "GPT Image 2", description: "Advanced prompt adherence using GPT Image 2." },
     { id: "flux-pulid", name: "Flux PuLID", description: "Legacy face-reference model. Use only as a fallback." },
   ];
+  const gptImageTestModes = [
+    { id: "fast-1k-low", label: "Fast 1K", detail: "Smallest and quickest: 1K / low quality." },
+    { id: "draft-1k-medium", label: "Draft 1K", detail: "Still small, with medium quality for better proofing." },
+    { id: "final-2k-high", label: "Final 2K", detail: "Slower and larger: 2K / high quality." },
+  ] as const;
 
   const selectedTeam = getTeamProfile(selectedTeamId);
   const isCustomTeam = selectedTeamId === customTeamId;
@@ -224,6 +233,7 @@ export default function CreatePage() {
             teamId: userTeamId,
             posterStyleId,
             model: selectedModel,
+            gptImageTestMode,
             kitVariant: userKitVariant,
             matchContext,
             teamProfile: {
@@ -237,16 +247,23 @@ export default function CreatePage() {
               visualMotifs: userTeam.visualMotifs
             },
             teamName,
-            kitNotes
+            kitNotes,
+            shirtName: shirtName.trim() || undefined,
+            teamSlogan: teamSlogan.trim() || undefined,
+            accessibilityNote: usesMobilityAid ? (accessibilityNote.trim() || "") : undefined
           })
       });
 
       const data = (await response.json()) as { jobId?: string; error?: string };
       if (!response.ok || !data.jobId) {
+        if (response.status === 401) {
+          window.location.href = "/login?next=/create";
+          return;
+        }
         throw new Error(data.error ?? "Poster job failed.");
       }
 
-      router.push(`/generating/${data.jobId}`);
+      window.location.href = `/generating/${data.jobId}`;
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Poster job failed.");
       setIsSubmitting(false);
@@ -309,6 +326,31 @@ export default function CreatePage() {
               {models.find((m) => m.id === selectedModel)?.description}
             </p>
           </label>
+
+          {selectedModel === "gpt-image-2" && (
+            <fieldset className="space-y-2 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-3">
+              <legend className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Testing output</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {gptImageTestModes.map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setGptImageTestMode(mode.id)}
+                    className={`min-h-11 rounded-[12px] border px-2 text-xs font-semibold transition ${
+                      gptImageTestMode === mode.id
+                        ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
+                        : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--foreground)]"
+                    }`}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs leading-5 text-[var(--muted)]">
+                {gptImageTestModes.find((mode) => mode.id === gptImageTestMode)?.detail}
+              </p>
+            </fieldset>
+          )}
 
           <fieldset className="space-y-2">
             <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster type</legend>
@@ -611,6 +653,54 @@ export default function CreatePage() {
                 {homeKitSpec && <p>{homeKitSpec.team} home: {homeKitSpec.manufacturer} · {homeKitSpec.mainSponsor}</p>}
                 {awayKitSpec && <p>{awayKitSpec.team} away: {awayKitSpec.manufacturer} · {awayKitSpec.mainSponsor}</p>}
               </div>
+            )}
+          </div>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Shirt name</span>
+            <input
+              value={shirtName}
+              onChange={(event) => setShirtName(event.target.value)}
+              maxLength={20}
+              placeholder="Your name on the back (e.g. JONES)"
+              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
+            />
+            <p className="text-xs leading-5 text-[var(--muted)]">Optional. Appears on the back of the shirt in the poster.</p>
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Team slogan</span>
+            <input
+              value={teamSlogan}
+              onChange={(event) => setTeamSlogan(event.target.value)}
+              maxLength={40}
+              placeholder={`e.g. Toon Army, You Reds, Come On You Spurs`}
+              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
+            />
+            <p className="text-xs leading-5 text-[var(--muted)]">Optional. A chant or slogan woven subtly into the poster scene.</p>
+          </label>
+
+          <div className="space-y-3">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={usesMobilityAid}
+                onChange={(e) => setUsesMobilityAid(e.target.checked)}
+                className="mt-0.5 h-4 w-4 flex-shrink-0 rounded accent-[var(--accent)]"
+              />
+              <span className="text-sm leading-5 text-[var(--foreground)]">
+                I use a wheelchair or mobility aid
+                <span className="block text-xs text-[var(--muted)]">Represent me naturally with my mobility aid — no forced standing or running poses.</span>
+              </span>
+            </label>
+            {usesMobilityAid && (
+              <input
+                value={accessibilityNote}
+                onChange={(e) => setAccessibilityNote(e.target.value)}
+                maxLength={80}
+                placeholder="Any extra detail (optional, e.g. electric wheelchair)"
+                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
+              />
             )}
           </div>
 

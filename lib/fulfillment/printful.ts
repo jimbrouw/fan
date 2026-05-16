@@ -126,7 +126,9 @@ export function readPrintfulDraftOrderConfig() {
   const catalogVariantId = Number(process.env.PRINTFUL_POSTER_VARIANT_ID);
 
   if (!Number.isInteger(catalogVariantId) || catalogVariantId <= 0) {
-    throw new Error("PRINTFUL_POSTER_VARIANT_ID must be configured as a positive integer.");
+    throw new Error(
+      "PRINTFUL_POSTER_VARIANT_ID must be configured as a positive integer. Find the A3 poster catalog_variant_id in Printful's catalog API or dashboard, then add it to .env.local."
+    );
   }
 
   return {

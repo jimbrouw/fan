@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { getPosterStyle } from "@/lib/posterTemplates";
+import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
-import { buildPosterPrompt } from "@/lib/ai/promptBuilder";
+import { buildPosterPrompt, normalizeKitBrandPlacementMode } from "@/lib/ai/promptBuilder";
 import { getKitSpec, type KitVariant } from "@/lib/kitSpecs";
 import { buildUsableReferenceImageUrls } from "@/lib/remoteImages";
+import { upsertUserProfile } from "@/lib/users";
 import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
+import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
 
 type GenerateBody = {
   sessionId: string;
@@ -15,9 +18,14 @@ type GenerateBody = {
   teamName: string;
   kitNotes: string;
   model?: string;
+  correctionPrompt?: string;
   kitVariant?: KitVariant;
   posterStyleId?: string;
+  gptImageTestMode?: MuapiGptImageTestMode;
   matchContext?: MatchContext;
+  shirtName?: string;
+  teamSlogan?: string;
+  accessibilityNote?: string;
   teamProfile?: {
     name: string;
     primary: string;
@@ -30,8 +38,18 @@ type GenerateBody = {
   };
 };
 
+function isMissingSchemaColumn(error: { message?: string }, column: string) {
+  return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
+}
+
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Sign in with Google before generating your poster." }, { status: 401 });
+    }
+    await upsertUserProfile(user);
+
     const body = (await request.json()) as GenerateBody;
     if (!body.sessionId || !body.sourceImageUrl || !body.teamName || !body.kitNotes || !body.teamProfile) {
       return NextResponse.json(
@@ -45,6 +63,7 @@ export async function POST(request: Request) {
     const kitSpec = body.teamId ? getKitSpec(body.teamId, kitVariant) : undefined;
     const homeKitSpec = body.matchContext ? getKitSpec(body.matchContext.homeTeam.id, body.matchContext.homeTeam.kitVariant) : undefined;
     const awayKitSpec = body.matchContext ? getKitSpec(body.matchContext.awayTeam.id, body.matchContext.awayTeam.kitVariant) : undefined;
+    const brandPlacementMode = normalizeKitBrandPlacementMode(process.env.KITFACE_BRAND_PLACEMENT_MODE);
     if (body.matchContext?.opponentMode === "another-person" && !body.matchContext.opponentSourceImageUrl) {
       return NextResponse.json(
         { error: "Add the other person's photo before generating this VS poster." },
@@ -69,6 +88,11 @@ export async function POST(request: Request) {
       awayKitSpec,
       matchContext: body.matchContext,
       model: body.model,
+      correctionPrompt: body.correctionPrompt,
+      brandPlacementMode,
+      shirtName: body.shirtName,
+      teamSlogan: body.teamSlogan,
+      accessibilityNote: body.accessibilityNote,
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -80,6 +104,7 @@ export async function POST(request: Request) {
       prompt,
       referenceImageUrls,
       model: body.model,
+      gptImageTestMode: body.gptImageTestMode,
       webhookUrl,
     });
 
@@ -90,10 +115,10 @@ export async function POST(request: Request) {
     const supabase = createServerSupabaseClient();
     const now = new Date().toISOString();
     const jobId = crypto.randomUUID();
-
-    const insert = await supabase.from("generation_jobs").insert({
+    const jobInsert = {
       id: jobId,
       session_id: body.sessionId,
+      user_id: user.id,
       team_name: body.teamName,
       kit_notes: [
         body.kitNotes,
@@ -103,7 +128,9 @@ export async function POST(request: Request) {
           ? `Match: ${body.matchContext.homeTeam.name} vs ${body.matchContext.awayTeam.name}; user side: ${body.matchContext.userSide}; opponent mode: ${body.matchContext.opponentMode}`
           : undefined,
         body.matchContext?.matchdayNotes ? `Matchday notes: ${body.matchContext.matchdayNotes}` : undefined,
+        `Brand placement mode: ${brandPlacementMode}`,
         `Model: ${body.model || "wan2.7-image-edit"}`,
+        body.model === "gpt-image-2" || body.model === "gpt-image-2-fast" ? `GPT Image test mode: ${body.gptImageTestMode || "fast-1k-low"}` : undefined,
         `Poster style: ${posterStyle.name}`
       ].filter(Boolean).join("\n"),
       target_poster_url: "", // Not used in this generation mode, but required by schema
@@ -111,10 +138,30 @@ export async function POST(request: Request) {
       status: "processing",
       created_at: now,
       updated_at: now
-    });
+    };
+
+    let insert = await supabase.from("generation_jobs").insert(jobInsert);
+
+    if (insert.error && isMissingSchemaColumn(insert.error, "user_id")) {
+      const legacyJobInsert: Omit<typeof jobInsert, "user_id"> = { ...jobInsert };
+      delete (legacyJobInsert as Partial<typeof jobInsert>).user_id;
+      insert = await supabase.from("generation_jobs").insert(legacyJobInsert);
+    }
 
     if (insert.error) {
       return NextResponse.json({ error: insert.error.message }, { status: 500 });
+    }
+
+    const sessionUpdate = await supabase
+      .from("capture_sessions")
+      .update({ user_id: user.id, status: "generating" })
+      .eq("id", body.sessionId);
+
+    if (sessionUpdate.error && isMissingSchemaColumn(sessionUpdate.error, "user_id")) {
+      await supabase
+        .from("capture_sessions")
+        .update({ status: "generating" })
+        .eq("id", body.sessionId);
     }
 
     return NextResponse.json({ jobId, requestId: providerJobId, status: "processing" });

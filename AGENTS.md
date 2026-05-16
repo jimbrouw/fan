@@ -7,6 +7,10 @@
 - Current UI direction: official, electric, playful football broadcast media. Use a light `#F5F5F7` canvas, deep indigo ink, cyan CTAs, white panels, and translucent lime/cyan/blue/violet gradient beams. Avoid the old ivory/sage/burgundy/serif keepsake direction and avoid dark gamer/sports-bro styling unless explicitly requested.
 - Primary flow: `/` -> `/capture` -> `/review` -> `/create` -> `/generating/[jobId]` -> `/result/[jobId]`.
 - VS posters rely on home/away team ids, kit variants, optional second-person `opponent_front` capture, and strict prompt separation between `[img1]` and `[img2]`.
+- Kitface sponsor experiment is branch-scoped and toggleable. `KITFACE_BRAND_PLACEMENT_MODE=kitface` asks prompts to replace main chest sponsors with exact `kitface.app` text and add subtle pitch-side LED boards; unset/anything else keeps original sponsors.
+- Auth/session code uses Supabase SSR cookie-aware clients. Some runtime fallbacks support older local Supabase schemas, but the real fix is applying `supabase/schema.sql`.
+- Strong “private photos” claims are not allowed until capture storage moves to private buckets and short-lived provider URLs. Use softer wording like “Used for posters.”
+- Localhost-only test controls such as `Regenerate test` are acceptable for iteration but should not appear on deployed production hosts.
 - Generated reference extraction output belongs in `design-extract-output/` and must stay ignored.
 - Generated demo prompt output belongs in `Prompts-vs/` and `test-images/` and must stay ignored.
 - Standard verification commands: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.

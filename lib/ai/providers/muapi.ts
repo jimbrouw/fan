@@ -15,15 +15,38 @@ type MuapiSubmitBody = {
   aspect_ratio: "3:4";
   image_url?: string;
   images_list?: string[];
-  quality?: "high";
+  resolution?: MuapiImageResolution;
+  quality?: MuapiImageQuality;
 };
+
+export type MuapiImageResolution = "1K" | "2K" | "4K";
+export type MuapiImageQuality = "low" | "medium" | "high";
+export type MuapiGptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high";
+
+export function getMuapiGptImageSettings(testMode?: MuapiGptImageTestMode): {
+  resolution: MuapiImageResolution;
+  quality: MuapiImageQuality;
+} {
+  if (testMode === "draft-1k-medium") {
+    return { resolution: "1K", quality: "medium" };
+  }
+
+  if (testMode === "final-2k-high") {
+    return { resolution: "2K", quality: "high" };
+  }
+
+  return { resolution: "1K", quality: "low" };
+}
 
 export function buildMuapiSubmitRequest(input: {
   prompt: string;
   referenceImageUrls: string[];
   model?: string;
+  gptImageTestMode?: MuapiGptImageTestMode;
 }): { endpoint: string; body: MuapiSubmitBody } {
   const model = input.model || "wan2.7-image-edit";
+  const isFastGptImage = model === "gpt-image-2-fast";
+  const gptImageSettings = getMuapiGptImageSettings(isFastGptImage ? "fast-1k-low" : input.gptImageTestMode);
   const body: MuapiSubmitBody = {
     prompt: input.prompt,
     aspect_ratio: "3:4",
@@ -49,13 +72,14 @@ export function buildMuapiSubmitRequest(input: {
     };
   }
 
-  if (model === "gpt-image-2") {
+  if (model === "gpt-image-2" || isFastGptImage) {
     return {
       endpoint: "gpt-image-2-image-to-image",
       body: {
         ...body,
         images_list: input.referenceImageUrls,
-        quality: "high",
+        resolution: gptImageSettings.resolution,
+        quality: gptImageSettings.quality,
       }
     };
   }
@@ -82,6 +106,7 @@ export class MuapiGenerationProvider implements GenerationProvider {
     prompt: string;
     referenceImageUrls: string[];
     model?: string;
+    gptImageTestMode?: MuapiGptImageTestMode;
     webhookUrl?: string;
   }): Promise<{ providerJobId: string }> {
     const { endpoint, body } = buildMuapiSubmitRequest(input);
