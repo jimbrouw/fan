@@ -20,6 +20,7 @@ type JobRow = {
 
 type VideoSummaryRow = {
   id: string;
+  provider: string;
   status: "queued" | "processing" | "completed" | "failed";
   output_url: string | null;
   error: string | null;
@@ -106,7 +107,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
 async function toResponse(job: JobRow, supabase: ReturnType<typeof createServerSupabaseClient>) {
   const { data: videoJob } = await supabase
     .from("video_jobs")
-    .select("id,status,output_url,error")
+    .select("id,provider,status,output_url,error")
     .eq("generation_job_id", job.id)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -128,6 +129,7 @@ async function toResponse(job: JobRow, supabase: ReturnType<typeof createServerS
     videoJob: videoJob
       ? {
           id: videoJob.id,
+          provider: videoJob.provider,
           status: videoJob.status,
           outputUrl: videoJob.output_url,
           error: videoJob.error,

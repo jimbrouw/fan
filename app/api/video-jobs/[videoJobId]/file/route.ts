@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getMemoryVideoJob, isMissingVideoJobsTable } from "@/lib/ai/videoJobMemory";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type VideoJobFileRow = {
@@ -17,15 +18,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ vid
       .eq("id", videoJobId)
       .single<VideoJobFileRow>();
 
-    if (error || !videoJob) {
+    const resolvedVideoJob =
+      error && isMissingVideoJobsTable(error)
+        ? getMemoryVideoJob(videoJobId)
+        : videoJob;
+
+    if ((error && !isMissingVideoJobsTable(error)) || !resolvedVideoJob) {
       return NextResponse.json({ error: error?.message ?? "Video job not found." }, { status: 404 });
     }
 
-    if (videoJob.status !== "completed" || !videoJob.output_url) {
+    if (resolvedVideoJob.status !== "completed" || !resolvedVideoJob.output_url) {
       return NextResponse.json({ error: "Animated poster is not ready." }, { status: 409 });
     }
 
-    const videoResponse = await fetch(videoJob.output_url, { cache: "no-store" });
+    const videoResponse = await fetch(resolvedVideoJob.output_url, { cache: "no-store" });
     if (!videoResponse.ok || !videoResponse.body) {
       return NextResponse.json({ error: "Animated poster is unavailable." }, { status: 502 });
     }
@@ -38,7 +44,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ vid
     return new Response(videoResponse.body, {
       headers: {
         "Cache-Control": "private, no-store",
-        "Content-Disposition": `inline; filename="kitface-${videoJob.id}.mp4"`,
+        "Content-Disposition": `inline; filename="kitface-${resolvedVideoJob.id}.mp4"`,
         "Content-Type": contentType === "application/octet-stream" ? "video/mp4" : contentType,
       },
     });

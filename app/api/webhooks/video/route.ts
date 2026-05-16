@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { FalSeedanceVideoProvider } from "@/lib/ai/providers/falVideo";
+import { createVideoProvider } from "@/lib/ai/providers/videoProvider";
+import { findMemoryVideoJobByProviderJobId, isMissingVideoJobsTable, updateMemoryVideoJob } from "@/lib/ai/videoJobMemory";
 import { notifyUser } from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -12,6 +13,7 @@ type VideoJobRow = {
   id: string;
   generation_job_id: string;
   user_id: string;
+  provider: string;
   status: "queued" | "processing" | "completed" | "failed";
 };
 
@@ -23,15 +25,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing request id." }, { status: 400 });
     }
 
-    const provider = new FalSeedanceVideoProvider();
-    const statusResult = await provider.getVideoJobStatus(requestId);
     const supabase = createServerSupabaseClient();
 
-    const { data: existingJob } = await supabase
+    const { data: existingJob, error: lookupError } = await supabase
       .from("video_jobs")
-      .select("id,generation_job_id,user_id,status")
+      .select("id,generation_job_id,user_id,provider,status")
       .eq("provider_job_id", requestId)
       .single<VideoJobRow>();
+
+    if (lookupError && isMissingVideoJobsTable(lookupError)) {
+      const memoryJob = findMemoryVideoJobByProviderJobId(requestId);
+      if (!memoryJob) {
+        return NextResponse.json({ error: "Video job not found." }, { status: 404 });
+      }
+
+      const provider = createVideoProvider(memoryJob.provider);
+      const statusResult = await provider.getVideoJobStatus(requestId);
+      updateMemoryVideoJob(memoryJob.id, {
+        status: statusResult.status,
+        output_url: statusResult.outputUrl ?? memoryJob.output_url,
+        error: statusResult.error ?? memoryJob.error,
+      });
+
+      return NextResponse.json({ ok: true });
+    }
+
+    if (!existingJob) {
+      return NextResponse.json({ error: "Video job not found." }, { status: 404 });
+    }
+
+    const provider = createVideoProvider(existingJob.provider);
+    const statusResult = await provider.getVideoJobStatus(requestId);
 
     const { error } = await supabase
       .from("video_jobs")
@@ -47,7 +71,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (existingJob && statusResult.status !== existingJob.status && ["completed", "failed"].includes(statusResult.status)) {
+    if (statusResult.status !== existingJob.status && ["completed", "failed"].includes(statusResult.status)) {
       const isCompleted = statusResult.status === "completed";
       await notifyUser({
         userId: existingJob.user_id,

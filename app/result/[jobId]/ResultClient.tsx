@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Copy, Download, Film, MessageCircle, RefreshCw, RotateCcw, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
+import { getDefaultMuapiVideoModel, MUAPI_VIDEO_MODELS, type MuapiVideoModelId } from "@/lib/ai/providers/muapiVideo";
 
 type JobResponse = {
   status?: "queued" | "processing" | "completed" | "failed";
@@ -15,9 +16,17 @@ type JobResponse = {
 
 type VideoJobResponse = {
   id: string;
+  provider?: string | null;
   status: "queued" | "processing" | "completed" | "failed";
   outputUrl?: string | null;
   error?: string | null;
+};
+
+type VideoTestImage = {
+  bucket: string;
+  path: string;
+  name: string;
+  signedUrl: string;
 };
 
 export function ResultClient({ jobId }: { jobId: string }) {
@@ -28,14 +37,18 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const [pageUrl, setPageUrl] = useState("");
   const [videoJob, setVideoJob] = useState<VideoJobResponse | null>(null);
   const [isStartingVideo, setIsStartingVideo] = useState(false);
+  const [selectedVideoModel, setSelectedVideoModel] = useState<MuapiVideoModelId>(getDefaultMuapiVideoModel());
   const [videoError, setVideoError] = useState<string | null>(null);
   const [correctionPrompt, setCorrectionPrompt] = useState("");
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
-  const [fulfillmentStatus, setFulfillmentStatus] = useState<string | null>(null);
-  const [finalizeStatus, setFinalizeStatus] = useState<string | null>(null);
-  const [isSendingToPrintful, setIsSendingToPrintful] = useState(false);
   const [showTestControls, setShowTestControls] = useState(false);
+  const [videoSourceMode, setVideoSourceMode] = useState<"poster" | "supabase">("poster");
+  const [testImages, setTestImages] = useState<VideoTestImage[]>([]);
+  const [selectedTestImagePath, setSelectedTestImagePath] = useState("");
+  const [isLoadingTestImages, setIsLoadingTestImages] = useState(false);
+  const [testImagesError, setTestImagesError] = useState<string | null>(null);
+  const [showDevVideoSource, setShowDevVideoSource] = useState(false);
 
   const loadJob = useCallback(async () => {
     setIsLoading(true);
@@ -62,6 +75,43 @@ export function ResultClient({ jobId }: { jobId: string }) {
     setPageUrl(window.location.href);
     setShowTestControls(["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
   }, []);
+
+  useEffect(() => {
+    if (!showTestControls) return;
+
+    let isActive = true;
+
+    async function loadTestImages() {
+      setIsLoadingTestImages(true);
+      setTestImagesError(null);
+
+      try {
+        const response = await fetch("/api/video-test-images", { cache: "no-store" });
+        const data = (await response.json()) as { images?: VideoTestImage[]; error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Could not load Supabase test images.");
+
+        if (isActive) {
+          const images = data.images ?? [];
+          setTestImages(images);
+          setSelectedTestImagePath((current) => current || images[0]?.path || "");
+        }
+      } catch (loadError) {
+        if (isActive) {
+          setTestImagesError(loadError instanceof Error ? loadError.message : "Could not load Supabase test images.");
+        }
+      } finally {
+        if (isActive) {
+          setIsLoadingTestImages(false);
+        }
+      }
+    }
+
+    loadTestImages();
+
+    return () => {
+      isActive = false;
+    };
+  }, [showTestControls]);
 
   const activeVideoJobId = videoJob?.id;
   const activeVideoJobStatus = videoJob?.status;
@@ -103,6 +153,8 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const pageShareUrl = pageUrl;
   const shareText = "I made a Kitface matchday poster.";
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${pageShareUrl || absoluteImageShareUrl}`.trim())}`;
+  const selectedTestImage = testImages.find((image) => image.path === selectedTestImagePath);
+  const videoIsBusy = isStartingVideo || videoJob?.status === "processing" || videoJob?.status === "queued";
 
   async function copyShareLink(url: string, message = "Link copied.") {
     if (!url) return;
@@ -216,6 +268,10 @@ export function ResultClient({ jobId }: { jobId: string }) {
 
   async function startVideoJob() {
     if (job?.status !== "completed" || !job.outputUrl) return;
+    if (videoSourceMode === "supabase" && !selectedTestImagePath) {
+      setVideoError("Choose a Supabase test image before starting animation.");
+      return;
+    }
 
     setIsStartingVideo(true);
     setVideoError(null);
@@ -225,9 +281,19 @@ export function ResultClient({ jobId }: { jobId: string }) {
       const response = await fetch("/api/video-jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ generationJobId: jobId }),
+        body: JSON.stringify({
+          generationJobId: jobId,
+          videoModel: selectedVideoModel,
+          testSourceImagePath: videoSourceMode === "supabase" ? selectedTestImagePath : undefined,
+        }),
       });
-      const data = (await response.json()) as { videoJobId?: string; status?: VideoJobResponse["status"]; outputUrl?: string; error?: string };
+      const data = (await response.json()) as {
+        videoJobId?: string;
+        provider?: string;
+        status?: VideoJobResponse["status"];
+        outputUrl?: string;
+        error?: string;
+      };
 
       if (!response.ok || !data.videoJobId) {
         if (response.status === 401) {
@@ -239,6 +305,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
 
       setVideoJob({
         id: data.videoJobId,
+        provider: data.provider ?? `muapi:${selectedVideoModel}`,
         status: data.status ?? "processing",
         outputUrl: data.outputUrl,
       });
@@ -276,34 +343,6 @@ export function ResultClient({ jobId }: { jobId: string }) {
       setCorrectionStatus(correctionError instanceof Error ? correctionError.message : "Correction job failed.");
     } finally {
       setIsCorrecting(false);
-    }
-  }
-
-  async function sendToPrintful() {
-    if (job?.status !== "completed") return;
-
-    setIsSendingToPrintful(true);
-    setFulfillmentStatus(null);
-
-    try {
-      const response = await fetch("/api/fulfillment/printful", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ jobId })
-      });
-      const data = (await response.json()) as { orderId?: string; status?: string; error?: string };
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Printful draft order failed.");
-      }
-
-      setFulfillmentStatus(`Printful draft order ${data.orderId} created (${data.status ?? "draft"}).`);
-    } catch (sendError) {
-      setFulfillmentStatus(sendError instanceof Error ? sendError.message : "Printful draft order failed.");
-    } finally {
-      setIsSendingToPrintful(false);
     }
   }
 
@@ -346,7 +385,94 @@ export function ResultClient({ jobId }: { jobId: string }) {
         {job?.status === "completed" ? (
           <>
             <div className="col-span-2 space-y-3 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
-              <Button type="button" onClick={startVideoJob} disabled={isStartingVideo || videoJob?.status === "processing" || videoJob?.status === "queued"} className="w-full">
+              <label className="block space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Video test model</span>
+                <select
+                  value={selectedVideoModel}
+                  onChange={(event) => setSelectedVideoModel(event.target.value as MuapiVideoModelId)}
+                  disabled={videoIsBusy}
+                  className="h-12 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)] disabled:opacity-60"
+                >
+                  {MUAPI_VIDEO_MODELS.map((model) => (
+                    <option key={model.id} value={model.id} className="bg-[var(--surface)] text-[var(--foreground)]">
+                      {model.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs leading-5 text-[var(--muted)]">
+                  {MUAPI_VIDEO_MODELS.find((model) => model.id === selectedVideoModel)?.description}
+                </p>
+              </label>
+              {showTestControls && showDevVideoSource && (
+                <div className="space-y-3 rounded-[14px] border border-dashed border-[var(--line)] bg-[var(--surface)] p-3">
+                  <label className="flex items-center gap-3 text-sm font-semibold text-[var(--foreground)]">
+                    <input
+                      type="checkbox"
+                      checked={videoSourceMode === "supabase"}
+                      onChange={(event) => setVideoSourceMode(event.target.checked ? "supabase" : "poster")}
+                      disabled={videoIsBusy}
+                      className="h-5 w-5 accent-[var(--accent)]"
+                    />
+                    Use stored test image
+                  </label>
+                  <p className="text-xs leading-5 text-[var(--muted)]">
+                    Dev only. Off means animate current poster.
+                  </p>
+                  {videoSourceMode === "supabase" && (
+                    <div className="space-y-3">
+                      <label className="block space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                          Test image
+                        </span>
+                        <select
+                          value={selectedTestImagePath}
+                          onChange={(event) => setSelectedTestImagePath(event.target.value)}
+                          disabled={videoIsBusy || isLoadingTestImages || testImages.length === 0}
+                          className="h-12 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/70 px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)] disabled:opacity-60"
+                        >
+                          {testImages.map((image) => (
+                            <option key={image.path} value={image.path} className="bg-[var(--surface)] text-[var(--foreground)]">
+                              {image.path}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {selectedTestImage && (
+                        <Image
+                          src={selectedTestImage.signedUrl}
+                          alt={`Supabase test image ${selectedTestImage.name}`}
+                          width={900}
+                          height={1200}
+                          className="aspect-[3/4] w-full rounded-[10px] border border-[var(--line)] bg-[var(--surface-soft)] object-cover"
+                          unoptimized
+                        />
+                      )}
+                      <p className="text-xs leading-5 text-[var(--muted)]">
+                        {isLoadingTestImages
+                          ? "Loading Supabase test images..."
+                          : testImagesError
+                            ? testImagesError
+                            : `Using bucket ${selectedTestImage?.bucket ?? "f9cbab46-9d5e-41e4-9261-70e1e5477a8d"}.`}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {showTestControls && !showDevVideoSource && (
+                <button
+                  type="button"
+                  onClick={() => setShowDevVideoSource(true)}
+                  className="text-left text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)] underline-offset-4 hover:underline"
+                >
+                  Dev source options
+                </button>
+              )}
+              <Button
+                type="button"
+                onClick={startVideoJob}
+                disabled={videoIsBusy || (videoSourceMode === "supabase" && !selectedTestImagePath)}
+                className="w-full"
+              >
                 <Film size={17} />
                 {videoJob?.status === "completed"
                   ? "Video ready"
@@ -356,6 +482,11 @@ export function ResultClient({ jobId }: { jobId: string }) {
                       ? "Starting..."
                       : "Animate"}
               </Button>
+              {videoError && !videoJob && (
+                <p className="rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-3 text-xs leading-5 text-[var(--accent)]">
+                  {videoError}
+                </p>
+              )}
               {videoJob && (
                 <div className="rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-3">
                   {videoJob.status === "completed" && videoJob.outputUrl ? (
@@ -370,6 +501,11 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   ) : (
                     <p className="text-xs leading-5 text-[var(--muted)]">
                       Animation is {videoJob.status}. You can stay in Kitface while it runs.
+                    </p>
+                  )}
+                  {videoJob.provider && (
+                    <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                      Provider: {videoJob.provider}
                     </p>
                   )}
                   {(videoError || videoJob.error) && (
@@ -439,13 +575,11 @@ export function ResultClient({ jobId }: { jobId: string }) {
               </div>
               {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}
             </div>
-            <Button
-              className="w-full"
-              onClick={() => setFinalizeStatus("Approved for testing. High-res fulfilment is not wired to this button yet.")}
-            >
-              Approve & Finalize
+            <Button className="w-full" onClick={() => {
+              window.location.href = `/upgrade/${jobId}`;
+            }}>
+              Upgrade
             </Button>
-            {finalizeStatus && <p className="col-span-2 text-xs leading-5 text-[var(--muted)]">{finalizeStatus}</p>}
             {showTestControls && (
               <Link href="/create">
                 <Button variant="secondary" className="w-full">
@@ -468,15 +602,6 @@ export function ResultClient({ jobId }: { jobId: string }) {
                 {isCorrecting ? "Revising..." : "Apply correction"}
               </Button>
               {correctionStatus && <p className="text-xs leading-5 text-[var(--accent)]">{correctionStatus}</p>}
-            </div>
-            <div className="col-span-2 space-y-2 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">
-              <Button type="button" variant="secondary" className="w-full" onClick={sendToPrintful} disabled={isSendingToPrintful}>
-                {isSendingToPrintful ? "Sending..." : "Send draft to Printful"}
-              </Button>
-              <p className="text-xs leading-5 text-[var(--muted)]">
-                Creates a draft Printful order using the current poster image. It does not confirm, charge, or send the order to production.
-              </p>
-              {fulfillmentStatus && <p className="text-xs font-semibold leading-5 text-[var(--foreground)]">{fulfillmentStatus}</p>}
             </div>
           </>
         ) : (

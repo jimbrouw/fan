@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Check, RefreshCw, VideoOff } from "lucide-react";
+import { Camera, Check, FlipHorizontal2, RefreshCw, VideoOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CaptureOverlay } from "@/components/CaptureOverlay";
 import { Button } from "@/components/Button";
@@ -21,6 +21,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
   const [validation, setValidation] = useState<ClientValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownTimerRef = useRef<number | null>(null);
 
@@ -28,6 +29,10 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
     let mounted = true;
 
     async function startCamera() {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      setIsCameraReady(false);
+
       try {
         if (!window.isSecureContext && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
           setError("Camera needs HTTPS on iPhone. Open the secure ngrok link, not the local network URL.");
@@ -40,9 +45,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "user" }
-          },
+          video: { facingMode: { ideal: facingMode } },
           audio: false
         });
 
@@ -86,13 +89,18 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
       mounted = false;
       streamRef.current?.getTracks().forEach((track) => track.stop());
     };
-  }, []);
+  }, [facingMode]);
 
   useEffect(() => {
     return () => {
       if (capturedUrl) URL.revokeObjectURL(capturedUrl);
     };
   }, [capturedUrl]);
+
+  const flipCamera = useCallback(() => {
+    if (capturedBlob) return;
+    setFacingMode((current) => current === "user" ? "environment" : "user");
+  }, [capturedBlob]);
 
   const captureFrame = useCallback(async () => {
     const video = videoRef.current;
@@ -104,8 +112,10 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
+    if (facingMode === "user") {
+      context.translate(canvas.width, 0);
+      context.scale(-1, 1);
+    }
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     setIsValidating(true);
@@ -123,7 +133,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
       setValidation(result);
       setIsValidating(false);
     }, "image/jpeg", 0.92);
-  }, [capturedUrl]);
+  }, [capturedUrl, facingMode]);
 
   const clearCountdown = useCallback(() => {
     if (countdownTimerRef.current !== null) {
@@ -184,8 +194,16 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
               muted
               playsInline
               onLoadedMetadata={() => setIsCameraReady(true)}
-              className="h-full w-full scale-x-[-1] object-contain"
+              className={`h-full w-full object-contain${facingMode === "user" ? " scale-x-[-1]" : ""}`}
             />
+            <button
+              aria-label="Flip camera"
+              onClick={flipCamera}
+              disabled={Boolean(capturedBlob)}
+              className="absolute right-3 top-3 grid size-10 place-items-center rounded-full border border-white/30 bg-black/30 text-white backdrop-blur-sm transition active:scale-95 disabled:opacity-40"
+            >
+              <FlipHorizontal2 size={18} />
+            </button>
             {capturedUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={capturedUrl} alt="Captured pose" className="absolute inset-0 h-full w-full object-contain" />

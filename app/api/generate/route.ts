@@ -9,6 +9,7 @@ import { buildUsableReferenceImageUrls } from "@/lib/remoteImages";
 import { upsertUserProfile } from "@/lib/users";
 import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
+import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
 
 type GenerateBody = {
   sessionId: string;
@@ -20,7 +21,11 @@ type GenerateBody = {
   correctionPrompt?: string;
   kitVariant?: KitVariant;
   posterStyleId?: string;
+  gptImageTestMode?: MuapiGptImageTestMode;
   matchContext?: MatchContext;
+  shirtName?: string;
+  teamSlogan?: string;
+  accessibilityNote?: string;
   teamProfile?: {
     name: string;
     primary: string;
@@ -85,6 +90,9 @@ export async function POST(request: Request) {
       model: body.model,
       correctionPrompt: body.correctionPrompt,
       brandPlacementMode,
+      shirtName: body.shirtName,
+      teamSlogan: body.teamSlogan,
+      accessibilityNote: body.accessibilityNote,
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -96,6 +104,7 @@ export async function POST(request: Request) {
       prompt,
       referenceImageUrls,
       model: body.model,
+      gptImageTestMode: body.gptImageTestMode,
       webhookUrl,
     });
 
@@ -121,6 +130,7 @@ export async function POST(request: Request) {
         body.matchContext?.matchdayNotes ? `Matchday notes: ${body.matchContext.matchdayNotes}` : undefined,
         `Brand placement mode: ${brandPlacementMode}`,
         `Model: ${body.model || "wan2.7-image-edit"}`,
+        body.model === "gpt-image-2" || body.model === "gpt-image-2-fast" ? `GPT Image test mode: ${body.gptImageTestMode || "fast-1k-low"}` : undefined,
         `Poster style: ${posterStyle.name}`
       ].filter(Boolean).join("\n"),
       target_poster_url: "", // Not used in this generation mode, but required by schema

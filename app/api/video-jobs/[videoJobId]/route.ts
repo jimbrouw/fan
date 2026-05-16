@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { FalSeedanceVideoProvider } from "@/lib/ai/providers/falVideo";
+import { createVideoProvider } from "@/lib/ai/providers/videoProvider";
+import { getMemoryVideoJob, isMissingVideoJobsTable, updateMemoryVideoJob } from "@/lib/ai/videoJobMemory";
 import { notifyUser } from "@/lib/notifications";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -34,6 +35,31 @@ export async function GET(_request: Request, { params }: { params: Promise<{ vid
       .eq("id", videoJobId)
       .single<VideoJobRow>();
 
+    if (error && isMissingVideoJobsTable(error)) {
+      const memoryJob = getMemoryVideoJob(videoJobId);
+      if (!memoryJob) {
+        return NextResponse.json({ error: "Video job not found." }, { status: 404 });
+      }
+
+      if (memoryJob.user_id !== user.id) {
+        return NextResponse.json({ error: "You can only view your own animation jobs." }, { status: 403 });
+      }
+
+      if ((memoryJob.status === "completed" && memoryJob.output_url) || memoryJob.status === "failed" || !memoryJob.provider_job_id) {
+        return NextResponse.json(toResponse(memoryJob));
+      }
+
+      const provider = createVideoProvider(memoryJob.provider);
+      const providerStatus = await provider.getVideoJobStatus(memoryJob.provider_job_id);
+      const updatedJob = updateMemoryVideoJob(memoryJob.id, {
+        status: providerStatus.status,
+        output_url: providerStatus.outputUrl ?? memoryJob.output_url,
+        error: providerStatus.error ?? memoryJob.error,
+      });
+
+      return NextResponse.json(toResponse(updatedJob ?? memoryJob));
+    }
+
     if (error || !videoJob) {
       return NextResponse.json({ error: error?.message ?? "Video job not found." }, { status: 404 });
     }
@@ -46,7 +72,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ vid
       return NextResponse.json(toResponse(videoJob));
     }
 
-    const provider = new FalSeedanceVideoProvider();
+    const provider = createVideoProvider(videoJob.provider);
     const providerStatus = await provider.getVideoJobStatus(videoJob.provider_job_id);
 
     if (providerStatus.status !== videoJob.status || providerStatus.outputUrl || providerStatus.error) {

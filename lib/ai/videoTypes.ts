@@ -11,6 +11,7 @@ export type SubmitVideoJobInput = {
   prompt: string;
   sourceImageUrl: string;
   durationSeconds?: number;
+  model?: string;
   webhookUrl?: string;
 };
 

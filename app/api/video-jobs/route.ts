@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
-import { FalSeedanceVideoProvider } from "@/lib/ai/providers/falVideo";
-import { KITFACE_VIDEO_PROMPT_4_SECONDS } from "@/lib/ai/videoTypes";
+import { getDefaultMuapiVideoModel, isMuapiVideoModelId } from "@/lib/ai/providers/muapiVideo";
+import { createVideoProvider } from "@/lib/ai/providers/videoProvider";
+import { isMissingVideoJobsTable, saveMemoryVideoJob } from "@/lib/ai/videoJobMemory";
+import { KITFACE_VIDEO_PROMPT_4_SECONDS, type VideoJobStatus } from "@/lib/ai/videoTypes";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient, videoTestBucket } from "@/lib/supabase/server";
+import {
+  buildSupabaseStorageUri,
+  createSignedVideoTestImageUrl,
+  isSupportedVideoTestImagePath,
+} from "@/lib/supabase/videoTestImages";
 
 type CreateVideoBody = {
   generationJobId?: string;
+  videoModel?: string;
+  testSourceImagePath?: string;
 };
 
 type GenerationJobRow = {
@@ -14,6 +23,14 @@ type GenerationJobRow = {
   status: "queued" | "processing" | "completed" | "failed";
   output_url: string | null;
 };
+
+function isMissingSchemaColumn(error: { message?: string }, column: string) {
+  const message = error.message ?? "";
+  return (
+    new RegExp(`Could not find the '${column}' column`, "i").test(message) ||
+    new RegExp(`column .*\\.${column} does not exist`, "i").test(message)
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -28,17 +45,32 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServerSupabaseClient();
-    const { data: imageJob, error: imageJobError } = await supabase
+    let imageJobQuery = await supabase
       .from("generation_jobs")
       .select("id,user_id,status,output_url")
       .eq("id", body.generationJobId)
       .single<GenerationJobRow>();
 
+    if (imageJobQuery.error && isMissingSchemaColumn(imageJobQuery.error, "user_id")) {
+      const fallback = await supabase
+        .from("generation_jobs")
+        .select("id,status,output_url")
+        .eq("id", body.generationJobId)
+        .single<Omit<GenerationJobRow, "user_id">>();
+
+      imageJobQuery = {
+        ...fallback,
+        data: fallback.data ? { ...fallback.data, user_id: null } : null,
+      } as typeof imageJobQuery;
+    }
+
+    const { data: imageJob, error: imageJobError } = imageJobQuery;
+
     if (imageJobError || !imageJob) {
       return NextResponse.json({ error: imageJobError?.message ?? "Poster job not found." }, { status: 404 });
     }
 
-    if (imageJob.user_id !== user.id) {
+    if (imageJob.user_id && imageJob.user_id !== user.id) {
       return NextResponse.json({ error: "You can only animate your own posters." }, { status: 403 });
     }
 
@@ -46,10 +78,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The static poster must finish before animation can start." }, { status: 409 });
     }
 
+    const videoModel = isMuapiVideoModelId(body.videoModel) ? body.videoModel : getDefaultMuapiVideoModel();
+    const provider = createVideoProvider(`muapi:${videoModel}`);
+    let sourceImageUrl = imageJob.output_url;
+    let sourcePosterUrl = imageJob.output_url;
+    const testSourceImagePath = body.testSourceImagePath?.trim();
+
+    if (testSourceImagePath) {
+      if (!isSupportedVideoTestImagePath(testSourceImagePath)) {
+        return NextResponse.json({ error: "Test source image must be a JPG, PNG, or WebP file." }, { status: 400 });
+      }
+
+      sourceImageUrl = await createSignedVideoTestImageUrl(supabase, videoTestBucket, testSourceImagePath);
+      sourcePosterUrl = buildSupabaseStorageUri(videoTestBucket, testSourceImagePath);
+    }
+
     const existing = await supabase
       .from("video_jobs")
       .select("id,status,output_url,error")
       .eq("generation_job_id", imageJob.id)
+      .eq("provider", provider.id)
+      .eq("source_poster_url", sourcePosterUrl)
       .in("status", ["queued", "processing", "completed"])
       .order("created_at", { ascending: false })
       .limit(1)
@@ -58,42 +107,58 @@ export async function POST(request: Request) {
     if (existing.data) {
       return NextResponse.json({
         videoJobId: existing.data.id,
+        provider: provider.id,
         status: existing.data.status,
         outputUrl: existing.data.output_url,
         error: existing.data.error,
       });
     }
 
-    const provider = new FalSeedanceVideoProvider();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/video` : undefined;
     const { providerJobId } = await provider.submitVideoJob({
-      sourceImageUrl: imageJob.output_url,
+      sourceImageUrl,
       prompt: KITFACE_VIDEO_PROMPT_4_SECONDS,
-      durationSeconds: 4,
+      durationSeconds: 5,
+      model: videoModel,
       webhookUrl,
     });
 
     const videoJobId = crypto.randomUUID();
     const now = new Date().toISOString();
-    const insert = await supabase.from("video_jobs").insert({
+    const videoJobInsert = {
       id: videoJobId,
       generation_job_id: imageJob.id,
       user_id: user.id,
-      source_poster_url: imageJob.output_url,
+      source_poster_url: sourcePosterUrl,
       provider: provider.id,
       provider_job_id: providerJobId,
-      status: "processing",
-      duration_seconds: 4,
+      status: "processing" as VideoJobStatus,
+      output_url: null,
+      error: null,
+      duration_seconds: 5,
       created_at: now,
       updated_at: now,
-    });
+    };
+
+    let insert = await supabase.from("video_jobs").insert(videoJobInsert);
+
+    if (insert.error && isMissingSchemaColumn(insert.error, "user_id")) {
+      const legacyVideoJobInsert: Omit<typeof videoJobInsert, "user_id"> = { ...videoJobInsert };
+      delete (legacyVideoJobInsert as Partial<typeof videoJobInsert>).user_id;
+      insert = await supabase.from("video_jobs").insert(legacyVideoJobInsert);
+    }
+
+    if (insert.error && isMissingVideoJobsTable(insert.error)) {
+      saveMemoryVideoJob(videoJobInsert);
+      return NextResponse.json({ videoJobId, providerJobId, provider: provider.id, status: "processing" });
+    }
 
     if (insert.error) {
       return NextResponse.json({ error: insert.error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ videoJobId, providerJobId, status: "processing" });
+    return NextResponse.json({ videoJobId, providerJobId, provider: provider.id, status: "processing" });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Video job creation failed." },

@@ -15,11 +15,11 @@ test("wan2.7-image-edit maps to the MuAPI image-edit endpoint with image referen
   assert.equal(request.body.image_url, undefined);
 });
 
-test("gpt-image-2-fast uses the low-cost MuAPI image-to-image settings", () => {
+test("gpt-image-2 defaults to the smallest fastest MuAPI image-to-image settings", () => {
   const request = buildMuapiSubmitRequest({
     prompt: "Create a quick football poster proof",
     referenceImageUrls: ["https://example.com/person.jpg"],
-    model: "gpt-image-2-fast"
+    model: "gpt-image-2"
   });
 
   assert.equal(request.endpoint, "gpt-image-2-image-to-image");
@@ -28,11 +28,25 @@ test("gpt-image-2-fast uses the low-cost MuAPI image-to-image settings", () => {
   assert.equal(request.body.quality, "low");
 });
 
-test("gpt-image-2 keeps high-quality production settings", () => {
+test("gpt-image-2 can use medium 1K draft settings", () => {
+  const request = buildMuapiSubmitRequest({
+    prompt: "Create a better football poster proof",
+    referenceImageUrls: ["https://example.com/person.jpg"],
+    model: "gpt-image-2",
+    gptImageTestMode: "draft-1k-medium"
+  });
+
+  assert.equal(request.endpoint, "gpt-image-2-image-to-image");
+  assert.equal(request.body.resolution, "1K");
+  assert.equal(request.body.quality, "medium");
+});
+
+test("gpt-image-2 can use high-quality final settings", () => {
   const request = buildMuapiSubmitRequest({
     prompt: "Create a finished football poster",
     referenceImageUrls: ["https://example.com/person.jpg"],
-    model: "gpt-image-2"
+    model: "gpt-image-2",
+    gptImageTestMode: "final-2k-high"
   });
 
   assert.equal(request.endpoint, "gpt-image-2-image-to-image");

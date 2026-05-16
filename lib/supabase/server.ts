@@ -16,3 +16,5 @@ export function createServerSupabaseClient() {
 }
 
 export const captureBucket = process.env.SUPABASE_STORAGE_BUCKET ?? "fan-hero-captures";
+export const videoTestBucket =
+  process.env.SUPABASE_VIDEO_TEST_BUCKET ?? "f9cbab46-9d5e-41e4-9261-70e1e5477a8d";

@@ -15,6 +15,9 @@
 - Reworked SVG poster previews to use a light base, translucent diagonal ramp beams, indigo text, and club colours as content accents.
 - Added Printful draft-order fulfillment plumbing from the previous in-progress work and kept result-page sharing via `/api/jobs/[jobId]/image`.
 - Ignored generated prompt-output folders (`Prompts-vs/`, `test-images/`) so regenerated demo prompt packs do not enter source control by accident.
+- Added back-facing camera flip button (↔) on `/capture`: switches between `user` and `environment` facing modes, removes mirror flip for back camera. Pending real-device test for stream switching and image orientation.
+- Added optional shirt name and team slogan fields on `/create`, flowing through `buildPosterPrompt` as a `PERSONALISATION` section. Pending live generation test to verify model adherence.
+- Added accessibility/mobility-aid checkbox on `/create`: when checked, injects an `ACCESSIBILITY` section into the poster prompt instructing the model to represent the fan naturally with their wheelchair or mobility aid — no forced standing or running poses. Optional free-text detail field expands when checked.
 - Verified this commit with `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
 
 ## Next
@@ -26,8 +29,14 @@
 5. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` against real generations and compare with `original` sponsor mode before making a product decision. Use `gpt-image-2-fast` for cheap proofing where quality is not the target.
 6. Do a live camera walkthrough on an actual phone against a secure local or deployed URL to check camera permissions, framing, and capture ergonomics.
 7. Tighten photo privacy before using strong “private photos” claims: move captures to a private Supabase bucket, send providers short-lived signed URLs, and consider deleting captures after generation or a retention window.
-8. Decide whether the CSS hero poster preview should remain or be replaced with a generated/photographic brand asset.
-9. Add Facebook login as an optional Supabase auth provider: configure the Meta app, add the Supabase callback URL, enable Facebook in Supabase, and add a Facebook sign-in button on `/login`.
+8. Redesign the abstract homepage/flow icon artwork, especially the kit preview graphic, because the current icons feel too abstract and do not match the official electric football broadcast design brief. Replace with clearer football-media visuals that feel integrated with the Kitface UI.
+9. Redesign the `/capture` camera page for iPhone-sized screens: clean up the shutter/retake/use-photo controls, keep the camera button fixed and visible as UI state changes, prevent layout jumps when preview/status elements update, and make the full capture workflow fit without forcing the user to scroll to reach the camera icon.
+10. Make the generating-page email and push notifications actually work instead of showing unavailable/off states: wire up user preferences, browser permission flow, push subscription handling, email delivery provider, completion triggers, and failure feedback.
+11. Fix result downloads so the saved poster image includes the Kitface watermark/branding overlay, not just the raw provider output.
+12. Fix WhatsApp/result sharing so it shares a usable public image or public result URL, not a `localhost` URL that only works on the developer machine.
+13. Add an inclusive option for disabled people: support accessibility-aware capture guidance, UI controls, and prompt language so disabled fans can be represented naturally in posters without being excluded, distorted, or forced into unrealistic athletic poses.
+14. Decide whether the CSS hero poster preview should remain or be replaced with a generated/photographic brand asset.
+15. Add Facebook login as an optional Supabase auth provider: configure the Meta app, add the Supabase callback URL, enable Facebook in Supabase, and add a Facebook sign-in button on `/login`.
 
 ## Blockers
 

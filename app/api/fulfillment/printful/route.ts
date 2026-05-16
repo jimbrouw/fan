@@ -52,9 +52,15 @@ export async function POST(request: Request) {
       status: order.status ?? "draft"
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Printful fulfillment failed.";
+    const isSetupError =
+      message.includes("PRINTFUL_") ||
+      message.includes("Printful test recipient") ||
+      message.includes("must be configured");
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Printful fulfillment failed." },
-      { status: 500 }
+      { error: message, setupRequired: isSetupError },
+      { status: isSetupError ? 503 : 500 }
     );
   }
 }
