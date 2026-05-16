@@ -190,6 +190,7 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
               autoPlay
               muted
               playsInline
+              disablePictureInPicture
               onLoadedMetadata={() => setIsCameraReady(true)}
               className={`h-full w-full object-cover${facingMode === "user" ? " scale-x-[-1]" : ""}`}
             />
