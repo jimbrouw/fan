@@ -23,7 +23,7 @@ type GptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high";
 
 export default function CreatePage() {
   const [createMode, setCreateMode] = useState<CreateMode>("single");
-  const [selectedTeamId, setSelectedTeamId] = useState("mansfield");
+  const [selectedTeamId, setSelectedTeamId] = useState("");
   const [customTeamName, setCustomTeamName] = useState("");
   const [customKitNotes, setCustomKitNotes] = useState("");
   const [kitVariant, setKitVariant] = useState<KitVariant>("home");
@@ -152,10 +152,11 @@ export default function CreatePage() {
       captures.find((capture) => capture.imageUrl)?.imageUrl,
     [captures]
   );
+  const hasTeamSelected = createMode !== "single" || selectedTeamId !== "";
   const hasValidMatch = createMode === "single" || homeTeamId !== awayTeamId;
   const needsOpponentImage = createMode === "vs" && opponentMode === "another-person";
   const hasOpponentImage = !needsOpponentImage || Boolean(opponentImageUrl);
-  const canSubmit = teamName && kitNotes && posterStyleId && sourceImageUrl && sessionId && hasValidMatch && hasOpponentImage;
+  const canSubmit = hasTeamSelected && teamName && kitNotes && posterStyleId && sourceImageUrl && sessionId && hasValidMatch && hasOpponentImage;
 
   useEffect(() => {
     setSessionId(localStorage.getItem("fan-hero-session-id"));
@@ -386,15 +387,21 @@ export default function CreatePage() {
                 onChange={(event) => setSelectedTeamId(event.target.value)}
                 className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
               >
-                {Object.entries(groupedTeams).map(([group, teams]) => (
-                  <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
-                    {teams.map((team) => (
-                      <option key={team.id} value={team.id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
+                <option value="" disabled className="bg-[var(--surface)] text-[var(--muted)]">Premier League</option>
+                {Object.entries(groupedTeams)
+                  .sort(([a], [b]) => {
+                    const order = ["Premier League", "EFL League One", "International", "International Giants", "World Cup 2026", "Custom"];
+                    return order.indexOf(a) - order.indexOf(b);
+                  })
+                  .map(([group, teams]) => (
+                    <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
+                      {teams.map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
               </select>
             </label>
           )}
@@ -549,7 +556,7 @@ export default function CreatePage() {
             </div>
           )}
 
-          {createMode === "single" && !isCustomTeam && (
+          {createMode === "single" && !isCustomTeam && selectedTeamId !== "" && (
             <label className="block space-y-2">
               <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">2025/26 kit</span>
               <select
@@ -596,7 +603,7 @@ export default function CreatePage() {
             </>
           )}
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {(createMode === "vs" || selectedTeamId !== "") && <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {kitPreviewTiles.map(({ label, team, imageUrl }) => {
               const visibleImageUrl = imageUrl && !failedKitImages[imageUrl] ? imageUrl : undefined;
 
@@ -628,9 +635,9 @@ export default function CreatePage() {
                 </div>
               );
             })}
-          </div>
+          </div>}
 
-          <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">
+          {(createMode === "vs" || selectedTeamId !== "") && <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">
             <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
               <Shirt size={15} />
               Kit profile
@@ -654,7 +661,7 @@ export default function CreatePage() {
                 {awayKitSpec && <p>{awayKitSpec.team} away: {awayKitSpec.manufacturer} · {awayKitSpec.mainSponsor}</p>}
               </div>
             )}
-          </div>
+          </div>}
 
           <label className="block space-y-2">
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Shirt name</span>
