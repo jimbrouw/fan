@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     });
 
     if (upload.error) {
+      console.error("Capture storage upload failed:", upload.error.message, { sessionId, type, path });
       return NextResponse.json({ error: upload.error.message }, { status: 500 });
     }
 
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
     );
 
     if (insert.error) {
+      console.error("Capture DB insert failed:", insert.error.message, { sessionId, type });
       return NextResponse.json({ error: insert.error.message }, { status: 500 });
     }
 
@@ -58,6 +60,7 @@ export async function POST(request: Request) {
       createdAt: now
     });
   } catch (error) {
+    console.error("Capture route unhandled error:", error instanceof Error ? error.message : error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Capture upload failed." },
       { status: 500 }
