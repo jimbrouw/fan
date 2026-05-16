@@ -131,7 +131,9 @@ export function CaptureClient() {
 
   return (
     // Fixed full-viewport layout — no scroll, camera fills available height
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[var(--surface)]">
+    // Outer shell centres the panel on wide screens (desktop/tablet)
+    <div className="fixed inset-0 flex justify-center bg-[var(--background)]">
+    <div className="flex w-full max-w-[430px] flex-col overflow-hidden bg-[var(--surface)]">
 
       {/* Header — always visible, never shifts */}
       <header className="shrink-0 flex items-center justify-between px-5 pt-5 pb-3">
@@ -182,6 +184,7 @@ export function CaptureClient() {
           <CameraCapture key={activeStep.type} step={activeStep} onUsePhoto={handleUsePhoto} isSaving={isSaving} />
         </div>
       )}
+    </div>
     </div>
   );
 }
