@@ -153,6 +153,8 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const absoluteVideoShareUrl = videoShareUrl && pageUrl ? new URL(videoShareUrl, pageUrl).href : videoShareUrl;
   const pageShareUrl = pageUrl;
   const shareText = "I made a Kitface matchday poster.";
+  const productionBase = process.env.NEXT_PUBLIC_APP_URL ?? pageUrl;
+  const whatsappImageUrl = imageShareUrl && productionBase ? new URL(imageShareUrl, productionBase).href : absoluteImageShareUrl;
   const selectedTestImage = testImages.find((image) => image.path === selectedTestImagePath);
   const videoIsBusy = isStartingVideo || videoJob?.status === "processing" || videoJob?.status === "queued";
 
@@ -566,7 +568,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   Copy page link
                 </Button>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(absoluteImageShareUrl || pageShareUrl)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(whatsappImageUrl)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
