@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Check, FlipHorizontal2, RefreshCw, VideoOff } from "lucide-react";
+import { Camera, Check, RefreshCw, RotateCcw, VideoOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CaptureOverlay } from "@/components/CaptureOverlay";
 import { Button } from "@/components/Button";
@@ -202,7 +202,7 @@ export function CameraCapture({ step, onUsePhoto }: CameraCaptureProps) {
               disabled={Boolean(capturedBlob)}
               className="absolute right-3 top-3 grid size-10 place-items-center rounded-full border border-white/30 bg-black/30 text-white backdrop-blur-sm transition active:scale-95 disabled:opacity-40"
             >
-              <FlipHorizontal2 size={18} />
+              <RotateCcw size={18} />
             </button>
             {capturedUrl && (
               // eslint-disable-next-line @next/next/no-img-element
