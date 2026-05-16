@@ -3,73 +3,43 @@ import type { CaptureStep } from "@/types/capture";
 export const captureSteps: CaptureStep[] = [
   {
     type: "neutral_front",
-    title: "Front photo",
+    title: "Look straight at the camera",
     shortLabel: "Front",
-    instruction: "Look straight ahead with a relaxed expression.",
+    instruction: "Hold still and look right into the camera.",
     purpose: "Baseline facial structure",
     overlay: "portrait"
   },
   {
     type: "smiling_front",
-    title: "Natural smile",
+    title: "Now give a big smile!",
     shortLabel: "Smile",
-    instruction: "Keep your head level and smile naturally.",
+    instruction: "Same spot — this time show us your best smile.",
     purpose: "Smile lines and mouth structure",
     overlay: "portrait"
   },
   {
     type: "left_45",
-    title: "Left side",
+    title: "Turn a little to the left",
     shortLabel: "Left",
-    instruction: "Turn slightly left and keep your eyes on the guide.",
+    instruction: "Just a small turn — like you're looking at something nearby.",
     purpose: "Facial depth and jawline",
     overlay: "angle-left"
   },
   {
     type: "right_45",
-    title: "Right side",
+    title: "Now turn a little to the right",
     shortLabel: "Right",
-    instruction: "Turn slightly right and keep your eyes on the guide.",
+    instruction: "Same thing, other side.",
     purpose: "Facial depth and ear structure",
     overlay: "angle-right"
   },
   {
-    type: "side_profile",
-    title: "Side profile",
-    shortLabel: "Profile",
-    instruction: "Face the side and keep your full profile inside the frame.",
-    purpose: "Nose silhouette and head shape",
-    overlay: "profile",
-    autoCapture: true,
-    countdownSeconds: 5
-  },
-  {
     type: "full_body",
-    title: "Full body",
-    shortLabel: "Body",
-    instruction: "Step back until your full body fits inside the guide.",
+    title: "Step back so we can see all of you",
+    shortLabel: "Full body",
+    instruction: "Back up until your whole body fits in the guide. Hit the button and strike a pose!",
     purpose: "Body proportions and posture",
     overlay: "body",
-    autoCapture: true,
-    countdownSeconds: 5
-  },
-  {
-    type: "arms_folded",
-    title: "Arms folded",
-    shortLabel: "Folded",
-    instruction: "Fold your arms and stand confidently.",
-    purpose: "Footballer body language",
-    overlay: "body",
-    autoCapture: true,
-    countdownSeconds: 5
-  },
-  {
-    type: "celebration",
-    title: "Celebration",
-    shortLabel: "Celebrate",
-    instruction: "Give a clean celebration pose with your face visible.",
-    purpose: "Dynamic sports expression",
-    overlay: "action",
     autoCapture: true,
     countdownSeconds: 5
   }
