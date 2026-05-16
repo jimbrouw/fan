@@ -4,8 +4,7 @@ export type CaptureStepType =
   | "left_45"
   | "right_45"
   | "side_profile"
-  | "full_body"
-  | "arms_folded"
+  | "torso"
   | "celebration"
   | "opponent_front";
 
@@ -21,7 +20,7 @@ export type CaptureStep = {
   shortLabel: string;
   instruction: string;
   purpose: string;
-  overlay: "portrait" | "angle-left" | "angle-right" | "profile" | "body" | "action";
+  overlay: "portrait" | "angle-left" | "angle-right" | "profile" | "body" | "torso" | "action";
   autoCapture?: boolean;
   countdownSeconds?: number;
 };

@@ -34,12 +34,20 @@ export const captureSteps: CaptureStep[] = [
     overlay: "angle-right"
   },
   {
-    type: "full_body",
-    title: "Step back so we can see all of you",
-    shortLabel: "Full body",
-    instruction: "Back up until your whole body fits in the guide. Hit the button and strike a pose!",
-    purpose: "Body proportions and posture",
-    overlay: "body",
+    type: "celebration",
+    title: "Now celebrate!",
+    shortLabel: "Celebrate",
+    instruction: "Big open-mouth shout, arms up, fist pump — your best winning reaction.",
+    purpose: "Celebration expression reference",
+    overlay: "portrait"
+  },
+  {
+    type: "torso",
+    title: "Show us your upper body",
+    shortLabel: "Torso",
+    instruction: "Step back until your torso fits in the guide. Hit the button and strike a pose!",
+    purpose: "Body build and posture reference",
+    overlay: "torso",
     autoCapture: true,
     countdownSeconds: 5
   }
