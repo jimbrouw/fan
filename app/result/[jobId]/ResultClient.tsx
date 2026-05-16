@@ -565,10 +565,15 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   <Copy size={17} />
                   Copy page link
                 </Button>
-                <Button type="button" variant="secondary" className="col-span-2" onClick={shareNative}>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(absoluteImageShareUrl || pageShareUrl)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
+                >
                   <MessageCircle size={17} />
                   WhatsApp
-                </Button>
+                </a>
               </div>
               {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}
             </div>
