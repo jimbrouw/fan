@@ -17,28 +17,39 @@ export default function LoginPage() {
     const nextParam = new URLSearchParams(window.location.search).get("next") ?? "/create";
     setNext(nextParam);
 
+    const timeout = setTimeout(() => {
+      if (isActive) setIsCheckingSession(false);
+    }, 3000);
+
     async function checkSession() {
       const supabase = createBrowserSupabaseClient();
       if (!supabase) {
-        setIsCheckingSession(false);
+        clearTimeout(timeout);
+        if (isActive) setIsCheckingSession(false);
         return;
       }
 
-      const { data } = await supabase.auth.getUser();
-      if (!isActive) return;
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!isActive) return;
+        clearTimeout(timeout);
 
-      if (data.user) {
-        window.location.assign(nextParam);
-        return;
+        if (data.user) {
+          window.location.assign(nextParam);
+          return;
+        }
+      } catch {
+        clearTimeout(timeout);
       }
 
-      setIsCheckingSession(false);
+      if (isActive) setIsCheckingSession(false);
     }
 
     checkSession();
 
     return () => {
       isActive = false;
+      clearTimeout(timeout);
     };
   }, []);
 
