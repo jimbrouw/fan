@@ -612,13 +612,13 @@ export default function CreatePage() {
                   key={`${label}-${team}`}
                   className="min-w-0 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-3"
                 >
-                  <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-[var(--line)] bg-[var(--surface-soft)]" aria-hidden="true">
+                  <div className="flex aspect-[2/3] w-full items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-[var(--line)] bg-[var(--surface-soft)]" aria-hidden="true">
                     {visibleImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={visibleImageUrl}
                         alt=""
-                        className="h-full w-full object-contain object-center"
+                        className="h-full w-full object-cover object-top"
                         onError={() => setFailedKitImages((current) => ({ ...current, [visibleImageUrl]: true }))}
                       />
                     ) : (
