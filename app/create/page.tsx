@@ -52,6 +52,7 @@ export default function CreatePage() {
   const [accessibilityNote, setAccessibilityNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRetryingUploads, setIsRetryingUploads] = useState(false);
 
   const models = [
     { id: "wan2.7-image-edit", name: "WAN 2.7 Edit", description: "Newer image-edit model with multi-image references. Good test default." },
@@ -158,15 +159,54 @@ export default function CreatePage() {
   const hasValidMatch = createMode === "single" || homeTeamId !== awayTeamId;
   const needsOpponentImage = createMode === "vs" && opponentMode === "another-person";
   const hasOpponentImage = !needsOpponentImage || Boolean(opponentImageUrl);
-  const canSubmit = hasTeamSelected && teamName && kitNotes && posterStyleId && sourceImageUrl && sessionId && hasValidMatch && hasOpponentImage;
+  const hasAnyCapture = captures.some((c) => c.objectUrl || c.imageUrl);
+  const canSubmit = !isRetryingUploads && hasTeamSelected && teamName && kitNotes && posterStyleId && sourceImageUrl && sessionId && hasValidMatch && hasOpponentImage;
 
   useEffect(() => {
-    setSessionId(localStorage.getItem("fan-hero-session-id"));
+    const sid = localStorage.getItem("fan-hero-session-id");
+    setSessionId(sid);
     const storedCaptures = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
     const storedOpponent = storedCaptures.find((capture) => capture.type === "opponent_front");
     setCaptures(storedCaptures);
     setOpponentImageUrl(storedOpponent?.imageUrl);
     setOpponentPreviewUrl(storedOpponent?.imageUrl ?? storedOpponent?.objectUrl);
+
+    if (!sid) return;
+    const needsUpload = storedCaptures.filter(
+      (c) => c.objectUrl && !c.imageUrl && c.type !== "opponent_front"
+    );
+    if (needsUpload.length === 0) return;
+
+    setIsRetryingUploads(true);
+    Promise.all(
+      needsUpload.map(async (capture) => {
+        try {
+          const blobRes = await fetch(capture.objectUrl!);
+          const blob = await blobRes.blob();
+          const form = new FormData();
+          form.append("file", blob, `${capture.type}.jpg`);
+          form.append("sessionId", sid);
+          form.append("type", capture.type);
+          form.append("validationStatus", "manual_review");
+          form.append("validationResults", "{}");
+          const res = await fetch("/api/captures", { method: "POST", body: form });
+          if (res.ok) {
+            const data = (await res.json()) as { imageUrl?: string };
+            if (data.imageUrl) return { ...capture, imageUrl: data.imageUrl };
+          }
+        } catch {
+          // blob may have expired; user will need to retake
+        }
+        return capture;
+      })
+    ).then((retried) => {
+      setCaptures((prev) => {
+        const next = prev.map((c) => retried.find((r) => r.type === c.type) ?? c);
+        localStorage.setItem("fan-hero-captures", JSON.stringify(next));
+        return next;
+      });
+      setIsRetryingUploads(false);
+    });
   }, []);
 
   async function handleOpponentPhotoChange(fileList: FileList | null) {
@@ -779,9 +819,13 @@ export default function CreatePage() {
           <div className="flex gap-3">
             <BadgeCheck size={18} className={sourceImageUrl ? "mt-1 text-[var(--accent)]" : "mt-1 text-[var(--muted)]"} />
             <span>
-              {sourceImageUrl
-                ? "Your photo set is ready for the poster."
-                : "Take at least one photo before creating a poster."}
+              {isRetryingUploads
+                ? "Uploading your photos…"
+                : sourceImageUrl
+                  ? "Your photo set is ready for the poster."
+                  : hasAnyCapture
+                    ? <>Photo upload didn&apos;t complete. <a href="/capture" className="underline">Retake your photos</a> to continue.</>
+                    : <>No photos yet. <a href="/capture" className="underline">Take photos first</a> to create a poster.</>}
             </span>
           </div>
         </div>
@@ -794,7 +838,7 @@ export default function CreatePage() {
 
         <Button type="button" disabled={!canSubmit || isSubmitting} onClick={submitJob} className="mt-auto w-full">
           <WandSparkles size={17} />
-          {isSubmitting ? "Creating..." : "Create poster"}
+          {isSubmitting ? "Creating..." : isRetryingUploads ? "Uploading photos…" : "Create poster"}
         </Button>
       </section>
     </AppFrame>

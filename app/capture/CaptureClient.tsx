@@ -23,6 +23,7 @@ export function CaptureClient() {
   const [captures, setCaptures] = useState<LocalCapture[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const activeStep = captureSteps[activeIndex];
 
@@ -82,6 +83,7 @@ export function CaptureClient() {
 
   async function handleUsePhoto(blob: Blob, validation: ClientValidationResult) {
     setIsSaving(true);
+    setUploadError(null);
     const objectUrl = URL.createObjectURL(blob);
     let imageUrl: string | undefined;
 
@@ -101,9 +103,12 @@ export function CaptureClient() {
         if (response.ok) {
           const data = (await response.json()) as { imageUrl?: string };
           imageUrl = data.imageUrl;
+        } else {
+          const data = (await response.json().catch(() => ({}))) as { error?: string };
+          setUploadError(data.error ?? "Photo upload failed. You can retake or continue and retry on the next screen.");
         }
       } catch {
-        imageUrl = undefined;
+        setUploadError("Photo upload failed. You can retake or continue and retry on the next screen.");
       }
     }
 
@@ -179,6 +184,12 @@ export function CaptureClient() {
               {activeStep.instruction}
             </p>
           </div>
+
+          {uploadError && (
+            <p className="shrink-0 mb-2 rounded-[12px] border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-2 text-xs leading-5 text-[var(--foreground)]">
+              {uploadError}
+            </p>
+          )}
 
           {/* Camera + controls — fills remaining height */}
           <CameraCapture key={activeStep.type} step={activeStep} onUsePhoto={handleUsePhoto} isSaving={isSaving} />
