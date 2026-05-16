@@ -28,10 +28,10 @@ export default function Home() {
           <div className="relative mx-auto w-[88%] rotate-[-3deg]">
             <div className="overflow-hidden rounded-[16px] shadow-[0_32px_64px_rgba(42,0,79,0.22)]">
               <Image
-                src="/example-poster.png"
+                src="/example-poster.jpg"
                 alt="Example Kitface poster"
                 width={800}
-                height={800}
+                height={1067}
                 className="w-full object-cover"
                 priority
               />
