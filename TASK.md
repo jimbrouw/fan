@@ -1,62 +1,53 @@
-# Task Handover
+# MD Task Handover
+
+## Product Fork
+
+- Branch: `product/md-gift`
+- Worktree: `/Users/standard/Developer/fan-md-gift`
+- Parent app: Kitface self-capture / matchday poster app remains intact in the original checkout.
+- New direction: MD is a gift-first football card/poster product for parents and family buyers using photos already on their phone.
 
 ## Finished
 
-- Shifted Kitface from the previous warm editorial keepsake direction to the new `BRANDING.md` system: official football media, light broadcast canvas, deep indigo ink, cyan CTA accents, and translucent lime/cyan/blue/violet gradient beams.
-- Restyled shared chrome and the main app flow across `/`, `/capture`, `/review`, `/create`, `/generating/[jobId]`, and `/result/[jobId]` so the UI no longer depends on old `--mist`, `--accent-green`, paper, sage, burgundy, or serif-era tokens.
-- Updated homepage copy and poster preview language to “official football media” and removed leftover “made to keep” / “matchday memories” wording from the live hero.
-- Updated generated-poster prompt direction toward clean light football broadcast composition while preserving identity, kit accuracy, VS side separation, and `[img1]` / `[img2]` prompt separation.
-- Added toggleable Kitface brand placement mode via `KITFACE_BRAND_PLACEMENT_MODE=kitface`: replaces main shirt sponsors with `kitface.app` and adds subtle pitch-side LED boards, while `original` mode keeps real kit sponsors.
-- Added Google auth flow, auth callback hardening, user/profile preference setup, notification routes, in-app notification bell, email notification records, and future push-notification preference plumbing.
-- Added poster correction, video animation jobs, video webhook/status/file routes, and result-page image/video sharing actions.
-- Improved the generating screen with clearer loading copy, notification preference controls, and localhost-only `Regenerate test` controls for iteration.
-- Added `gpt-image-2-fast` MuAPI mapping for low-cost 1K/low-quality test generations while keeping `gpt-image-2` at 2K/high-quality settings.
-- Added compatibility fallbacks for local Supabase schemas that are missing newer `user_id` columns or notification/profile tables, so testing can continue before migrations are applied.
-- Reworked SVG poster previews to use a light base, translucent diagonal ramp beams, indigo text, and club colours as content accents.
-- Added Printful draft-order fulfillment plumbing from the previous in-progress work and kept result-page sharing via `/api/jobs/[jobId]/image`.
-- Ignored generated prompt-output folders (`Prompts-vs/`, `test-images/`) so regenerated demo prompt packs do not enter source control by accident.
-- Added back-facing camera flip button (↔) on `/capture`: switches between `user` and `environment` facing modes, removes mirror flip for back camera. Pending real-device test for stream switching and image orientation.
-- Added optional shirt name and team slogan fields on `/create`, flowing through `buildPosterPrompt` as a `PERSONALISATION` section. Pending live generation test to verify model adherence.
-- Added accessibility/mobility-aid checkbox on `/create`: when checked, injects an `ACCESSIBILITY` section into the poster prompt instructing the model to represent the fan naturally with their wheelchair or mobility aid — no forced standing or running poses. Optional free-text detail field expands when checked.
-- Verified this commit with `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
+- Created a separate git worktree and branch for the MD product fork so gift-market changes do not disrupt the existing Kitface branch.
+- Reframed the product around surprise gifting: parent uploads existing photos, chooses team/country style, adds name/age/message, then buys a print-on-demand card or poster.
+- Kept the existing self-capture, VS, auth, result, correction, sharing, video, and Printful-era code available as inherited app features rather than deleting them.
+- Preserved the current photoreal football poster prompt path for existing Kitface flows.
+- Added a new MD prompt direction for less fragile likeness: premium illustrated football gift poster/card, stylised editorial realism, print texture, strong resemblance without pretending to be a perfect photograph.
+- Recorded model exploration direction: keep GPT Image 2 as baseline, test Nano Banana 2 as a lower-cost candidate, and compare output quality before making it the default.
+- Updated handover context and project instructions for the MD fork.
 
 ## Next
 
-### UI fixes (high priority — broken or confusing)
-1. **Fix kit preview on homepage** — kit preview graphic is broken; replace abstract icon with a working visual that matches the electric football broadcast look.
-2. **Fix camera layout on iPhone** — `/capture` is too tall for phone screens and layout jumps as state changes. Pin shutter button to bottom, lock viewport height, prevent scroll, keep controls stable throughout capture → retake → use-photo flow.
-3. **Simplify onboarding** — flow must be understandable to a first-timer with no context. Audit every screen for jargon, reduce steps, add plain-language labels and hints. Target: a 6-year-old could follow it.
+### MD Product Definition
+1. **MD-01 Define the one-product promise** - lock the homepage promise to one clear offer: "Make them the star of their own football birthday card/poster." Avoid template sprawl.
+2. **MD-02 Decide the first paid SKU** - choose the first print-on-demand product: birthday card, A4/A3 poster, or card-plus-poster bundle. Do not build multiple commerce paths at once.
+3. **MD-03 Define the safe football IP posture** - decide how club/country styles are described without unlicensed crests, official marks, or replica sponsor claims.
 
-### Notifications
-4. **Pick email provider and wire up** — no provider chosen yet. Options: Resend (simple, good Next.js DX), SendGrid, Postmark. Pick one, add API key to env, send a real completion email when generation finishes. Hook into existing notification record insert.
-5. **Pick push provider and wire up** — no push service chosen. Options: web-native Push API + VAPID keys (free, no third party), or OneSignal/Notix (managed). VAPID approach: generate keys, store subscription in `user_notification_preferences`, send push from server on job completion.
+### MD Upload-First Flow
+4. **MD-04 Build gift intake flow** - create an upload-first route for occasion, recipient name, age, team/country style, short message, and 3-5 existing photos.
+5. **MD-05 Add photo guidance** - grade uploaded photos for size, blur, likely face presence, and main-photo suitability with parent-friendly copy.
+6. **MD-06 Keep live capture as secondary** - move guided camera capture behind "making one for yourself" so surprise gifts do not require the recipient to participate.
 
-### Analytics
-6. **Add generation analytics** — log each poster generation to an analytics table or service: user id, team, model, kit variant, timestamp, success/fail. Goal: know which teams and modes get used. Options: Supabase table (already available) or Vercel Analytics + custom events. Use Supabase table first — no extra service needed.
-7. **User history page** — Google login exists; add a `/history` page showing the logged-in user's past generations with thumbnail, team, and date. Data already in `generation_jobs` table filtered by `user_id`.
+### MD Image Generation
+7. **MD-07 Wire MD prompt variant** - add a generation mode that uses the MD stylised gift prompt while preserving the existing Kitface prompt for self/VS flows.
+8. **MD-08 Run model bake-off** - generate the same 10 photo sets through GPT Image 2 fast, GPT Image 2 final, and Nano Banana 2; score likeness, text, kit style, cost, and parent acceptability.
+9. **MD-09 Pick default model strategy** - choose default/draft/final model routing after bake-off. Candidate: Nano Banana 2 for drafts, GPT Image 2 for paid final if quality is better.
 
-### Rate limiting
-8. **Rate limit `/api/generate` per user** — tie to Google login (user id). Limit: e.g. 5 generations per hour per user while testing. Use Supabase to count recent jobs for the user before accepting new submission. Return 429 with clear message if exceeded.
+### MD Print-On-Demand
+10. **MD-10 Select print API provider** - compare Printful, Gelato, Prodigi, and Printify for greeting cards/posters, UK delivery, API ergonomics, costs, and branding.
+11. **MD-11 Card/poster composition pipeline** - place generated art into print-safe card/poster templates with bleed, safe area, text area, and export dimensions.
+12. **MD-12 Checkout and order handoff** - collect payment, create the print provider order, and show order status without handling printing manually.
 
-### Monetization groundwork
-9. **Design credit/paywall model** — still in testing phase, but define: free tier limit (e.g. 3 free posters), paid tier unlock mechanism, where credit balance lives (Supabase `users` table), and which flow enforces it. No Stripe integration yet — just document the model and add the balance field to schema so it's ready.
-
-### Existing backlog
-10. Test end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
-11. Apply latest `supabase/schema.sql` to live project so notifications, video_jobs, and generation_jobs.user_id exist without fallbacks.
-12. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
-13. Smoke test VS mode with uploaded opponent photo.
-14. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
-15. Live camera walkthrough on real phone on secure URL.
-16. Tighten photo privacy: private Supabase bucket, signed URLs to providers, retention window.
-17. Fix result downloads to include Kitface watermark overlay.
-18. Fix WhatsApp sharing to use public URL, not localhost.
-19. Decide: keep CSS hero poster preview or replace with real generated image.
+### MD Retained Features
+13. **MD-13 Preserve VS/matchday mode** - keep VS banter as a shareable secondary mode, not the main paid funnel.
+14. **MD-14 Preserve self-poster mode** - keep guided camera capture for users knowingly making posters for themselves.
+15. **MD-15 Preserve result sharing** - keep watermark preview, download/share links, correction flow, and video experimentation where useful.
 
 ## Blockers
 
-- Live generation verification depends on valid `.env.local` credentials and provider access.
-- The local/live Supabase schema may be behind `supabase/schema.sql`; compatibility fallbacks are in code, but notifications, user history, and video ownership require the migration.
-- Live team-news verification depends on `FOOTBALL_DATA_API_KEY`; without it, the API intentionally falls back to team-only notes.
-- Real camera verification needs a secure device/browser path when testing outside localhost.
-- Printful verification requires valid Printful credentials and a confirmed catalog variant mapping.
+- MD model choice needs real generation tests with parent-style camera-roll photos, not just synthetic prompt review.
+- Print-on-demand pricing and margin cannot be finalized until the first SKU and provider are selected.
+- Official club/team marks require licensing or a careful inspired-by design system.
+- Strong privacy claims still require private buckets, signed provider URLs, and a retention policy.
+- Nano Banana 2 availability/pricing should be verified against the chosen provider at implementation time because image API pricing changes quickly.

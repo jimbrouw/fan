@@ -2,12 +2,15 @@
 
 ## Project Snapshot
 
-- Product: Kitface, a mobile-first football poster app that turns personal photos into official-style football media.
+- Product: MD gift-market fork of Kitface, a mobile-first football card/poster app that turns existing camera-roll photos into football-themed printed gifts.
 - Stack: Next.js 16, React 19, Tailwind CSS v4, lucide-react, Supabase, MUAPI/FAL image providers.
-- Current UI direction: official, electric, playful football broadcast media. Use a light `#F5F5F7` canvas, deep indigo ink, cyan CTAs, white panels, and translucent lime/cyan/blue/violet gradient beams. Avoid the old ivory/sage/burgundy/serif keepsake direction and avoid dark gamer/sports-bro styling unless explicitly requested.
-- Primary flow: `/` -> `/capture` -> `/review` -> `/create` -> `/generating/[jobId]` -> `/result/[jobId]`.
-- VS posters rely on home/away team ids, kit variants, optional second-person `opponent_front` capture, and strict prompt separation between `[img1]` and `[img2]`.
-- Kitface sponsor experiment is branch-scoped and toggleable. `KITFACE_BRAND_PLACEMENT_MODE=kitface` asks prompts to replace main chest sponsors with exact `kitface.app` text and add subtle pitch-side LED boards; unset/anything else keeps original sponsors.
+- Current UI direction: parent-friendly, gift-first, football editorial. Keep the light `#F5F5F7` canvas, deep indigo ink, cyan CTAs, white panels, and translucent lime/cyan/blue/violet football energy, but make the first screen explain the gift outcome rather than the generation technology.
+- Primary MD flow target: `/` -> gift intake/upload -> generating -> result/proof -> checkout/print-on-demand order.
+- Existing Kitface flow remains available as secondary/self-use: `/capture` -> `/review` -> `/create` -> `/generating/[jobId]` -> `/result/[jobId]`.
+- VS posters remain a secondary shareable mode, not the primary paid funnel. They still rely on home/away team ids, kit variants, optional second-person `opponent_front` capture, and strict prompt separation between `[img1]` and `[img2]`.
+- MD prompt work is additive. Preserve the existing photoreal football poster prompt for current Kitface/self/VS flows, and add a distinct stylised gift-card/poster prompt for less fragile likeness.
+- Monetization target: print-on-demand cards/posters through an API provider. MD should place generated artwork onto print-safe card/poster templates and hand off orders rather than handling printing.
+- Model strategy: keep GPT Image 2 as baseline, test Nano Banana 2 as lower-cost draft/final candidate, and choose after a scored bake-off on real parent camera-roll photos.
 - Auth/session code uses Supabase SSR cookie-aware clients. Some runtime fallbacks support older local Supabase schemas, but the real fix is applying `supabase/schema.sql`.
 - Strong “private photos” claims are not allowed until capture storage moves to private buckets and short-lived provider URLs. Use softer wording like “Used for posters.”
 - Localhost-only test controls such as `Regenerate test` are acceptable for iteration but should not appear on deployed production hosts.
@@ -79,6 +82,6 @@ When the user says `resume`:
 ## Handover Files
 
 - `AGENTS.md` - Codex project instructions, workflow rules, stack notes, constraints, and key decisions.
-- `TASK.md` - Finished work, ordered next steps, and blockers.
+- `TASK.md` - MD-prefixed finished work, ordered next steps, and blockers.
 - `CONTEXT.md` - Current session summary: what changed, why, and open questions.
 - `BANANAS.md` - The full banana hunt and session handover protocol.
