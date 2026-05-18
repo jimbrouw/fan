@@ -16,7 +16,7 @@ export default function Home() {
             <p className="mt-5 max-w-[28ch] text-[15px] leading-6 text-[var(--muted)]">
               Turn your photos into official-style football posters.
             </p>
-            <Link href={{ pathname: "/login", query: { next: "/capture" } }} className="mt-6 inline-block">
+            <Link href={{ pathname: "/login", query: { next: "/capture?restart=1" } }} className="mt-6 inline-block">
               <Button className="min-w-40">
                 Start now
                 <ArrowRight size={17} />
