@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Check, RefreshCw, RotateCcw, VideoOff } from "lucide-react";
+import { Camera, Check, RefreshCw, RotateCcw, Upload, VideoOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CaptureOverlay } from "@/components/CaptureOverlay";
 import { Button } from "@/components/Button";
@@ -25,6 +25,7 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownTimerRef = useRef<number | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -174,6 +175,23 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
     setValidation(null);
   }
 
+  async function handleUploadPhoto(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    clearCountdown();
+    setIsValidating(true);
+
+    const result = await validateImageBlob(file);
+    const nextUrl = URL.createObjectURL(file);
+    if (capturedUrl) URL.revokeObjectURL(capturedUrl);
+    setCapturedBlob(file);
+    setCapturedUrl(nextUrl);
+    setValidation(result);
+    setIsValidating(false);
+  }
+
   return (
     <section className="flex flex-1 flex-col min-h-0">
       {/* Camera view — fills all remaining space */}
@@ -233,26 +251,45 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
       </div>
 
       {/* Controls — always pinned, never shift */}
-      <div className="shrink-0 grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-4">
-        <Button variant="secondary" onClick={retake} disabled={!capturedBlob}>
-          <RefreshCw size={17} />
-          Retake
-        </Button>
-        <button
-          aria-label={step.autoCapture ? "Start countdown" : "Take photo"}
-          onClick={step.autoCapture ? startCountdown : captureFrame}
-          disabled={Boolean(error) || isValidating || countdown !== null}
-          className="grid size-[72px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(42,0,79,0.12)] transition active:scale-95 disabled:opacity-50"
-        >
-          <Camera size={26} />
-        </button>
+      <div className="shrink-0 py-4">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <Button variant="secondary" onClick={retake} disabled={!capturedBlob}>
+            <RefreshCw size={17} />
+            Retake
+          </Button>
+          <button
+            aria-label={step.autoCapture ? "Start countdown" : "Take photo"}
+            onClick={step.autoCapture ? startCountdown : captureFrame}
+            disabled={Boolean(error) || isValidating || countdown !== null}
+            className="grid size-[72px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(42,0,79,0.12)] transition active:scale-95 disabled:opacity-50"
+          >
+            <Camera size={26} />
+          </button>
+          <Button
+            variant="primary"
+            disabled={!capturedBlob || !validation}
+            onClick={() => capturedBlob && validation && onUsePhoto(capturedBlob, validation)}
+          >
+            <Check size={17} />
+            Use photo
+          </Button>
+        </div>
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={handleUploadPhoto}
+        />
         <Button
-          variant="primary"
-          disabled={!capturedBlob || !validation}
-          onClick={() => capturedBlob && validation && onUsePhoto(capturedBlob, validation)}
+          variant="secondary"
+          type="button"
+          onClick={() => uploadInputRef.current?.click()}
+          disabled={isValidating || countdown !== null || isSaving}
+          className="mt-3 w-full bg-white text-[var(--foreground)] hover:bg-white"
         >
-          <Check size={17} />
-          Use photo
+          <Upload size={17} />
+          Upload a photo
         </Button>
       </div>
     </section>
