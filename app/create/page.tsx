@@ -4,7 +4,7 @@ import { BadgeCheck, ImagePlus, Shirt, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
-import { getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
+import { describeKitSpec, getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
 import { getDefaultPosterStyleIdForCreateMode, posterStyles } from "@/lib/posterTemplates";
 import { customTeamId, getTeamProfile, teamProfiles } from "@/lib/teamProfiles";
 import { validateImageBlob } from "@/lib/validation";
@@ -93,7 +93,7 @@ export default function CreatePage() {
     const spec = getKitSpec(teamId, variant);
 
     return spec
-      ? `${spec.season} ${spec.variant} kit: ${spec.baseColor}; ${spec.pattern}; ${spec.mainSponsor} sponsor; ${spec.manufacturer} manufacturer.`
+      ? describeKitSpec(spec, variant)
       : team.kitNotes;
   }
 
@@ -429,11 +429,17 @@ export default function CreatePage() {
                       ))}
                     </select>
                   </label>
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="grid grid-cols-4 gap-1">
                     {kitVariants.map((v) => (
                       <button key={v.id} type="button" onClick={() => setHomeKitVariant(v.id)}
-                        className={`h-9 rounded-[10px] border text-xs font-semibold transition ${homeKitVariant === v.id ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]" : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"}`}>
-                        {v.label}
+                        className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
+                          homeKitVariant === v.id
+                            ? v.id === "retro"
+                              ? "border-amber-400 bg-amber-400/15 text-amber-300"
+                              : "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
+                            : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
+                        }`}>
+                        {v.emoji} {v.label}
                       </button>
                     ))}
                   </div>
@@ -454,11 +460,17 @@ export default function CreatePage() {
                       ))}
                     </select>
                   </label>
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="grid grid-cols-4 gap-1">
                     {kitVariants.map((v) => (
                       <button key={v.id} type="button" onClick={() => setAwayKitVariant(v.id)}
-                        className={`h-9 rounded-[10px] border text-xs font-semibold transition ${awayKitVariant === v.id ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]" : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"}`}>
-                        {v.label}
+                        className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
+                          awayKitVariant === v.id
+                            ? v.id === "retro"
+                              ? "border-amber-400 bg-amber-400/15 text-amber-300"
+                              : "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
+                            : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
+                        }`}>
+                        {v.emoji} {v.label}
                       </button>
                     ))}
                   </div>
@@ -582,27 +594,39 @@ export default function CreatePage() {
           )}
 
           {createMode === "single" && !isCustomTeam && selectedTeamId !== "" && (
-            <label className="block space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">2025/26 kit</span>
-              <select
-                value={kitVariant}
-                onChange={(event) => setKitVariant(event.target.value as KitVariant)}
-                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-              >
-                {kitVariants.map((variant) => (
-                  <option key={variant.id} value={variant.id} className="bg-[var(--surface)] text-[var(--foreground)]">
-                    {variant.label}
-                  </option>
+            <fieldset className="space-y-2">
+              <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Kit variant</legend>
+              <div className="grid grid-cols-4 gap-1.5">
+                {kitVariants.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setKitVariant(v.id)}
+                    className={`flex h-12 flex-col items-center justify-center gap-0.5 rounded-[12px] border text-xs font-semibold transition ${
+                      kitVariant === v.id
+                        ? v.id === "retro"
+                          ? "border-amber-400 bg-amber-400/15 text-amber-300"
+                          : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                        : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)]/50 hover:text-[var(--foreground)]"
+                    }`}
+                  >
+                    <span className="text-base leading-none">{v.emoji}</span>
+                    <span>{v.label}</span>
+                  </button>
                 ))}
-              </select>
+              </div>
               <p className="text-xs leading-5 text-[var(--muted)]">
-                {selectedKitSpec?.referenceImageUrl
-                  ? `${selectedKitSpec.season} ${selectedKitSpec.variant} kit reference ready.`
-                  : selectedKitSpec
-                    ? `${selectedKitSpec.season} ${selectedKitSpec.variant} kit metadata ready; image reference still needed.`
-                  : "No exact kit reference is curated yet for this team, so the app will use the written kit profile."}
+                {kitVariant === "retro"
+                  ? selectedKitSpec?.referenceImageUrl
+                    ? `Retro kit reference ready — ${selectedKitSpec.season}.`
+                    : "Retro variant selected. AI will use classic colours if no reference image is found."
+                  : selectedKitSpec?.referenceImageUrl
+                    ? `${selectedKitSpec.season} ${selectedKitSpec.variant} kit reference ready.`
+                    : selectedKitSpec
+                      ? `${selectedKitSpec.season} ${selectedKitSpec.variant} kit metadata ready; image reference still needed.`
+                      : "No exact kit reference is curated yet for this team, so the app will use the written kit profile."}
               </p>
-            </label>
+            </fieldset>
           )}
 
           {createMode === "single" && isCustomTeam && (
