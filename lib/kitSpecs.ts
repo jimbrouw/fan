@@ -24,11 +24,11 @@ export type KitSpec = {
   confidence: "high" | "medium" | "low";
 };
 
-export const kitVariants: Array<{ id: KitVariant; label: string; emoji: string }> = [
-  { id: "home", label: "Home",  emoji: "🏠" },
-  { id: "away", label: "Away",  emoji: "✈️" },
-  { id: "third", label: "Third", emoji: "⚡" },
-  { id: "retro", label: "Retro", emoji: "📼" },
+export const kitVariants: Array<{ id: KitVariant; label: string }> = [
+  { id: "home", label: "Home" },
+  { id: "away", label: "Away" },
+  { id: "third", label: "Third" },
+  { id: "retro", label: "Retro" },
 ];
 
 const kitSpecs: KitSpec[] = [
@@ -982,15 +982,9 @@ export const internationalKitSpecs: KitSpec[] = [
 ];
 
 export function getKitSpec(teamId: string, variant: KitVariant): KitSpec | undefined {
-  const all = [...kitSpecs, ...fallbackKitSpecs, ...internationalKitSpecs];
-  // Look for an exact variant match first
-  const exact = all.find((spec) => spec.teamId === teamId && spec.variant === variant);
-  if (exact) return exact;
-  // For retro: fall back to home spec so we surface classic reference images
-  if (variant === "retro") {
-    return all.find((spec) => spec.teamId === teamId && spec.variant === "home");
-  }
-  return undefined;
+  return [...kitSpecs, ...fallbackKitSpecs, ...internationalKitSpecs].find(
+    (spec) => spec.teamId === teamId && spec.variant === variant
+  );
 }
 
 export function describeKitSpec(spec: KitSpec, variant?: KitVariant): string {

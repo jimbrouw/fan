@@ -92,6 +92,11 @@ export default function CreatePage() {
     const team = getTeamProfile(teamId);
     const spec = getKitSpec(teamId, variant);
 
+    if (variant === "retro") {
+      if (spec) return describeKitSpec(spec, variant);
+      return `Classic/retro era ${team.name} kit (use a vintage football shirt aesthetic — worn fabric texture, bold retro badge, no modern sponsor branding). Base color: ${team.primary}. Accent color: ${team.accent}.`;
+    }
+
     return spec
       ? describeKitSpec(spec, variant)
       : team.kitNotes;
@@ -439,7 +444,7 @@ export default function CreatePage() {
                               : "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
                             : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
                         }`}>
-                        {v.emoji} {v.label}
+                        {v.label}
                       </button>
                     ))}
                   </div>
@@ -470,7 +475,7 @@ export default function CreatePage() {
                               : "border-[var(--accent)] bg-[var(--accent)] text-[var(--foreground)]"
                             : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
                         }`}>
-                        {v.emoji} {v.label}
+                        {v.label}
                       </button>
                     ))}
                   </div>
@@ -602,7 +607,7 @@ export default function CreatePage() {
                     key={v.id}
                     type="button"
                     onClick={() => setKitVariant(v.id)}
-                    className={`flex h-12 flex-col items-center justify-center gap-0.5 rounded-[12px] border text-xs font-semibold transition ${
+                    className={`flex h-11 items-center justify-center rounded-[12px] border text-xs font-semibold transition ${
                       kitVariant === v.id
                         ? v.id === "retro"
                           ? "border-amber-400 bg-amber-400/15 text-amber-300"
@@ -610,7 +615,6 @@ export default function CreatePage() {
                         : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)]/50 hover:text-[var(--foreground)]"
                     }`}
                   >
-                    <span className="text-base leading-none">{v.emoji}</span>
                     <span>{v.label}</span>
                   </button>
                 ))}
