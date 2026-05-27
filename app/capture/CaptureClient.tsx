@@ -30,6 +30,9 @@ export function CaptureClient() {
   const capturedTypes = useMemo(() => new Set(captures.map((capture) => capture.type)), [captures]);
 
   useEffect(() => {
+    const stepType = searchParams.get("step");
+    const shouldRestart = searchParams.get("restart") === "1" || !stepType;
+
     async function createSession() {
       try {
         const response = await fetch("/api/sessions", { method: "POST" });
@@ -53,14 +56,22 @@ export function CaptureClient() {
 
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
-        window.location.href = "/login?next=/capture";
+        window.location.href = "/login?next=/capture?restart=1";
+        return;
+      }
+
+      if (shouldRestart) {
+        localStorage.removeItem("fan-hero-session-id");
+        localStorage.removeItem("fan-hero-captures");
+        setCaptures([]);
+        await createSession();
+        setIsCheckingAuth(false);
         return;
       }
 
       const existing = localStorage.getItem("fan-hero-session-id");
       const existingCaptures = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
       setCaptures(existingCaptures);
-
       if (existing) {
         setSessionId(existing);
       } else {
@@ -71,7 +82,7 @@ export function CaptureClient() {
     }
 
     bootCapture();
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     const stepType = searchParams.get("step");

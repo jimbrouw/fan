@@ -20,6 +20,14 @@ type CreateMode = "single" | "vs";
 type MatchSide = "home" | "away";
 type OpponentMode = "club-players" | "another-person";
 
+const captureBucket = "fan-hero-captures";
+
+function buildPublicCaptureUrl(sessionId: string | null, type?: CaptureStepType) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl || !sessionId || !type) return undefined;
+  return `${supabaseUrl}/storage/v1/object/public/${captureBucket}/${sessionId}/${type}.jpg`;
+}
+
 export default function CreatePage() {
   const [createMode, setCreateMode] = useState<CreateMode>("single");
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -136,10 +144,16 @@ export default function CreatePage() {
     []
   );
   const sourceImageUrl = useMemo(
-    () =>
-      captures.find((capture) => capture.type === "neutral_front")?.imageUrl ??
-      captures.find((capture) => capture.imageUrl)?.imageUrl,
-    [captures]
+    () => {
+      const primaryCapture = captures.find((capture) => capture.type === "neutral_front");
+      const uploadedCapture = captures.find((capture) => capture.imageUrl);
+      return (
+        primaryCapture?.imageUrl ??
+        uploadedCapture?.imageUrl ??
+        buildPublicCaptureUrl(sessionId, primaryCapture?.type ?? captures[0]?.type)
+      );
+    },
+    [captures, sessionId]
   );
   const hasTeamSelected = createMode !== "single" || selectedTeamId !== "";
   const hasValidMatch = createMode === "single" || homeTeamId !== awayTeamId;
@@ -151,11 +165,16 @@ export default function CreatePage() {
   useEffect(() => {
     const sid = localStorage.getItem("fan-hero-session-id");
     setSessionId(sid);
-    const storedCaptures = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
+    const storedCaptures = (JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[])
+      .map((capture) => ({
+        ...capture,
+        imageUrl: capture.imageUrl ?? buildPublicCaptureUrl(sid, capture.type)
+      }));
     const storedOpponent = storedCaptures.find((capture) => capture.type === "opponent_front");
     setCaptures(storedCaptures);
     setOpponentImageUrl(storedOpponent?.imageUrl);
     setOpponentPreviewUrl(storedOpponent?.imageUrl ?? storedOpponent?.objectUrl);
+    localStorage.setItem("fan-hero-captures", JSON.stringify(storedCaptures));
 
     if (!sid) return;
     const needsUpload = storedCaptures.filter(

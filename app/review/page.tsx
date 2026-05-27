@@ -80,7 +80,7 @@ export default function ReviewPage() {
         </div>
 
         <div className="mt-auto grid grid-cols-2 gap-3">
-          <Link href="/capture?step=neutral_front">
+          <Link href="/capture?restart=1">
             <Button variant="secondary" className="w-full">
               <Camera size={17} />
               New photos

@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { captureBucket, createServerSupabaseClient } from "@/lib/supabase/server";
 import type { CaptureStepType } from "@/types/capture";
 
+function isMissingSchemaColumn(error: { message?: string }, column: string) {
+  const message = error.message ?? "";
+  return (
+    new RegExp(`Could not find the '${column}' column`, "i").test(message) ||
+    new RegExp(`column .*\\.${column} does not exist`, "i").test(message)
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const form = await request.formData();
@@ -17,6 +25,32 @@ export async function POST(request: Request) {
 
     const supabase = createServerSupabaseClient();
     const path = `${sessionId}/${type}.jpg`;
+    const now = new Date().toISOString();
+
+    const sessionInsert = {
+      id: sessionId,
+      user_id: null,
+      status: "capturing",
+      created_at: now,
+      updated_at: now
+    };
+
+    let sessionUpsert = await supabase
+      .from("capture_sessions")
+      .upsert(sessionInsert, { onConflict: "id", ignoreDuplicates: true });
+
+    if (sessionUpsert.error && isMissingSchemaColumn(sessionUpsert.error, "user_id")) {
+      const legacySessionInsert: Omit<typeof sessionInsert, "user_id"> = { ...sessionInsert };
+      delete (legacySessionInsert as Partial<typeof sessionInsert>).user_id;
+      sessionUpsert = await supabase
+        .from("capture_sessions")
+        .upsert(legacySessionInsert, { onConflict: "id", ignoreDuplicates: true });
+    }
+
+    if (sessionUpsert.error) {
+      console.error("Capture session upsert failed:", sessionUpsert.error.message, { sessionId });
+      return NextResponse.json({ error: sessionUpsert.error.message }, { status: 500 });
+    }
 
     const upload = await supabase.storage.from(captureBucket).upload(path, file, {
       contentType: file.type || "image/jpeg",
@@ -29,7 +63,6 @@ export async function POST(request: Request) {
     }
 
     const { data: publicUrlData } = supabase.storage.from(captureBucket).getPublicUrl(path);
-    const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
     const insert = await supabase.from("captures").upsert(
