@@ -148,6 +148,14 @@ export default function CreatePage() {
       }, {}),
     []
   );
+  const groupedMatchTeams = useMemo(
+    () =>
+      matchTeams.reduce<Record<string, typeof matchTeams>>((groups, team) => {
+        groups[team.group] = [...(groups[team.group] ?? []), team];
+        return groups;
+      }, {}),
+    [matchTeams]
+  );
   const sourceImageUrl = useMemo(
     () => {
       const primaryCapture = captures.find((capture) => capture.type === "neutral_front");
@@ -427,11 +435,20 @@ export default function CreatePage() {
                       onChange={(event) => setHomeTeamId(event.target.value)}
                       className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                     >
-                      {matchTeams.map((team) => (
-                        <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
-                          {team.name}
-                        </option>
-                      ))}
+                      {Object.entries(groupedMatchTeams)
+                        .sort(([a], [b]) => {
+                          const order = ["Premier League", "EFL League One", "International", "International Giants", "World Cup 2026"];
+                          return order.indexOf(a) - order.indexOf(b);
+                        })
+                        .map(([group, teams]) => (
+                          <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
+                            {teams.map((team) => (
+                              <option key={team.id} value={team.id}>
+                                {team.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
                     </select>
                   </label>
                   <div className="grid grid-cols-4 gap-1">
@@ -458,11 +475,20 @@ export default function CreatePage() {
                       onChange={(event) => setAwayTeamId(event.target.value)}
                       className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                     >
-                      {matchTeams.map((team) => (
-                        <option key={team.id} value={team.id} className="bg-[var(--surface)] text-[var(--foreground)]">
-                          {team.name}
-                        </option>
-                      ))}
+                      {Object.entries(groupedMatchTeams)
+                        .sort(([a], [b]) => {
+                          const order = ["Premier League", "EFL League One", "International", "International Giants", "World Cup 2026"];
+                          return order.indexOf(a) - order.indexOf(b);
+                        })
+                        .map(([group, teams]) => (
+                          <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
+                            {teams.map((team) => (
+                              <option key={team.id} value={team.id}>
+                                {team.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
                     </select>
                   </label>
                   <div className="grid grid-cols-4 gap-1">
