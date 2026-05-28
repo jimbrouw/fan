@@ -7,11 +7,18 @@ import { CameraCapture } from "@/components/CameraCapture";
 import { captureSteps } from "@/lib/captureSteps";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { ClientValidationResult } from "@/lib/validation";
-import type { CaptureStepType } from "@/types/capture";
+import type { CaptureStepType, CaptureValidationStatus } from "@/types/capture";
+
+interface DatabaseCapture {
+  type: CaptureStepType;
+  image_url: string;
+  validation_status: CaptureValidationStatus;
+  validation_results: Record<string, unknown>;
+}
 
 type LocalCapture = {
   type: CaptureStepType;
-  objectUrl: string;
+  objectUrl?: string;
   imageUrl?: string;
   validation: ClientValidationResult;
 };
@@ -25,6 +32,7 @@ export function CaptureClient() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [pastSession, setPastSession] = useState<{ id: string; capturesCount: number; dateStr: string; rawCaptures: DatabaseCapture[] } | null>(null);
   const activeStep = captureSteps[activeIndex];
 
   const capturedTypes = useMemo(() => new Set(captures.map((capture) => capture.type)), [captures]);
@@ -60,6 +68,37 @@ export function CaptureClient() {
         return;
       }
 
+      // Check if there are past captures to restore
+      try {
+        const { data: sessions, error: sessionsErr } = await supabase
+          .from("capture_sessions")
+          .select("id, created_at, captures ( type, image_url, validation_status, validation_results )")
+          .eq("user_id", data.user.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (!sessionsErr && sessions && sessions.length > 0) {
+          const latest = sessions[0];
+          if (latest.captures && latest.captures.length > 0) {
+            const date = new Date(latest.created_at);
+            const dateStr = date.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            setPastSession({
+              id: latest.id,
+              capturesCount: latest.captures.length,
+              dateStr,
+              rawCaptures: latest.captures,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Could not check for restorable sessions:", err);
+      }
+
       if (shouldRestart) {
         localStorage.removeItem("fan-hero-session-id");
         localStorage.removeItem("fan-hero-captures");
@@ -91,6 +130,40 @@ export function CaptureClient() {
       setActiveIndex(stepIndex);
     }
   }, [searchParams]);
+
+  async function handleRestoreSession() {
+    if (!pastSession) return;
+    setIsSaving(true);
+    try {
+      const restoredCaptures = pastSession.rawCaptures.map((cap: DatabaseCapture) => {
+        const results = cap.validation_results || {};
+        return {
+          type: cap.type,
+          imageUrl: cap.image_url,
+          validation: {
+            status: cap.validation_status ?? "manual_review",
+            checks: {
+              brightness: typeof results.brightness === "number" ? results.brightness : 255,
+              blurScore: typeof results.blurScore === "number" ? results.blurScore : 10,
+            },
+            messages: [] as string[]
+          }
+        };
+      });
+
+      localStorage.setItem("fan-hero-session-id", pastSession.id);
+      localStorage.setItem("fan-hero-captures", JSON.stringify(restoredCaptures));
+      setCaptures(restoredCaptures);
+      setSessionId(pastSession.id);
+
+      router.push("/review");
+    } catch (err) {
+      console.error("Error restoring session:", err);
+      setUploadError("Could not restore your previous photos. Please try taking them manually.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   async function handleUsePhoto(blob: Blob, validation: ClientValidationResult) {
     setIsSaving(true);
@@ -195,6 +268,30 @@ export function CaptureClient() {
               {activeStep.instruction}
             </p>
           </div>
+
+          {activeIndex === 0 && pastSession && captures.length === 0 && (
+            <div className="shrink-0 mb-4 p-4 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/80 relative overflow-hidden">
+              <div className="kitface-ramp absolute -inset-1 -z-10 rounded-[18px] opacity-10 blur-md" />
+              <div className="flex flex-col gap-3">
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                    <span>✨</span> Reuse your last photos?
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+                    Found {pastSession.capturesCount} photos captured on {pastSession.dateStr}. Skip the camera and restore them instantly.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRestoreSession}
+                  disabled={isSaving}
+                  className="w-full h-10 rounded-[10px] bg-[var(--accent)] text-[var(--foreground)] text-xs font-bold transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isSaving ? "Restoring..." : "Restore previous photos"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {uploadError && (
             <p className="shrink-0 mb-2 rounded-[12px] border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-2 text-xs leading-5 text-[var(--foreground)]">

@@ -34,7 +34,7 @@ export function AccountButton() {
   if (initials) {
     return (
       <Link
-        href="/create"
+        href={{ pathname: "/history" }}
         title="Your account"
         className="grid size-9 place-items-center rounded-full bg-[var(--foreground)] text-[11px] font-bold tracking-wide text-white"
       >
