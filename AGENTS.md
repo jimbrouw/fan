@@ -14,6 +14,10 @@
 - Generated reference extraction output belongs in `design-extract-output/` and must stay ignored.
 - Generated demo prompt output belongs in `Prompts-vs/` and `test-images/` and must stay ignored.
 - Standard verification commands: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
+- Vercel Deployment Link constraint: ALWAYS provide the Vercel link when summarizing deployments, pushing commits, or completing sessions.
+  - Production URL: https://kitface-app.vercel.app
+  - Active Branch Preview URL: https://kitface-app-git-feat-football-waiting-messages-jimbrouws-projects.vercel.app
+
 
 ## Workflow Orchestration
 
