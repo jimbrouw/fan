@@ -127,14 +127,28 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
       </div>
 
       {details && (
-        <div className="grid gap-6 md:grid-cols-[1fr_380px]">
-          {/* Form container */}
-          <form onSubmit={handlePayment} className="space-y-5 rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_14px_34px_rgba(42,0,79,0.03)]">
-            <h3 className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Billing Details</h3>
+        <div className="flex flex-col gap-5 w-full max-w-[480px] mx-auto">
+          {/* Cart summary at the top for mobile */}
+          <div className="space-y-3.5 rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/50 p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid size-9 place-items-center rounded-full bg-[var(--accent)]/15 text-[var(--foreground)]">
+                <Package size={16} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-[var(--foreground)] truncate">{details.name}</p>
+                <p className="mt-0.5 text-[10px] text-[var(--muted)]">Poster: {details.jobId.slice(0, 8)}</p>
+              </div>
+              <p className="text-xs font-bold text-[var(--accent)]">{details.price}</p>
+            </div>
+          </div>
 
-            <div className="space-y-4">
+          {/* Form container */}
+          <form onSubmit={handlePayment} className="space-y-4 rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[0_14px_34px_rgba(42,0,79,0.02)]">
+            <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Billing Details</h3>
+
+            <div className="space-y-3.5">
               <label className="block space-y-1.5">
-                <span className="text-xs font-semibold text-[var(--muted)]">Name on Card</span>
+                <span className="text-[11px] font-semibold text-[var(--muted)]">Name on Card</span>
                 <input
                   type="text"
                   required
@@ -142,12 +156,12 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={paying}
-                  className="h-12 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/50 px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                  className="h-11 w-full rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)]/50 px-3.5 text-xs text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                 />
               </label>
 
               <label className="block space-y-1.5">
-                <span className="text-xs font-semibold text-[var(--muted)]">Email Address</span>
+                <span className="text-[11px] font-semibold text-[var(--muted)]">Email Address</span>
                 <input
                   type="email"
                   required
@@ -155,18 +169,18 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={paying}
-                  className="h-12 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/50 px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                  className="h-11 w-full rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)]/50 px-3.5 text-xs text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                 />
               </label>
 
-              <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/30 p-4 space-y-4">
-                <div className="flex items-center justify-between border-b border-[var(--line)] pb-2">
-                  <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Credit Card Details</span>
-                  <CreditCard size={16} className="text-[var(--muted)]" />
+              <div className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/30 p-3.5 space-y-3">
+                <div className="flex items-center justify-between border-b border-[var(--line)] pb-1.5">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Credit Card Details</span>
+                  <CreditCard size={14} className="text-[var(--muted)]" />
                 </div>
 
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-semibold text-[var(--muted)]">Card Number</span>
+                  <span className="text-[11px] font-semibold text-[var(--muted)]">Card Number</span>
                   <input
                     type="text"
                     required
@@ -174,13 +188,13 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value)}
                     disabled={paying}
-                    className="h-12 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                    className="h-11 w-full rounded-[12px] border border-[var(--line)] bg-[var(--surface)] px-3.5 text-xs text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                   />
                 </label>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-semibold text-[var(--muted)]">Expiry Date</span>
+                    <span className="text-[11px] font-semibold text-[var(--muted)]">Expiry Date</span>
                     <input
                       type="text"
                       required
@@ -188,12 +202,12 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                       value={expiry}
                       onChange={(e) => setExpiry(e.target.value)}
                       disabled={paying}
-                      className="h-12 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                      className="h-11 w-full rounded-[12px] border border-[var(--line)] bg-[var(--surface)] px-3.5 text-xs text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                     />
                   </label>
 
                   <label className="block space-y-1.5">
-                    <span className="text-xs font-semibold text-[var(--muted)]">CVC</span>
+                    <span className="text-[11px] font-semibold text-[var(--muted)]">CVC</span>
                     <input
                       type="text"
                       required
@@ -201,24 +215,24 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                       value={cvc}
                       onChange={(e) => setCvc(e.target.value)}
                       disabled={paying}
-                      className="h-12 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                      className="h-11 w-full rounded-[12px] border border-[var(--line)] bg-[var(--surface)] px-3.5 text-xs text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                     />
                   </label>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 pt-3">
-              <Button type="submit" disabled={paying} className="w-full">
+            <div className="flex flex-col gap-2.5 pt-2">
+              <Button type="submit" disabled={paying} className="w-full min-h-11 rounded-[12px]">
                 {paying ? (
                   <>
-                    <RefreshCw size={16} className="animate-spin" />
-                    Simulating payment approval...
+                    <RefreshCw size={14} className="animate-spin" />
+                    Processing...
                   </>
                 ) : (
                   <>
-                    <Lock size={15} />
-                    Submit simulated payment — {details.price}
+                    <Lock size={13} />
+                    Pay — {details.price}
                   </>
                 )}
               </Button>
@@ -227,49 +241,18 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                 type="button"
                 onClick={handleAutofill}
                 disabled={paying}
-                className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)] underline-offset-4 hover:underline text-center"
+                className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent)] underline-offset-4 hover:underline text-center py-1"
               >
                 🪄 Fill test card details
               </button>
             </div>
 
             {error && (
-              <p className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] p-3 text-xs leading-5 text-[var(--accent)]">
+              <p className="rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)] p-2.5 text-[11px] leading-5 text-[var(--accent)]">
                 {error}
               </p>
             )}
           </form>
-
-          {/* Cart side-card */}
-          <div className="space-y-4 rounded-[20px] border border-[var(--line)] bg-[var(--surface-soft)]/50 p-5 self-start">
-            <h3 className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Order Summary</h3>
-
-            <div className="flex items-center gap-3 rounded-[14px] bg-[var(--surface)] p-3 border border-[var(--line)]">
-              <div className="grid size-10 place-items-center rounded-full bg-[var(--accent)]/15 text-[var(--foreground)]">
-                <Package size={18} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-[var(--foreground)] truncate">{details.name}</p>
-                <p className="mt-0.5 text-[10px] text-[var(--muted)]">ID: {details.jobId.slice(0, 8)}</p>
-              </div>
-              <p className="text-xs font-bold text-[var(--accent)]">{details.price}</p>
-            </div>
-
-            <div className="border-t border-[var(--line)] pt-3 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-[var(--muted)]">Subtotal</span>
-                <span className="font-bold text-[var(--foreground)]">{details.price}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[var(--muted)]">Shipping</span>
-                <span className="font-bold text-[var(--foreground)]">Free</span>
-              </div>
-              <div className="flex justify-between border-t border-[var(--line)] pt-2 text-sm">
-                <span className="font-bold text-[var(--foreground)]">Total</span>
-                <span className="font-bold text-[var(--accent)]">{details.price}</span>
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </section>
