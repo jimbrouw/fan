@@ -808,28 +808,7 @@ export default function CreatePage() {
             </p>
           </label>
 
-          <div className="grid grid-cols-2 gap-3">
-            {posterStyles.slice(0, 2).map((style, index) => (
-              <button
-                key={style.id}
-                type="button"
-                onClick={() => setPosterStyleId(style.id)}
-                className={`rounded-[14px] border bg-[var(--surface)] p-2 text-left transition ${
-                  posterStyleId === style.id ? "border-[var(--accent)]" : "border-[var(--line)]"
-                }`}
-              >
-                <div className="relative aspect-[3/4] overflow-hidden rounded-[10px] bg-[var(--surface-soft)] p-3">
-                  <div className="kitface-ramp absolute -left-10 top-10 h-12 w-48 rotate-[-18deg] opacity-35" />
-                  <div className="kitface-ramp absolute -right-12 bottom-8 h-10 w-44 rotate-[-18deg] opacity-25" />
-                  <p className="font-display text-2xl leading-none text-[var(--foreground)]">
-                    {index === 0 ? "Kitface" : "Matchday"}
-                  </p>
-                  <div className="relative mt-6 h-20 rounded-t-full bg-[var(--foreground)]/90" />
-                </div>
-                <p className="mt-2 text-center text-xs font-semibold text-[var(--foreground)]">{style.name}</p>
-              </button>
-            ))}
-          </div>
+
         </form>
 
         <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/55 p-4 text-sm leading-6 text-[var(--foreground)]">
