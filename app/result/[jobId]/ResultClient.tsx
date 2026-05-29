@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Copy, Download, Film, MessageCircle, RefreshCw, RotateCcw, Share2 } from "lucide-react";
+import { Copy, Download, Film, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 import { getDefaultMuapiVideoModel, MUAPI_VIDEO_MODELS, type MuapiVideoModelId } from "@/lib/ai/providers/muapiVideo";
@@ -385,6 +385,22 @@ export function ResultClient({ jobId }: { jobId: string }) {
         )}
       </div>
 
+      {job?.status === "completed" && (
+        <button
+          type="button"
+          onClick={() => { window.location.href = `/upgrade/${jobId}`; }}
+          className="group flex w-full items-center gap-4 rounded-[18px] border-2 border-[var(--accent)] bg-gradient-to-r from-[var(--accent)] to-[rgba(49,240,213,0.75)] p-4 text-left shadow-[0_14px_34px_rgba(49,240,213,0.22)] transition duration-300 active:scale-[0.98]"
+        >
+          <div className="grid size-12 shrink-0 place-items-center rounded-full bg-white/30 backdrop-blur-sm">
+            <Package size={22} className="text-[var(--foreground)]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold text-[var(--foreground)]">Get Printed — from £7.99</p>
+            <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">A3 poster delivered to your door, or download without watermark.</p>
+          </div>
+        </button>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         {job?.status === "completed" ? (
           <>
@@ -579,11 +595,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
               </div>
               {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}
             </div>
-            <Button className="w-full" onClick={() => {
-              window.location.href = `/upgrade/${jobId}`;
-            }}>
-              Upgrade
-            </Button>
+
             {showTestControls && (
               <Link href="/create">
                 <Button variant="secondary" className="w-full">

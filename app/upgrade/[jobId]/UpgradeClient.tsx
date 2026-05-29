@@ -80,10 +80,31 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
   const selectedOption = upgradeOptions.find((option) => option.id === selectedOptionId) ?? upgradeOptions[1];
   const canContinue = job?.status === "completed" && Boolean(job.outputUrl);
 
-  function handleContinue() {
-    setStatus(
-      `${selectedOption.name} selected. Next build step: Stripe checkout, upscale job, then private download or Printful draft order.`
-    );
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  async function handleContinue() {
+    setIsRedirecting(true);
+    setStatus(null);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId, optionId: selectedOptionId }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to initialize checkout.");
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "An error occurred starting checkout.";
+      setStatus(message);
+    } finally {
+      setIsRedirecting(false);
+    }
   }
 
   return (
@@ -169,8 +190,8 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
       </div>
 
       <div className="space-y-3 rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
-        <Button type="button" className="w-full" disabled={!canContinue} onClick={handleContinue}>
-          Order — {selectedOption.price}
+        <Button type="button" className="w-full" disabled={!canContinue || isRedirecting} onClick={handleContinue}>
+          {isRedirecting ? "Processing..." : `Checkout — ${selectedOption.price}`}
         </Button>
         <p className="text-xs leading-5 text-[var(--muted)]">
           Secure checkout. Delivered to your door or sent as a private download link.
