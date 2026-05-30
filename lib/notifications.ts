@@ -92,10 +92,70 @@ async function sendEmailNotification(input: NotifyInput) {
   }
 
   try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.kitface.app";
+    const absoluteActionUrl = input.actionUrl
+      ? input.actionUrl.startsWith("http")
+        ? input.actionUrl
+        : `${appUrl}${input.actionUrl}`
+      : appUrl;
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${input.title}</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #F5F5F7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F5F5F7; padding: 32px 16px;">
+          <tr>
+            <td align="center">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; background-color: #ffffff; border-radius: 20px; border: 1px solid #E4E4E7; overflow: hidden; box-shadow: 0 10px 30px rgba(28, 25, 54, 0.03);">
+                <!-- Header -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, #1C1936 0%, #2A2454 100%); padding: 32px 24px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">Kitface</h1>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: #31F0D5; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">Official Football Media</p>
+                  </td>
+                </tr>
+                <!-- Body -->
+                <tr>
+                  <td style="padding: 32px 24px;">
+                    <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700; color: #1C1936; line-height: 1.3;">${input.title}</h2>
+                    <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #69697A;">${input.body}</p>
+                    
+                    <!-- CTA Button -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td align="center" style="padding-bottom: 8px;">
+                          <a href="${absoluteActionUrl}" target="_blank" style="display: inline-block; background-color: #00CDAC; color: #1C1936; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0, 205, 172, 0.25); transition: all 0.2s ease-in-out;">
+                            View Poster in App
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- Footer -->
+                <tr>
+                  <td style="padding: 24px; background-color: #FAFAFB; border-top: 1px solid #E4E4E7; text-align: center;">
+                    <p style="margin: 0; font-size: 11px; color: #9A9AB0; line-height: 1.5;">This email was sent by Kitface because your poster finished generating. Link back to the app: <a href="${appUrl}" style="color: #00CDAC; text-decoration: none; font-weight: 600;">kitface.app</a></p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
     await sendTransactionalEmail({
       to: user.email,
       subject: input.title,
-      text: `${input.body}${input.actionUrl ? `\n\n${input.actionUrl}` : ""}`,
+      text: `${input.body}${absoluteActionUrl ? `\n\nView details: ${absoluteActionUrl}` : ""}`,
+      html: emailHtml,
     });
 
     await supabase
@@ -142,7 +202,7 @@ async function sendWebPushNotification(input: NotifyInput) {
   }
 }
 
-async function sendTransactionalEmail(input: { to: string; subject: string; text: string }) {
+async function sendTransactionalEmail(input: { to: string; subject: string; text: string; html?: string }) {
   const resendApiKey = process.env.RESEND_API_KEY;
   const emailFrom = process.env.EMAIL_FROM ?? "Kitface <notifications@kitface.app>";
 
@@ -162,6 +222,7 @@ async function sendTransactionalEmail(input: { to: string; subject: string; text
       to: input.to,
       subject: input.subject,
       text: input.text,
+      html: input.html,
     }),
   });
 
