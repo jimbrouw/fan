@@ -31,6 +31,293 @@ export const kitVariants: Array<{ id: KitVariant; label: string }> = [
   { id: "retro", label: "Retro" },
 ];
 
+const premierLeague2026SourceUrl = "https://www.footballkitarchive.com/premier-league-kits-2026-27-l224/";
+
+function makePremierLeague2026KitSpec(
+  spec: Omit<KitSpec, "season" | "collar" | "cuffs" | "crestPlacement" | "sponsorPlacement" | "shorts" | "socks" | "sourceUrls" | "confidence"> & {
+    sourceUrls?: string[];
+    confidence?: KitSpec["confidence"];
+  },
+): KitSpec {
+  return {
+    ...spec,
+    season: "2026/27",
+    collar: "not fully confirmed from launch imagery",
+    cuffs: "not fully confirmed from launch imagery",
+    crestPlacement: "standard club crest placement on the wearer's left chest",
+    sponsorPlacement: "main sponsor centred on the chest where present",
+    shorts: "match the official 2026/27 kit set when visible",
+    socks: "match the official 2026/27 kit set when visible",
+    sourceUrls: spec.sourceUrls ?? [premierLeague2026SourceUrl],
+    confidence: spec.confidence ?? "low"
+  };
+}
+
+const premierLeague2026KitSpecs: KitSpec[] = [
+  makePremierLeague2026KitSpec({
+    teamId: "arsenal",
+    team: "Arsenal",
+    variant: "home",
+    manufacturer: "adidas",
+    mainSponsor: "Emirates",
+    baseColor: "red body with white sleeves",
+    accentColors: ["white", "red"],
+    pattern: "2026/27 Arsenal home shirt listed by Football Kit Archive; classic red body and white sleeves identity with adidas detailing",
+    sourceUrls: [premierLeague2026SourceUrl, "https://www.footballkitarchive.com/arsenal-fc-2026-27-home-kit-441205/"]
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "arsenal",
+    team: "Arsenal",
+    variant: "away",
+    manufacturer: "adidas",
+    mainSponsor: "Emirates",
+    baseColor: "dark away base",
+    accentColors: ["red", "blue"],
+    pattern: "2026/27 Arsenal away shirt listed by Football Kit Archive; dark alternate look with bold Arsenal accent colours"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "arsenal",
+    team: "Arsenal",
+    variant: "third",
+    manufacturer: "adidas",
+    mainSponsor: "Emirates",
+    baseColor: "light third-kit base",
+    accentColors: ["red", "navy"],
+    pattern: "2026/27 Arsenal third shirt listed by Football Kit Archive; alternate cup-style palette with adidas trim"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "aston-villa",
+    team: "Aston Villa",
+    variant: "home",
+    manufacturer: "adidas",
+    mainSponsor: "Betano",
+    baseColor: "claret body with sky blue sleeves",
+    accentColors: ["sky blue", "claret"],
+    pattern: "2026/27 Aston Villa home shirt listed by Football Kit Archive; traditional claret-and-blue Villa identity"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "aston-villa",
+    team: "Aston Villa",
+    variant: "away",
+    manufacturer: "adidas",
+    mainSponsor: "Betano",
+    baseColor: "dark away base",
+    accentColors: ["sky blue", "claret"],
+    pattern: "2026/27 Aston Villa away shirt listed by Football Kit Archive; dark alternate shirt with Villa accent colours"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "aston-villa",
+    team: "Aston Villa",
+    variant: "third",
+    manufacturer: "adidas",
+    mainSponsor: "Betano",
+    baseColor: "light third-kit base",
+    accentColors: ["claret", "sky blue"],
+    pattern: "2026/27 Aston Villa third shirt listed by Football Kit Archive; alternate adidas design with Villa colour cues"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "brighton",
+    team: "Brighton & Hove Albion",
+    variant: "third",
+    manufacturer: "Nike",
+    mainSponsor: "American Express",
+    baseColor: "third-kit alternate base",
+    accentColors: ["blue", "white"],
+    pattern: "2026/27 Brighton third shirt listed by Football Kit Archive; Nike alternate design using Brighton identity colours"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "chelsea",
+    team: "Chelsea",
+    variant: "home",
+    manufacturer: "Nike",
+    mainSponsor: "unknown",
+    baseColor: "royal blue",
+    accentColors: ["white"],
+    pattern: "2026/27 Chelsea home shirt listed by Football Kit Archive; royal-blue Nike home identity"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "chelsea",
+    team: "Chelsea",
+    variant: "away",
+    manufacturer: "Nike",
+    mainSponsor: "unknown",
+    baseColor: "light away base",
+    accentColors: ["blue"],
+    pattern: "2026/27 Chelsea away shirt listed by Football Kit Archive; light alternate Nike design with Chelsea blue details"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "leeds",
+    team: "Leeds United",
+    variant: "home",
+    manufacturer: "adidas",
+    mainSponsor: "Red Bull",
+    baseColor: "white",
+    accentColors: ["blue", "yellow"],
+    pattern: "2026/27 Leeds United home shirt listed by Football Kit Archive; white adidas home identity with blue-and-yellow detailing"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "leeds",
+    team: "Leeds United",
+    variant: "away",
+    manufacturer: "adidas",
+    mainSponsor: "Red Bull",
+    baseColor: "away-kit alternate base",
+    accentColors: ["blue", "yellow", "white"],
+    pattern: "2026/27 Leeds United away shirt listed by Football Kit Archive; alternate adidas design using Leeds accent colours"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "leeds",
+    team: "Leeds United",
+    variant: "third",
+    manufacturer: "adidas",
+    mainSponsor: "Red Bull",
+    baseColor: "third-kit alternate base",
+    accentColors: ["blue", "yellow", "white"],
+    pattern: "2026/27 Leeds United third shirt listed by Football Kit Archive; alternate adidas design using Leeds identity colours"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "liverpool",
+    team: "Liverpool",
+    variant: "home",
+    manufacturer: "adidas",
+    mainSponsor: "Standard Chartered",
+    baseColor: "red",
+    accentColors: ["white"],
+    pattern: "2026/27 Liverpool home shirt listed by Football Kit Archive; full red adidas home identity"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "liverpool",
+    team: "Liverpool",
+    variant: "away",
+    manufacturer: "adidas",
+    mainSponsor: "Standard Chartered",
+    baseColor: "light away base",
+    accentColors: ["red", "black"],
+    pattern: "2026/27 Liverpool away shirt listed by Football Kit Archive; light alternate adidas shirt with Liverpool red detailing"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "liverpool",
+    team: "Liverpool",
+    variant: "third",
+    manufacturer: "adidas",
+    mainSponsor: "Standard Chartered",
+    baseColor: "dark third-kit base",
+    accentColors: ["red", "white"],
+    pattern: "2026/27 Liverpool third shirt listed by Football Kit Archive; dark alternate adidas cup-kit direction"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "man-city",
+    team: "Manchester City",
+    variant: "home",
+    manufacturer: "Puma",
+    mainSponsor: "Etihad Airways",
+    baseColor: "sky blue",
+    accentColors: ["white", "navy"],
+    pattern: "2026/27 Manchester City home shirt listed by Football Kit Archive; sky-blue Puma home identity"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "man-city",
+    team: "Manchester City",
+    variant: "away",
+    manufacturer: "Puma",
+    mainSponsor: "Etihad Airways",
+    baseColor: "away-kit alternate base",
+    accentColors: ["sky blue", "white"],
+    pattern: "2026/27 Manchester City away shirt listed by Football Kit Archive; Puma alternate shirt with City detailing"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "man-city",
+    team: "Manchester City",
+    variant: "third",
+    manufacturer: "Puma",
+    mainSponsor: "Etihad Airways",
+    baseColor: "third-kit alternate base",
+    accentColors: ["sky blue", "white"],
+    pattern: "2026/27 Manchester City third shirt listed by Football Kit Archive; Puma alternate cup-kit palette"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "man-united",
+    team: "Manchester United",
+    variant: "home",
+    manufacturer: "adidas",
+    mainSponsor: "Snapdragon",
+    baseColor: "red",
+    accentColors: ["white", "black"],
+    pattern: "2026/27 Manchester United home shirt listed by Football Kit Archive; red adidas home identity with black-and-white detailing"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "man-united",
+    team: "Manchester United",
+    variant: "away",
+    manufacturer: "adidas",
+    mainSponsor: "Snapdragon",
+    baseColor: "light away base",
+    accentColors: ["red", "black"],
+    pattern: "2026/27 Manchester United away shirt listed by Football Kit Archive; light alternate adidas design with United accent colours"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "man-united",
+    team: "Manchester United",
+    variant: "third",
+    manufacturer: "adidas",
+    mainSponsor: "Snapdragon",
+    baseColor: "dark third-kit base",
+    accentColors: ["red", "white"],
+    pattern: "2026/27 Manchester United third shirt listed by Football Kit Archive; dark alternate adidas cup-kit direction"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "newcastle",
+    team: "Newcastle United",
+    variant: "home",
+    manufacturer: "adidas",
+    mainSponsor: "Sela",
+    baseColor: "black and white stripes",
+    accentColors: ["black", "white"],
+    pattern: "2026/27 Newcastle United home shirt listed by Football Kit Archive; black-and-white striped adidas home identity"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "newcastle",
+    team: "Newcastle United",
+    variant: "away",
+    manufacturer: "adidas",
+    mainSponsor: "Sela",
+    baseColor: "away-kit alternate base",
+    accentColors: ["black", "white"],
+    pattern: "2026/27 Newcastle United away shirt listed by Football Kit Archive; alternate adidas design with Newcastle identity details"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "nottingham-forest",
+    team: "Nottingham Forest",
+    variant: "home",
+    manufacturer: "adidas",
+    mainSponsor: "Bally's",
+    sleeveSponsor: "Ideagen",
+    baseColor: "Nottingham Forest red",
+    accentColors: ["white"],
+    pattern: "2026/27 Nottingham Forest home shirt listed by Football Kit Archive; red adidas home identity with white detailing"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "tottenham",
+    team: "Tottenham Hotspur",
+    variant: "home",
+    manufacturer: "Nike",
+    mainSponsor: "AIA",
+    baseColor: "white",
+    accentColors: ["navy"],
+    pattern: "2026/27 Tottenham Hotspur home shirt listed by Football Kit Archive; white Nike home identity with navy detailing"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "tottenham",
+    team: "Tottenham Hotspur",
+    variant: "away",
+    manufacturer: "Nike",
+    mainSponsor: "AIA",
+    baseColor: "away-kit alternate base",
+    accentColors: ["navy", "white"],
+    pattern: "2026/27 Tottenham Hotspur away shirt listed by Football Kit Archive; alternate Nike shirt with Spurs colour cues"
+  })
+];
+
 const internationalAwayBaseColorByHome: Record<string, string> = {
   black: "white",
   blue: "white",
@@ -1007,7 +1294,7 @@ export function getKitSpec(teamId: string, variant: KitVariant): KitSpec | undef
   else if (teamId === "congo-dr") normalizedId = "dr-congo";
   else if (teamId === "cabo-verde") normalizedId = "cape-verde";
 
-  const spec = [...kitSpecs, ...fallbackKitSpecs, ...internationalKitSpecs].find(
+  const spec = [...premierLeague2026KitSpecs, ...kitSpecs, ...fallbackKitSpecs, ...internationalKitSpecs].find(
     (spec) => spec.teamId === normalizedId && spec.variant === variant
   );
   if (spec) return spec;

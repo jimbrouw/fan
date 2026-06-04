@@ -10,19 +10,19 @@ const posterStyle = {
   description: "Clean football card composition with club colours."
 };
 
-test("Nottingham Forest 2025/26 home kit exposes exact visual details", () => {
+test("Nottingham Forest home kit uses the current 2026/27 Premier League overlay", () => {
   const spec = getKitSpec("nottingham-forest", "home");
 
-  assert.equal(spec?.season, "2025/26");
+  assert.equal(spec?.season, "2026/27");
   assert.equal(spec?.variant, "home");
   assert.equal(spec?.manufacturer, "adidas");
   assert.equal(spec?.mainSponsor, "Bally's");
   assert.equal(spec?.sleeveSponsor, "Ideagen");
-  assert.match(spec?.pattern ?? "", /thin vertical white pinstripes/i);
-  assert.match(spec?.collar ?? "", /red polo collar/i);
+  assert.match(spec?.pattern ?? "", /2026\/27 Nottingham Forest home shirt/i);
+  assert.match(spec?.sourceUrls.join(" ") ?? "", /premier-league-kits-2026-27/i);
 });
 
-test("poster prompt includes kit reference and 2025/26 kit mandate", () => {
+test("poster prompt includes current 2026/27 kit mandate", () => {
   const kitSpec = getKitSpec("nottingham-forest", "home");
   assert.ok(kitSpec);
 
@@ -39,13 +39,12 @@ test("poster prompt includes kit reference and 2025/26 kit mandate", () => {
     kitSpec
   });
 
-  assert.match(prompt, /official 2025\/26 Nottingham Forest home kit/i);
+  assert.match(prompt, /official 2026\/27 Nottingham Forest home kit/i);
   assert.match(prompt, /Bally's/i);
   assert.match(prompt, /Ideagen/i);
-  assert.match(prompt, /thin vertical white pinstripes/i);
-  assert.match(prompt, /white Bally's script sponsor/i);
-  assert.match(prompt, /Nottingham Forest crest inside a white shield/i);
-  assert.match(prompt, /attached kit reference image/i);
+  assert.match(prompt, /2026\/27 Nottingham Forest home shirt/i);
+  assert.doesNotMatch(prompt, /attached kit reference image/i);
+  assert.match(prompt, /No kit reference image is attached/i);
 });
 
 test("World Cup teams can fall back to away kit metadata", () => {
