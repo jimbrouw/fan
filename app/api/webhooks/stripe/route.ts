@@ -60,6 +60,11 @@ export async function POST(request: Request) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  if (session.metadata?.kind === "credits") {
+    await handleCreditsPurchase(session);
+    return;
+  }
+
   const jobId = session.metadata?.jobId;
   const optionId = session.metadata?.optionId as PrintfulProductOptionId | undefined;
   const cardMessage = session.metadata?.cardMessage?.trim() || null;
@@ -131,6 +136,47 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   });
 
   await markOrderFulfilled(supabase, session.id, String(order.id));
+}
+
+async function handleCreditsPurchase(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId;
+  const credits = Number.parseInt(session.metadata?.credits ?? "", 10);
+
+  if (!userId || !Number.isFinite(credits) || credits <= 0) {
+    throw new Error("Stripe credits session is missing userId or a valid credits amount.");
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  // Record the purchase keyed by Stripe session id for exactly-once crediting.
+  // A duplicate webhook delivery hits the primary-key conflict and is ignored.
+  const inserted = await supabase
+    .from("credit_purchases")
+    .insert({
+      stripe_session_id: session.id,
+      user_id: userId,
+      credits,
+      amount_total: session.amount_total,
+      currency: session.currency,
+    })
+    .select("stripe_session_id")
+    .maybeSingle<{ stripe_session_id: string }>();
+
+  if (inserted.error) {
+    if (inserted.error.code === "23505") {
+      return; // Already processed this session.
+    }
+    throw new Error(inserted.error.message);
+  }
+
+  const { error: creditError } = await supabase.rpc("add_user_credits", {
+    p_user_id: userId,
+    p_amount: credits,
+  });
+
+  if (creditError) {
+    throw new Error(creditError.message);
+  }
 }
 
 async function readExistingOrder(

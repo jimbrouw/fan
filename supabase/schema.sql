@@ -81,6 +81,15 @@ create table if not exists public.purchase_orders (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.credit_purchases (
+  stripe_session_id text primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  credits integer not null,
+  amount_total integer,
+  currency text,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.notifications (
   id uuid primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -105,6 +114,7 @@ create index if not exists video_jobs_generation_job_id_idx on public.video_jobs
 create index if not exists video_jobs_user_id_idx on public.video_jobs(user_id);
 create index if not exists video_jobs_provider_job_id_idx on public.video_jobs(provider_job_id);
 create index if not exists purchase_orders_generation_job_id_idx on public.purchase_orders(generation_job_id);
+create index if not exists credit_purchases_user_id_idx on public.credit_purchases(user_id);
 create index if not exists notifications_user_id_created_at_idx on public.notifications(user_id, created_at desc);
 
 create or replace function public.set_updated_at()
@@ -126,6 +136,17 @@ as $$
   update public.users
   set credits = credits - 1
   where id = p_user_id and credits > 0
+  returning credits;
+$$;
+
+-- Atomically grant credits after a successful purchase. Returns the new balance.
+create or replace function public.add_user_credits(p_user_id uuid, p_amount integer)
+returns integer
+language sql
+as $$
+  update public.users
+  set credits = credits + p_amount
+  where id = p_user_id
   returning credits;
 $$;
 
@@ -171,6 +192,7 @@ alter table public.captures enable row level security;
 alter table public.generation_jobs enable row level security;
 alter table public.video_jobs enable row level security;
 alter table public.purchase_orders enable row level security;
+alter table public.credit_purchases enable row level security;
 alter table public.notifications enable row level security;
 
 grant usage on schema public to anon, authenticated;
@@ -181,6 +203,7 @@ grant select, insert, update on public.captures to authenticated;
 grant select, insert, update on public.generation_jobs to authenticated;
 grant select, insert, update on public.video_jobs to authenticated;
 grant select on public.purchase_orders to authenticated;
+grant select on public.credit_purchases to authenticated;
 grant select, update on public.notifications to authenticated;
 
 drop policy if exists "Users can read own profile" on public.users;
@@ -258,6 +281,11 @@ using (
       and generation_jobs.user_id = auth.uid()
   )
 );
+
+drop policy if exists "Users can read own credit purchases" on public.credit_purchases;
+create policy "Users can read own credit purchases"
+on public.credit_purchases for select
+using (auth.uid() = user_id);
 
 drop policy if exists "Users can read own notifications" on public.notifications;
 create policy "Users can read own notifications"

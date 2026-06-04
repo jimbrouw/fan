@@ -10,6 +10,7 @@ import { upsertUserProfile } from "@/lib/users";
 import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
 import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
+import { FREE_TIER_GENERATIONS, isExemptEmail } from "@/lib/credits";
 
 type GenerateBody = {
   sessionId: string;
@@ -43,9 +44,6 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
   return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
 }
 
-const FREE_TIER_GENERATIONS = 3;
-const RATE_LIMIT_EXEMPT_EMAILS = new Set(["jimbrouwer@gmail.com"]);
-
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
@@ -54,7 +52,7 @@ export async function POST(request: Request) {
     }
     await upsertUserProfile(user);
 
-    const isExempt = RATE_LIMIT_EXEMPT_EMAILS.has((user.email ?? "").toLowerCase());
+    const isExempt = isExemptEmail(user.email);
     let consumeCreditAfterSuccess = false;
     if (!isExempt) {
       const usageClient = createServerSupabaseClient();
