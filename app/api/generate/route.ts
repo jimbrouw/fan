@@ -43,7 +43,7 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
   return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
 }
 
-const GENERATIONS_PER_HOUR = 10;
+const FREE_TIER_GENERATIONS = 3;
 const RATE_LIMIT_EXEMPT_EMAILS = new Set(["jimbrouwer@gmail.com"]);
 
 export async function POST(request: Request) {
@@ -56,19 +56,20 @@ export async function POST(request: Request) {
 
     const isExempt = RATE_LIMIT_EXEMPT_EMAILS.has((user.email ?? "").toLowerCase());
     if (!isExempt) {
-      const rateClient = createServerSupabaseClient();
-      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const { count, error: rateError } = await rateClient
+      const usageClient = createServerSupabaseClient();
+      const { count, error: usageError } = await usageClient
         .from("generation_jobs")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", since);
+        .eq("user_id", user.id);
 
       // Fail open if the user_id column isn't migrated yet so we never falsely block.
-      if (!rateError && (count ?? 0) >= GENERATIONS_PER_HOUR) {
+      if (!usageError && (count ?? 0) >= FREE_TIER_GENERATIONS) {
         return NextResponse.json(
-          { error: `You've reached the limit of ${GENERATIONS_PER_HOUR} posters per hour. Please try again later.` },
-          { status: 429 }
+          {
+            error: `You've used all ${FREE_TIER_GENERATIONS} of your free posters. Add credits to keep creating.`,
+            code: "free_tier_exhausted",
+          },
+          { status: 402 }
         );
       }
     }
