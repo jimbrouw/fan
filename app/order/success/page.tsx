@@ -3,14 +3,13 @@
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, Truck, ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, Download, Plus, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/Button";
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const orderId = searchParams.get("orderId") || sessionId || "N/A";
-  const provider = searchParams.get("provider") || (sessionId ? "stripe" : "printful");
   const optionId = searchParams.get("optionId") || "fathers-day-card";
 
   const optionNameMap = {
@@ -21,6 +20,12 @@ function OrderSuccessContent() {
   };
 
   const selectedName = optionNameMap[optionId as keyof typeof optionNameMap] || "Father's Day card";
+  const isDownload = optionId === "download";
+  const isPhysicalOrder = optionId === "fathers-day-card" || optionId === "birthday-card" || optionId === "poster";
+  const receiptReference = sessionId ? sessionId.slice(-10).toUpperCase() : orderId;
+  const statusLabel = isPhysicalOrder ? "Fulfillment Status" : "Delivery Status";
+  const statusText = isPhysicalOrder ? "Queued" : "Digital";
+  const fulfillmentCenter = isPhysicalOrder ? "Stripe + Printful" : "Stripe";
 
   return (
     <section className="flex flex-1 flex-col gap-6 pb-6 items-center justify-center min-h-[75vh]">
@@ -35,9 +40,13 @@ function OrderSuccessContent() {
           
           <div className="space-y-1.5">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Order Confirmed</p>
-            <h1 className="font-display text-[28px] leading-tight text-[var(--foreground)]">It&apos;s on the way!</h1>
+            <h1 className="font-display text-[28px] leading-tight text-[var(--foreground)]">
+              {isDownload ? "Your download is ready." : "It's on the way!"}
+            </h1>
             <p className="text-sm text-[var(--muted)] px-4">
-              Your payment cleared successfully. Physical orders are registered for fulfilment after Stripe confirms payment.
+              {isDownload
+                ? "Your payment cleared successfully. You can return to your poster to download the full-resolution file."
+                : "Your payment cleared successfully. Your order is being registered for fulfillment."}
             </p>
           </div>
         </div>
@@ -50,20 +59,20 @@ function OrderSuccessContent() {
           </div>
 
           <div className="flex justify-between items-center text-xs pb-2 border-b border-[var(--line)]">
-            <span className="text-[var(--muted)] font-semibold">{sessionId ? "Stripe Session" : provider === "printful" ? "Printful Draft ID" : "Order ID"}</span>
-            <span className="font-mono font-bold text-[var(--accent)]">{orderId}</span>
+            <span className="text-[var(--muted)] font-semibold">Receipt Reference</span>
+            <span className="font-mono font-bold text-[var(--accent)]">{receiptReference}</span>
           </div>
 
           <div className="flex justify-between items-center text-xs pb-2 border-b border-[var(--line)]">
-            <span className="text-[var(--muted)] font-semibold">{provider === "printful" ? "Postage Status" : "Delivery Status"}</span>
+            <span className="text-[var(--muted)] font-semibold">{statusLabel}</span>
             <span className="inline-flex items-center gap-1 font-bold text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full text-[10px]">
-              <Truck size={10} /> {provider === "printful" ? "Registered Draft" : "Digital"}
+              {isDownload ? <Download size={10} /> : <Truck size={10} />} {statusText}
             </span>
           </div>
 
           <div className="flex justify-between items-center text-xs">
             <span className="text-[var(--muted)] font-semibold">Fulfillment Center</span>
-            <span className="font-bold text-[var(--foreground)] uppercase tracking-[0.05em]">{sessionId ? "stripe" : provider} V2</span>
+            <span className="font-bold text-[var(--foreground)] uppercase tracking-[0.05em]">{fulfillmentCenter}</span>
           </div>
         </div>
 
@@ -71,19 +80,21 @@ function OrderSuccessContent() {
           <Link href="/capture">
             <Button className="w-full">
               <Plus size={16} />
-              Make another card
+              Make another poster
             </Button>
           </Link>
 
-          <a 
-            href="https://printful.com" 
-            target="_blank" 
-            rel="noreferrer"
-            className="w-full inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface-soft)] px-5 text-sm font-bold text-[var(--foreground)] transition duration-300 hover:bg-white active:scale-[0.98]"
-          >
-            Check Printful Dashboard
-            <ArrowRight size={15} />
-          </a>
+          {isPhysicalOrder && (
+            <a
+              href="https://printful.com"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface-soft)] px-5 text-sm font-bold text-[var(--foreground)] transition duration-300 hover:bg-white active:scale-[0.98]"
+            >
+              Check Printful Dashboard
+              <ArrowRight size={15} />
+            </a>
+          )}
         </div>
       </div>
     </section>
