@@ -194,8 +194,8 @@ export function ResultClient({ jobId }: { jobId: string }) {
             <Package size={22} className="text-[var(--foreground)]" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-[var(--foreground)]">Get Printed — from £7.99</p>
-            <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">A3 poster delivered to your door, or download without watermark.</p>
+            <p className="text-base font-bold text-[var(--foreground)]">Make it a card — from £4.99</p>
+            <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">Birthday, Father&apos;s Day, or matchday card. Printed and posted.</p>
           </div>
         </button>
       )}

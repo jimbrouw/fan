@@ -48,6 +48,18 @@ test("poster prompt includes kit reference and 2025/26 kit mandate", () => {
   assert.match(prompt, /attached kit reference image/i);
 });
 
+test("World Cup teams can fall back to away kit metadata", () => {
+  const spec = getKitSpec("england-wc", "away");
+
+  assert.ok(spec);
+  assert.equal(spec.team, "England");
+  assert.equal(spec.variant, "away");
+  assert.equal(spec.mainSponsor, "none");
+  assert.equal(spec.referenceImageUrl, undefined);
+  assert.match(spec.pattern, /away shirt/i);
+  assert.match(spec.pattern, /national-team trim/i);
+});
+
 test("poster prompt can replace the main shirt sponsor with Kitface branding", () => {
   const kitSpec = getKitSpec("nottingham-forest", "home");
   assert.ok(kitSpec);
@@ -81,8 +93,9 @@ test("Kitface sponsor mode is the default unless original sponsors are explicitl
 });
 
 test("poster prompt does not claim an image reference for metadata-only kits", () => {
-  const kitSpec = getKitSpec("arsenal", "home");
-  assert.ok(kitSpec);
+  const kitSpecWithReference = getKitSpec("arsenal", "home");
+  assert.ok(kitSpecWithReference);
+  const kitSpec = { ...kitSpecWithReference, referenceImageUrl: undefined };
   assert.equal(kitSpec.referenceImageUrl, undefined);
 
   const prompt = buildPosterPrompt({
@@ -133,7 +146,7 @@ test("Nano Banana prompt uses joyful broadcast media-day direction", () => {
   assert.match(prompt, /NO stern blank central expression/i);
 });
 
-test("GPT Image 2 prompt uses joyful club personality direction", () => {
+test("GPT Image 2 prompt uses the Kitface tournament poster structure", () => {
   const kitSpec = getKitSpec("nottingham-forest", "home");
   assert.ok(kitSpec);
 
@@ -154,21 +167,48 @@ test("GPT Image 2 prompt uses joyful club personality direction", () => {
   });
 
   assert.match(prompt, /GPT IMAGE 2 DIRECTION/i);
-  assert.match(prompt, /best day of the fan's life/i);
+  assert.match(prompt, /official international tournament media campaign/i);
+  assert.match(prompt, /real app result/i);
+  assert.match(prompt, /not a single-player trading card/i);
+  assert.match(prompt, /SUBJECT/i);
+  assert.match(prompt, /real football supporter/i);
+  assert.match(prompt, /One huge chest-up hero portrait occupies about 60-70%/i);
+  assert.match(prompt, /four to five smaller full-body action shots/i);
+  assert.match(prompt, /ACTION POSES/i);
+  assert.match(prompt, /running, celebrating, match action/i);
   assert.match(prompt, /IDENTITY LOCK/i);
-  assert.match(prompt, /recognisable likeness/i);
+  assert.match(prompt, /one football media-day shoot/i);
+  assert.match(prompt, /Do not beautify, de-age, slim, bulk up/i);
+  assert.match(prompt, /REFERENCE PRIORITY/i);
+  assert.match(prompt, /additional person photos are the same person/i);
+  assert.match(prompt, /PHOTO ENHANCEMENT/i);
+  assert.match(prompt, /lift shadows/i);
+  assert.match(prompt, /harsh phone-camera lighting/i);
+  assert.match(prompt, /PHYSICAL INTEGRATION/i);
+  assert.match(prompt, /head, neck, shoulders, and shirt must look photographed together/i);
+  assert.match(prompt, /contact shadows where the chin, neck, and collar meet/i);
+  assert.match(prompt, /EXPRESSION/i);
+  assert.match(prompt, /proud, warm, joyful, and celebratory/i);
+  assert.match(prompt, /not a passport photo/i);
+  assert.match(prompt, /Use the selected kit variables and kit reference images exactly/i);
   assert.match(prompt, /KIND ATHLETIC PRESENTATION/i);
   assert.match(prompt, /flattering kit fit/i);
-  assert.match(prompt, /No body-shaming caricature/i);
-  assert.match(prompt, /No exaggerated belly, double chin, or squeezed kit/i);
+  assert.match(prompt, /Modern football stadium at night/i);
+  assert.match(prompt, /national-team media asset polish/i);
+  assert.match(prompt, /Only include readable text explicitly allowed by the dynamic prompt/i);
   assert.match(prompt, /NEGATIVE PROMPT/i);
-  assert.match(prompt, /No generic replacement face/i);
-  assert.match(prompt, /No missing sponsor on visible shirt fronts/i);
-  assert.match(prompt, /lovable AI absurdity/i);
+  assert.match(prompt, /No cartoon/i);
+  assert.match(prompt, /sad hero face/i);
+  assert.match(prompt, /stern passport-photo expression/i);
+  assert.match(prompt, /pasted-on head/i);
+  assert.match(prompt, /mismatched head\/body lighting/i);
+  assert.match(prompt, /collar gap/i);
+  assert.match(prompt, /single generic footballer portrait/i);
+  assert.match(prompt, /missing bottom action figures/i);
   assert.match(prompt, /Tricky Trees/i);
   assert.match(prompt, /subtle tree silhouettes/i);
   assert.match(prompt, /not literal mascots/i);
-  assert.ok(prompt.length <= 12000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
+  assert.ok(prompt.length <= 10000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
 });
 
 test("poster prompt can frame an away VS match with the reference person on the selected side", () => {

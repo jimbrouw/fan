@@ -179,12 +179,26 @@ Preserve the person's recognisable build, age, and identity, but present them ki
 ${matchSection}
 
 COMPOSITION & POSES:
-Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player." : ""} Do not swap sides.`
-    : `Modern football ${isNationalTeam ? "tournament" : "league"} poster, surrounded by multiple versions of [img] in different athletic poses and kit colours.
+${isGptImage ? `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one huge chest-up selected-side hero portrait dominate the poster, with four to five smaller selected-side full-body action shots along the bottom third. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} as secondary match context only. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player only, never for the selected-side hero figures." : ""} Do not swap sides.` : `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player." : ""} Do not swap sides.`}`
+    : `Modern football ${isNationalTeam ? "tournament" : "league"} poster${isGptImage ? " starring [img] in a fresh football campaign concept" : ", surrounded by multiple versions of [img] in different athletic poses and kit colours"}.
 
 COMPOSITION & POSES:
-Use the same [img] face in every pose: close-up centre portrait, triumphant shouting pose, thoughtful captain pose, running and celebrating figures. Do not include a trophy, cup, or medal as a central prop.`;
+${isGptImage ? "Use one huge chest-up hero portrait occupying approximately 60-70% of the poster, plus four to five smaller full-body action shots positioned along the bottom third. Every smaller figure must be the same reference person. Include running, celebrating, match action, arms raised after scoring, and crowd celebration energy. Do not include a trophy, cup, or medal as a central prop." : "Use the same [img] face in every pose: close-up centre portrait, triumphant shouting pose, thoughtful captain pose, running and celebrating figures. Do not include a trophy, cup, or medal as a central prop."}`;
 
+  /*
+   * LEGACY GPT IMAGE 2 PROMPT (rollback reference):
+   *
+   * Use GPT Image 2's stronger prompt adherence to build a premium but intentionally funny football media-day poster. The mood should feel like the best day of the fan's life, as if they have just won the biggest match of their life: joyful, comedic, over-the-top, broad grins, laughing, arms raised, playful fist pumps, kneeslide celebration, badge-kiss pride, confetti-like atmosphere, warm internet-football humour, and a tiny controlled dose of lovable AI absurdity. Keep it family-friendly, polished, and emotionally light.
+   *
+   * IDENTITY LOCK:
+   * The reference person is the hero. Preserve the reference person's recognisable likeness across every repeated version: head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, and body type. Expressions may become happier and more theatrical, but the person must still clearly look like the source photo. Do not average the face with professional players, kit-reference models, or generic footballer faces.
+   *
+   * COMPOSITION:
+   * Use one large central hero portrait with a joyful proud grin, plus smaller supporting versions doing funny match-winning celebrations. Keep the repeated figures readable and intentionally poster-like, not chaotic. If identity starts to drift, use fewer repeated figures and make the central portrait more accurate.
+   *
+   * NEGATIVE PROMPT:
+   * No generic replacement face. No face averaging. No beautified stranger. No unrealistic body transformation. No body-shaming caricature. No exaggerated belly, double chin, or squeezed kit. No stern police-lineup expression. No dead-eyed serious portrait. No missing sponsor on visible shirt fronts. No fake sponsor font. No random readable poster titles. No slogan text. No malformed hands. No extra fingers. No warped limbs. No duplicate half-faces. No melted facial features. No chaotic AI slop. No scary or aggressive mood. No literal mascot costume. No giant nickname text. No applying the fan face to opposition players.
+   */
   const modelDirection = isNanoBanana
     ? `NANO BANANA MODEL DIRECTION:
 Make this a joyful, funny, celebratory fan media-day poster, not a stern professional lineup collage. Identity accuracy is more important than the smile or pose: preserve the reference person's head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, and body type. The central hero should have a natural proud smile that still looks exactly like the reference person, not a generic smiling replacement face. Supporting poses can be playful and over-the-top: laughing, roaring with joy, arms raised, fist pump, kneeslide, or cheeky badge-kiss energy. If exact identity would suffer, use fewer supporting figures rather than inventing a new face.
@@ -194,34 +208,74 @@ ${flatteringAthleticDirection}
 Use a premium football broadcast environment: bright stadium atmosphere with curved stands and crowd texture, clean floodlit pitch, vibrant matchday energy, electric gradient light forms across the environment. The composition should feel like official sports campaign photography — sharp, premium, broadcast-quality. The people, pitch, lights, and crowd must feel integrated in one scene. Reproduce the shirt sponsor as the exact logo style from the kit reference, not plain typed text or a generic font. No plain studio background. No dark moody fog. No shadowy back-lit cinema look. No large poster title text, slogan text, fake readable banners, random advertising boards, old sponsors, trophies, cups, medals, or isolated cutout collage.`
     : isGptImage
       ? `GPT IMAGE 2 DIRECTION:
-Use GPT Image 2's stronger prompt adherence to build a premium but intentionally funny football media-day poster. The mood should feel like the best day of the fan's life, as if they have just won the biggest match of their life: joyful, comedic, over-the-top, broad grins, laughing, arms raised, playful fist pumps, kneeslide celebration, badge-kiss pride, confetti-like atmosphere, warm internet-football humour, and a tiny controlled dose of lovable AI absurdity. Keep it family-friendly, polished, and emotionally light.
+Create a premium photorealistic Kitface football poster that looks like a real app result: official international tournament media campaign meets modern sports broadcast advertising; not a single-player trading card.
+
+SUBJECT:
+The hero is the uploaded person as a real football supporter, not a professional footballer, celebrity, or replacement model. Preserve realistic skin texture, natural imperfections, strong facial detail, natural eyes, realistic proportions, and a proud joyful expression. The same person must appear throughout the poster.
+
+POSTER STRUCTURE:
+Vertical 3:4 poster. One huge chest-up hero portrait occupies about 60-70% of the poster and dominates the background. Add four to five smaller full-body action shots along the bottom third: running, celebrating, match action, arms raised after scoring, and crowd celebration. Every figure must be the uploaded person.
 
 IDENTITY LOCK:
-The reference person is the hero. Preserve the reference person's recognisable likeness across every repeated version: head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, and body type. Expressions may become happier and more theatrical, but the person must still clearly look like the source photo. Do not average the face with professional players, kit-reference models, or generic footballer faces.
+Preserve exact recognisable likeness above all style choices: head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, body type, and natural facial proportions. Keep identity consistent across every appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but the person must still clearly look like the uploaded photo. Do not beautify, de-age, slim, bulk up, average the face with footballers, or replace them.
+
+REFERENCE PRIORITY:
+The first attached image is the primary identity source. Any additional person photos are the same person and may be used for smile, celebration, body build, and lighting correction. Kit reference images are clothing only: shirt, collar, crest, manufacturer, sponsor, pattern, shorts, and socks. Never borrow faces, bodies, poses, or lighting from kit images. Identity accuracy from the person photos wins over poster style.
+
+PHOTO ENHANCEMENT:
+If the person photo has poor lighting, heavy shadows, dull expression, uneven exposure, tired eyes, harsh phone-camera lighting, or flat indoor light, improve it naturally: lift shadows, even skin lighting, brighten eyes, correct exposure, soften harsh under-eye shadows, and keep natural skin texture. Keep the same person; do not change age, face shape, nose, eyes, jaw, skin texture, facial hair, or body type.
+
+PHYSICAL INTEGRATION:
+The head, neck, shoulders, and shirt must look photographed together in one real stadium shoot, not composited. Match face lighting to stadium key/rim light. Add contact shadows where the chin, neck, and collar meet. Keep correct neck thickness, shoulder connection, skin tone, camera perspective, and lens scale. Collar sits around the real neck with believable fabric tension and shadow.
+
+EXPRESSION:
+The hero portrait must feel proud, warm, joyful, and celebratory. This is a football celebration, not a passport photo. Avoid sad, stern, tired, angry, blank, police-lineup, or dead-eyed expressions.
+
+KIT:
+Use the selected kit variables and kit reference images exactly. Render authentic fabric texture, stitching, folds, crest, manufacturer mark, collar, trim, shorts, and socks. The shirt must look physically worn, not pasted on. If Kitface sponsor mode is active, chest sponsor must read exactly "kitface.app" and be integrated into the fabric. If original sponsor mode is active, keep the original sponsor from the kit reference/profile.
 
 ${flatteringAthleticDirection}
 
 COMPOSITION:
-Use one large central hero portrait with a joyful proud grin, plus smaller supporting versions doing funny match-winning celebrations. Keep the repeated figures readable and intentionally poster-like, not chaotic. If identity starts to drift, use fewer repeated figures and make the central portrait more accurate.
+Use a clean official football federation media-day poster aesthetic. Place the huge hero portrait in the upper/middle area. Arrange smaller action versions across the bottom third with realistic scale, feet on pitch, and natural overlap. Keep layout premium and uncluttered with subtle broadcast graphic overlays.
+
+ACTION POSES:
+Bottom-third action figures should read as a complete sequence: running, celebrating, match action with ball or movement, arms raised after scoring, and crowd celebration. Figures are smaller than the hero but sharp and recognisable.
 
 ${matchContext
   ? `MATCHDAY VS HANDLING:
-The selected-side fan figure is the hero. Opposition or matchday players are secondary scene elements only. Do not put the reference person's face on opposition players. Use opposition figures as smaller, less prominent, non-reference footballers with clear side separation. Avoid making real players look like distorted copies of the fan.`
+The selected-side fan figure is the hero and must follow the huge-portrait-plus-bottom-action-pose structure. Opposition or matchday players are secondary scene elements only. Do not put the reference person's face on opposition players. Use opposition figures as smaller, less prominent, non-reference footballers with clear side separation. Avoid making real players look like distorted copies of the fan.`
   : "SINGLE-TEAM HANDLING:\nEvery human figure that represents the hero fan should use the same reference identity. Do not introduce unrelated celebrity or professional-player faces."}
 
-KIT AND LOGO ACCURACY:
-Treat kit references as shirt references only. Keep sponsor, crest, manufacturer, collar, shirt pattern, sleeve sponsor, shorts, and socks accurate. If the shirt front is visible, show the correct sponsor logo; do not leave the main central shirt blank.
+ENVIRONMENT:
+Modern football stadium at night with bright floodlights, crowd texture, smoke haze, light confetti, visible pitch texture, cinematic depth, and premium matchday atmosphere.
+
+DESIGN AND PALETTE:
+Modern sports editorial layout, tournament campaign quality, national-team media asset polish, football advertising feel, professional matchday programme quality, and premium broadcast sports graphics. Use selected team palette. For England-style or neutral Kitface outputs, favour white, navy blue, England red accents, subtle grey overlays, and bright highlights.
+
+BRANDING AND TEXT:
+Only include readable text explicitly allowed by the dynamic prompt: "Kitface", "YOUR POSTER", authentic shirt numbers or provided shirt-name personalisation, crests, maker logos, allowed sleeve sponsors, and selected shirt sponsor. Do not add random poster titles, fake slogans, stadium copy, or extra readable advertising.
+
+LIGHTING AND QUALITY:
+Stadium commercial lighting, soft key light on face, controlled rim light, natural skin tones, premium sports photography, professional retouching, photorealistic detail, sharp focus, realistic anatomy, hands, eyes, and facial proportions.
+
+MOOD:
+Confident, proud, joyful, relatable, celebratory, and emotionally warm. The person should feel like a typical supporter having the best football media-day moment of their life, not like a celebrity or elite athlete. Keep it family-friendly and polished.
 
 ${motifNotes ? `CLUB PERSONALITY:\nUse club personality lightly: ${motifNotes} These should be subtle environmental jokes or background atmosphere cues, not literal mascots, not large text, and not the main subject.` : ""}
 
 NEGATIVE PROMPT:
-No generic replacement face. No face averaging. No beautified stranger. No unrealistic body transformation. No body-shaming caricature. No exaggerated belly, double chin, or squeezed kit. No stern police-lineup expression. No dead-eyed serious portrait. No missing sponsor on visible shirt fronts. No fake sponsor font. No random readable poster titles. No slogan text. No malformed hands. No extra fingers. No warped limbs. No duplicate half-faces. No melted facial features. No chaotic AI slop. No scary or aggressive mood. No literal mascot costume. No giant nickname text. No applying the fan face to opposition players.`
+No trophy. No cartoon, illustration, painting, CGI look, AI-art style, celebrity likeness, child, generic replacement face, face averaging, beautified stranger, copied pro-player face, mismatched identity, identity drift, pasted-on head, cutout face, mismatched head/body lighting, halo edge around head, missing neck shadow, collar gap, sad hero face, stern passport-photo expression, tired dead-eyed portrait, single generic footballer portrait, missing bottom action figures, distorted anatomy, extra fingers, warped limbs, malformed hands, blurry faces, unrealistic body transformation, body-shaming caricature, exaggerated belly, double chin, squeezed kit, random logos, watermarks, fake sponsor names, misspelled text, random titles, extra slogans, mascot costume, giant nickname text, or fan face on opposition players.`
     : "";
-  const moodSection = !matchContext || isNanoBanana || isGptImage
+  const moodSection = isGptImage
     ? `MOOD:
+Premium tournament-final poster energy; confident, proud, relatable supporter expression; preserve identity.
+${motifNotes ? `Club personality: ${motifNotes} Subtle background cues only.` : ""}`
+    : !matchContext || isNanoBanana
+      ? `MOOD:
 Joyful, funny, best-day-of-your-life winning energy; proud warm expressions, preserve identity.
 ${motifNotes ? `Club personality: ${motifNotes} Subtle background cues only.` : ""}`
-    : "";
+      : "";
 
   const personalisationSection = (input.shirtName || input.teamSlogan)
     ? `PERSONALISATION:

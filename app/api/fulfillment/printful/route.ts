@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { PrintfulFulfillmentProvider, readPrintfulDraftOrderConfig } from "@/lib/fulfillment/printful";
+import { PrintfulFulfillmentProvider, readPrintfulDraftOrderConfig, type PrintfulProductOptionId } from "@/lib/fulfillment/printful";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type FulfillmentRequest = {
   jobId?: string;
+  optionId?: PrintfulProductOptionId;
 };
 
 type JobRow = {
@@ -18,6 +19,10 @@ export async function POST(request: Request) {
 
     if (!body.jobId) {
       return NextResponse.json({ error: "jobId is required." }, { status: 400 });
+    }
+
+    if (body.optionId === "download") {
+      return NextResponse.json({ error: "Download orders do not use Printful fulfillment." }, { status: 400 });
     }
 
     const supabase = createServerSupabaseClient();
@@ -35,10 +40,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only completed jobs with an output image can be sent to Printful." }, { status: 409 });
     }
 
-    const config = readPrintfulDraftOrderConfig();
+    const config = readPrintfulDraftOrderConfig(body.optionId ?? "fathers-day-card");
     const provider = new PrintfulFulfillmentProvider();
     const order = await provider.createDraftOrder({
-      externalId: `kitface-${job.id}`,
+      externalId: `kitface-${body.optionId ?? "fathers-day-card"}-${job.id}`,
       recipient: config.recipient,
       catalogVariantId: config.catalogVariantId,
       printFileUrl: job.output_url,
@@ -48,6 +53,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       provider: "printful",
+      productType: config.productType,
       orderId: String(order.id),
       status: order.status ?? "draft"
     });

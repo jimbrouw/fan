@@ -66,6 +66,19 @@ create table if not exists public.video_jobs (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.purchase_orders (
+  stripe_session_id text primary key,
+  generation_job_id uuid not null references public.generation_jobs(id) on delete cascade,
+  option_id text not null,
+  status text not null check (status in ('processing', 'fulfilled', 'failed')),
+  amount_total integer,
+  currency text,
+  customer_email text,
+  printful_order_id text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.notifications (
   id uuid primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -89,6 +102,7 @@ create index if not exists generation_jobs_provider_job_id_idx on public.generat
 create index if not exists video_jobs_generation_job_id_idx on public.video_jobs(generation_job_id);
 create index if not exists video_jobs_user_id_idx on public.video_jobs(user_id);
 create index if not exists video_jobs_provider_job_id_idx on public.video_jobs(provider_job_id);
+create index if not exists purchase_orders_generation_job_id_idx on public.purchase_orders(generation_job_id);
 create index if not exists notifications_user_id_created_at_idx on public.notifications(user_id, created_at desc);
 
 create or replace function public.set_updated_at()
@@ -131,12 +145,18 @@ create trigger set_video_jobs_updated_at
 before update on public.video_jobs
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_purchase_orders_updated_at on public.purchase_orders;
+create trigger set_purchase_orders_updated_at
+before update on public.purchase_orders
+for each row execute function public.set_updated_at();
+
 alter table public.capture_sessions enable row level security;
 alter table public.users enable row level security;
 alter table public.user_notification_preferences enable row level security;
 alter table public.captures enable row level security;
 alter table public.generation_jobs enable row level security;
 alter table public.video_jobs enable row level security;
+alter table public.purchase_orders enable row level security;
 alter table public.notifications enable row level security;
 
 grant usage on schema public to anon, authenticated;
@@ -146,6 +166,7 @@ grant select, insert, update on public.capture_sessions to authenticated;
 grant select, insert, update on public.captures to authenticated;
 grant select, insert, update on public.generation_jobs to authenticated;
 grant select, insert, update on public.video_jobs to authenticated;
+grant select on public.purchase_orders to authenticated;
 grant select, update on public.notifications to authenticated;
 
 drop policy if exists "Users can read own profile" on public.users;
@@ -211,6 +232,18 @@ drop policy if exists "Users can read own video jobs" on public.video_jobs;
 create policy "Users can read own video jobs"
 on public.video_jobs for select
 using (auth.uid() = user_id);
+
+drop policy if exists "Users can read own purchase orders" on public.purchase_orders;
+create policy "Users can read own purchase orders"
+on public.purchase_orders for select
+using (
+  exists (
+    select 1
+    from public.generation_jobs
+    where generation_jobs.id = purchase_orders.generation_job_id
+      and generation_jobs.user_id = auth.uid()
+  )
+);
 
 drop policy if exists "Users can read own notifications" on public.notifications;
 create policy "Users can read own notifications"

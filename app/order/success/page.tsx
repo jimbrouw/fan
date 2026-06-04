@@ -8,17 +8,19 @@ import { Button } from "@/components/Button";
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId") || "N/A";
-  const provider = searchParams.get("provider") || "printful";
-  const optionId = searchParams.get("optionId") || "poster";
+  const sessionId = searchParams.get("session_id");
+  const orderId = searchParams.get("orderId") || sessionId || "N/A";
+  const provider = searchParams.get("provider") || (sessionId ? "stripe" : "printful");
+  const optionId = searchParams.get("optionId") || "fathers-day-card";
 
   const optionNameMap = {
+    "fathers-day-card": "Father's Day card",
+    "birthday-card": "Birthday card",
     download: "Download — no watermark",
     poster: "A3 poster — delivered",
-    bundle: "The gift set",
   };
 
-  const selectedName = optionNameMap[optionId as keyof typeof optionNameMap] || "A3 poster — delivered";
+  const selectedName = optionNameMap[optionId as keyof typeof optionNameMap] || "Father's Day card";
 
   return (
     <section className="flex flex-1 flex-col gap-6 pb-6 items-center justify-center min-h-[75vh]">
@@ -35,7 +37,7 @@ function OrderSuccessContent() {
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Order Confirmed</p>
             <h1 className="font-display text-[28px] leading-tight text-[var(--foreground)]">It&apos;s on the way!</h1>
             <p className="text-sm text-[var(--muted)] px-4">
-              Your mock payment cleared successfully, and the real draft order is now registered.
+              Your payment cleared successfully. Physical orders are registered for fulfilment after Stripe confirms payment.
             </p>
           </div>
         </div>
@@ -48,20 +50,20 @@ function OrderSuccessContent() {
           </div>
 
           <div className="flex justify-between items-center text-xs pb-2 border-b border-[var(--line)]">
-            <span className="text-[var(--muted)] font-semibold">Printful Draft ID</span>
+            <span className="text-[var(--muted)] font-semibold">{sessionId ? "Stripe Session" : provider === "printful" ? "Printful Draft ID" : "Order ID"}</span>
             <span className="font-mono font-bold text-[var(--accent)]">{orderId}</span>
           </div>
 
           <div className="flex justify-between items-center text-xs pb-2 border-b border-[var(--line)]">
-            <span className="text-[var(--muted)] font-semibold">Postage Status</span>
+            <span className="text-[var(--muted)] font-semibold">{provider === "printful" ? "Postage Status" : "Delivery Status"}</span>
             <span className="inline-flex items-center gap-1 font-bold text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full text-[10px]">
-              <Truck size={10} /> Registered Draft
+              <Truck size={10} /> {provider === "printful" ? "Registered Draft" : "Digital"}
             </span>
           </div>
 
           <div className="flex justify-between items-center text-xs">
             <span className="text-[var(--muted)] font-semibold">Fulfillment Center</span>
-            <span className="font-bold text-[var(--foreground)] uppercase tracking-[0.05em]">{provider} V2</span>
+            <span className="font-bold text-[var(--foreground)] uppercase tracking-[0.05em]">{sessionId ? "stripe" : provider} V2</span>
           </div>
         </div>
 
@@ -69,7 +71,7 @@ function OrderSuccessContent() {
           <Link href="/capture">
             <Button className="w-full">
               <Plus size={16} />
-              Make another poster
+              Make another card
             </Button>
           </Link>
 

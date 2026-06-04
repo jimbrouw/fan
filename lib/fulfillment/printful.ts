@@ -1,4 +1,7 @@
 const PRINTFUL_API_BASE_URL = "https://api.printful.com/v2";
+const DEFAULT_GREETING_CARD_VARIANT_ID = 14457;
+
+export type PrintfulProductOptionId = "fathers-day-card" | "birthday-card" | "download" | "poster";
 
 export type PrintfulRecipient = {
   name?: string;
@@ -122,20 +125,40 @@ export class PrintfulFulfillmentProvider {
   }
 }
 
-export function readPrintfulDraftOrderConfig() {
-  const catalogVariantId = Number(process.env.PRINTFUL_POSTER_VARIANT_ID);
+export function isPrintfulCardOption(optionId?: string) {
+  return optionId === "fathers-day-card" || optionId === "birthday-card";
+}
+
+export function readPrintfulDraftOrderConfig(optionId: PrintfulProductOptionId = "fathers-day-card") {
+  return {
+    ...readPrintfulProductConfig(optionId),
+    recipient: readPrintfulRecipient()
+  };
+}
+
+export function readPrintfulProductConfig(optionId: PrintfulProductOptionId = "fathers-day-card") {
+  const isCard = isPrintfulCardOption(optionId);
+  const catalogVariantId = isCard
+    ? Number(process.env.PRINTFUL_CARD_VARIANT_ID ?? process.env.PRINTFUL_GREETING_CARD_VARIANT_ID ?? DEFAULT_GREETING_CARD_VARIANT_ID)
+    : Number(process.env.PRINTFUL_POSTER_VARIANT_ID);
 
   if (!Number.isInteger(catalogVariantId) || catalogVariantId <= 0) {
+    const variableName = isCard ? "PRINTFUL_CARD_VARIANT_ID" : "PRINTFUL_POSTER_VARIANT_ID";
+    const productName = isCard ? "Greeting Card" : "A3 poster";
     throw new Error(
-      "PRINTFUL_POSTER_VARIANT_ID must be configured as a positive integer. Find the A3 poster catalog_variant_id in Printful's catalog API or dashboard, then add it to .env.local."
+      `${variableName} must be configured as a positive integer. Find the ${productName} catalog_variant_id in Printful's catalog API or dashboard, then add it to .env.local.`
     );
   }
 
   return {
     catalogVariantId,
-    placement: process.env.PRINTFUL_POSTER_PLACEMENT || "default",
-    technique: process.env.PRINTFUL_POSTER_TECHNIQUE || "digital",
-    recipient: readPrintfulRecipient()
+    placement: isCard
+      ? process.env.PRINTFUL_CARD_PLACEMENT || "front"
+      : process.env.PRINTFUL_POSTER_PLACEMENT || "default",
+    technique: isCard
+      ? process.env.PRINTFUL_CARD_TECHNIQUE || "digital"
+      : process.env.PRINTFUL_POSTER_TECHNIQUE || "digital",
+    productType: isCard ? "card" : "poster"
   };
 }
 

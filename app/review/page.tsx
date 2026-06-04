@@ -25,9 +25,9 @@ export default function ReviewPage() {
     <AppFrame>
       <section className="flex flex-1 flex-col gap-6 pb-4">
         <div className="space-y-3">
-          <h1 className="font-display text-[34px] leading-none text-[var(--foreground)]">Review.</h1>
+          <h1 className="font-display text-[34px] leading-none text-[var(--foreground)]">Check your photos.</h1>
           <p className="text-sm leading-6 text-[var(--muted)]">
-            Check every photo before choosing the kit and poster style.
+            Keep the clear ones. Retake anything blurry.
           </p>
         </div>
 
@@ -37,8 +37,8 @@ export default function ReviewPage() {
               <CheckCircle2 size={20} />
             </div>
             <div>
-              <p className="font-semibold text-[var(--foreground)]">Looks good.</p>
-              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Retake anything that feels blurry or awkward.</p>
+              <p className="font-semibold text-[var(--foreground)]">Ready for your kit.</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Next you choose the team and poster style.</p>
             </div>
           </div>
         </div>

@@ -193,9 +193,8 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
   }
 
   return (
-    <section className="flex flex-1 flex-col min-h-0">
-      {/* Camera view — fills all remaining space */}
-      <div className="relative flex-1 min-h-0 overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--surface-soft)] shadow-[0_28px_55px_rgba(42,0,79,0.12)]">
+    <section className="flex min-h-0 flex-1 flex-col">
+      <div className="relative min-h-[220px] flex-1 overflow-hidden rounded-[22px] border border-[var(--line)] bg-[var(--surface-soft)] shadow-[0_28px_55px_rgba(42,0,79,0.12)]">
         {error ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-[var(--muted)]">
             <VideoOff size={34} className="text-[var(--accent)]" />
@@ -243,17 +242,16 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
                 {isSaving
                   ? "Saving…"
                   : validation?.messages[0]
-                    ?? "Hit the button then step into position — you have 5 seconds!"}
+                    ?? "Tap once, then step into position."}
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* Controls — always pinned, never shift */}
-      <div className="shrink-0 py-4">
+      <div className="shrink-0 pb-2 pt-3">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <Button variant="secondary" onClick={retake} disabled={!capturedBlob}>
+          <Button variant="secondary" onClick={retake} disabled={!capturedBlob} className="h-11 px-3 text-xs">
             <RefreshCw size={17} />
             Retake
           </Button>
@@ -261,7 +259,7 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
             aria-label={step.autoCapture ? "Start countdown" : "Take photo"}
             onClick={step.autoCapture ? startCountdown : captureFrame}
             disabled={Boolean(error) || isValidating || countdown !== null}
-            className="grid size-[72px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(42,0,79,0.12)] transition active:scale-95 disabled:opacity-50"
+            className="grid size-[66px] place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--foreground)] shadow-[0_18px_38px_rgba(42,0,79,0.12)] transition active:scale-95 disabled:opacity-50"
           >
             <Camera size={26} />
           </button>
@@ -269,6 +267,7 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
             variant="primary"
             disabled={!capturedBlob || !validation}
             onClick={() => capturedBlob && validation && onUsePhoto(capturedBlob, validation)}
+            className="h-11 px-3 text-xs"
           >
             <Check size={17} />
             Use photo
@@ -286,7 +285,7 @@ export function CameraCapture({ step, onUsePhoto, isSaving }: CameraCaptureProps
           type="button"
           onClick={() => uploadInputRef.current?.click()}
           disabled={isValidating || countdown !== null || isSaving}
-          className="mt-3 w-full bg-white text-[var(--foreground)] hover:bg-white"
+          className="mt-2 h-10 w-full bg-white text-xs text-[var(--foreground)] hover:bg-white"
         >
           <Upload size={17} />
           Upload a photo

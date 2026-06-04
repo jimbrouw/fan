@@ -1,9 +1,12 @@
+import type { PrintfulProductOptionId } from "@/lib/fulfillment/printful";
 import { NextResponse } from "next/server";
+import { getCheckoutProduct } from "@/lib/checkout/products";
+import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type CheckoutRequest = {
   jobId?: string;
-  optionId?: "download" | "poster" | "bundle";
+  optionId?: PrintfulProductOptionId;
 };
 
 type JobRow = {
@@ -19,6 +22,15 @@ export async function POST(request: Request) {
     if (!body.jobId || !body.optionId) {
       return NextResponse.json(
         { error: "jobId and optionId are required." },
+        { status: 400 }
+      );
+    }
+
+    const product = getCheckoutProduct(body.optionId);
+
+    if (!product) {
+      return NextResponse.json(
+        { error: "Unknown checkout option." },
         { status: 400 }
       );
     }
@@ -44,20 +56,62 @@ export async function POST(request: Request) {
       );
     }
 
-    const hasStripe = Boolean(process.env.STRIPE_SECRET_KEY);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-    if (hasStripe) {
-      // In the future, you will initialize Stripe here:
-      // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-      // const session = await stripe.checkout.sessions.create(...);
-      // return NextResponse.json({ url: session.url });
+    if (!appUrl) {
+      return NextResponse.json(
+        { error: "NEXT_PUBLIC_APP_URL is not configured." },
+        { status: 503 }
+      );
     }
 
-    // Graceful fallback: Simulator Checkout url
-    const mockSessionId = `mock_sess_${job.id}_${body.optionId}`;
-    const checkoutUrl = `/checkout/${mockSessionId}`;
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: product.currency,
+            unit_amount: product.unitAmount,
+            product_data: {
+              name: product.name,
+              description: product.description
+            }
+          }
+        }
+      ],
+      metadata: {
+        jobId: job.id,
+        optionId: product.id
+      },
+      payment_intent_data: {
+        metadata: {
+          jobId: job.id,
+          optionId: product.id
+        }
+      },
+      customer_creation: "if_required",
+      phone_number_collection: {
+        enabled: product.requiresShipping
+      },
+      shipping_address_collection: product.requiresShipping
+        ? {
+            allowed_countries: ["GB"]
+          }
+        : undefined,
+      success_url: `${appUrl}/order/success?session_id={CHECKOUT_SESSION_ID}&optionId=${product.id}`,
+      cancel_url: `${appUrl}/upgrade/${job.id}`
+    });
 
-    return NextResponse.json({ url: checkoutUrl });
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "Stripe did not return a checkout URL." },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({ url: session.url });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(

@@ -219,13 +219,10 @@ export function CaptureClient() {
   }
 
   return (
-    // Fixed full-viewport layout — no scroll, camera fills available height
-    // Outer shell centres the panel on wide screens (desktop/tablet)
-    <div className="fixed inset-0 flex justify-center bg-[var(--background)]">
-    <div className="flex w-full max-w-[430px] flex-col overflow-hidden bg-[var(--surface)]">
+    <div className="fixed inset-0 flex h-[100dvh] max-h-[100dvh] touch-none justify-center overflow-hidden bg-[var(--background)]">
+    <div className="flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-[var(--surface)]">
 
-      {/* Header — always visible, never shifts */}
-      <header className="shrink-0 flex items-center justify-between px-5 pt-5 pb-3">
+      <header className="flex shrink-0 items-center justify-between px-5 pb-3 pt-[max(16px,env(safe-area-inset-top))]">
         <Link href="/" className="font-display text-[26px] leading-none text-[var(--foreground)]">
           Kitface
         </Link>
@@ -254,17 +251,16 @@ export function CaptureClient() {
       </header>
 
       {isCheckingAuth ? (
-        <div className="flex flex-1 items-center justify-center text-sm text-[var(--muted)]">
+        <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-[var(--muted)]">
           One moment...
         </div>
       ) : (
-        <div className="flex flex-1 flex-col min-h-0 px-4 pb-safe">
-          {/* Step title + instruction — compact, always above camera */}
-          <div className="shrink-0 pb-3 text-center">
-            <h1 className="font-display text-[26px] leading-tight text-[var(--foreground)]">
+        <div className="flex min-h-0 flex-1 flex-col px-4 pb-[max(8px,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 pb-2 text-center">
+            <h1 className="font-display text-[24px] leading-tight text-[var(--foreground)]">
               {activeStep.title}
             </h1>
-            <p className="mt-1 text-sm leading-5 text-[var(--muted)]">
+            <p className="mx-auto mt-1 max-w-[30ch] text-sm leading-5 text-[var(--muted)]">
               {activeStep.instruction}
             </p>
           </div>
@@ -275,10 +271,10 @@ export function CaptureClient() {
               <div className="flex flex-col gap-3">
                 <div>
                   <h3 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                    <span>✨</span> Reuse your last photos?
+                    <span>✨</span> Use your last photos?
                   </h3>
                   <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-                    Found {pastSession.capturesCount} photos captured on {pastSession.dateStr}. Skip the camera and restore them instantly.
+                    Found {pastSession.capturesCount} photos from {pastSession.dateStr}. Skip the camera if they still look good.
                   </p>
                 </div>
                 <button
@@ -287,7 +283,7 @@ export function CaptureClient() {
                   disabled={isSaving}
                   className="w-full h-10 rounded-[10px] bg-[var(--accent)] text-[var(--foreground)] text-xs font-bold transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                 >
-                  {isSaving ? "Restoring..." : "Restore previous photos"}
+                  {isSaving ? "Loading..." : "Use last photos"}
                 </button>
               </div>
             </div>
@@ -299,7 +295,6 @@ export function CaptureClient() {
             </p>
           )}
 
-          {/* Camera + controls — fills remaining height */}
           <CameraCapture key={activeStep.type} step={activeStep} onUsePhoto={handleUsePhoto} isSaving={isSaving} />
         </div>
       )}

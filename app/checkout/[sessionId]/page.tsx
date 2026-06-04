@@ -7,7 +7,7 @@ import { Button } from "@/components/Button";
 
 type MockSessionDetails = {
   jobId: string;
-  optionId: "download" | "poster" | "bundle";
+  optionId: "fathers-day-card" | "birthday-card" | "download" | "poster";
   price: string;
   name: string;
 };
@@ -37,12 +37,13 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
       const optionId = parts[1] as MockSessionDetails["optionId"];
       
       const optionMap = {
+        "fathers-day-card": { name: "Father's Day card", price: "£4.99" },
+        "birthday-card": { name: "Birthday card", price: "£4.99" },
         download: { name: "Download — no watermark", price: "£7.99" },
         poster: { name: "A3 poster — delivered", price: "£29.99" },
-        bundle: { name: "The gift set", price: "£89.99" },
       };
       
-      const selection = optionMap[optionId] || optionMap.poster;
+      const selection = optionMap[optionId] || optionMap["fathers-day-card"];
       
       setDetails({
         jobId,
@@ -58,8 +59,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
   }, [sessionId]);
 
   const handleAutofill = () => {
-    setName("Jim Brouwer");
-    setEmail("jim@kitface.app");
+    setName("Test Customer");
+    setEmail("test@example.com");
     setCardNumber("4242 •••• •••• 4242");
     setExpiry("12/28");
     setCvc("242");
@@ -76,21 +77,27 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
     setError(null);
 
     try {
-      // 1. Trigger the Printful draft order API backend
-      const response = await fetch("/api/fulfillment/printful", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId: details?.jobId }),
-      });
+      let provider = "kitface";
+      let orderId = "download";
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || "Fulfillment creation failed.");
+      if (details?.optionId !== "download") {
+        const response = await fetch("/api/fulfillment/printful", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId: details?.jobId, optionId: details?.optionId }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Fulfillment creation failed.");
+        }
+
+        provider = data.provider;
+        orderId = data.orderId;
       }
 
-      // 2. Redirect to success screen with real order IDs
-      const successUrl = `/order/success?orderId=${data.orderId}&provider=${data.provider}&optionId=${details?.optionId}`;
+      const successUrl = `/order/success?orderId=${orderId}&provider=${provider}&optionId=${details?.optionId}`;
       window.location.href = successUrl;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Simulated checkout failed.";
@@ -136,7 +143,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-[var(--foreground)] truncate">{details.name}</p>
-                <p className="mt-0.5 text-[10px] text-[var(--muted)]">Poster: {details.jobId.slice(0, 8)}</p>
+                <p className="mt-0.5 text-[10px] text-[var(--muted)]">Kitface image: {details.jobId.slice(0, 8)}</p>
               </div>
               <p className="text-xs font-bold text-[var(--accent)]">{details.price}</p>
             </div>
@@ -152,7 +159,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Jim Brouwer"
+                  placeholder="Name on card"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={paying}
@@ -165,7 +172,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
                 <input
                   type="email"
                   required
-                  placeholder="e.g. jim@kitface.app"
+                  placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={paying}

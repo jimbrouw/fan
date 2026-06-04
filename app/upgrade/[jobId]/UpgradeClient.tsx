@@ -13,7 +13,7 @@ type JobResponse = {
 };
 
 type UpgradeOption = {
-  id: "download" | "poster" | "bundle";
+  id: "fathers-day-card" | "birthday-card" | "download" | "poster";
   name: string;
   price: string;
   icon: typeof Download;
@@ -24,29 +24,37 @@ type UpgradeOption = {
 
 const upgradeOptions: UpgradeOption[] = [
   {
+    id: "fathers-day-card",
+    name: "Father's Day card",
+    price: "£4.99",
+    icon: Gift,
+    description: "A printed card with their Kitface poster on the front.",
+    includes: ["Printful Greeting Card 4x6", "Printed front design", "Ready to post or gift"],
+    badge: "Best gift",
+  },
+  {
+    id: "birthday-card",
+    name: "Birthday card",
+    price: "£4.99",
+    icon: Gift,
+    description: "A cheaper keepsake card for birthdays, matchdays, and family gifts.",
+    includes: ["Printful Greeting Card 4x6", "Printed front design", "Uses your final poster"],
+  },
+  {
     id: "download",
     name: "Download — no watermark",
     price: "£7.99",
     icon: Download,
     description: "Full-resolution private file, yours to keep and share forever.",
-    includes: ["High-res file (A3-ready)", "No Kitface watermark", "Private download link"],
+    includes: ["High-res file", "No Kitface watermark", "Private download link"],
   },
   {
     id: "poster",
     name: "A3 poster — delivered",
     price: "£29.99",
     icon: Package,
-    description: "Printed and sent to your door. Frame it, gift it, done.",
+    description: "Still available if you want the bigger wall print.",
     includes: ["High-res upscale", "Professional A3 print", "Delivered to your door"],
-    badge: "Most popular",
-  },
-  {
-    id: "bundle",
-    name: "The gift set",
-    price: "£89.99",
-    icon: Gift,
-    description: "Everything in one box, ready to give. Free postage included.",
-    includes: ["Framed A3 print", "Personalised mug", "Greeting card", "Free postage"],
   },
 ];
 
@@ -54,7 +62,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedOptionId, setSelectedOptionId] = useState<UpgradeOption["id"]>("poster");
+  const [selectedOptionId, setSelectedOptionId] = useState<UpgradeOption["id"]>("fathers-day-card");
   const [status, setStatus] = useState<string | null>(null);
 
   const loadJob = useCallback(async () => {
@@ -77,7 +85,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
     loadJob();
   }, [loadJob]);
 
-  const selectedOption = upgradeOptions.find((option) => option.id === selectedOptionId) ?? upgradeOptions[1];
+  const selectedOption = upgradeOptions.find((option) => option.id === selectedOptionId) ?? upgradeOptions[0];
   const canContinue = job?.status === "completed" && Boolean(job.outputUrl);
 
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -111,9 +119,9 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Make it theirs</p>
-        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">This poster belongs on a wall.</h1>
+        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Turn it into a card.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          The free preview has a watermark. Remove it, print it A3, and give them something they&apos;ll actually keep.
+          Start with a cheaper printed card for Father&apos;s Day, birthdays, or matchday gifts. A3 posters are still available below.
         </p>
       </div>
 
@@ -128,14 +136,14 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           )}
         </div>
         <div className="flex flex-col justify-center gap-2">
-          <p className="text-sm font-semibold text-[var(--foreground)]">Poster {jobId.slice(0, 8)}</p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">Card front {jobId.slice(0, 8)}</p>
           <p className="text-xs leading-5 text-[var(--muted)]">
-            Status: {job?.status ?? "loading"}. Upscale target: A3 around 3508 x 4961 px before print.
+            Status: {job?.status ?? "loading"}. The final poster becomes the front print for the selected card.
           </p>
           {!canContinue && (
             <Button type="button" variant="secondary" onClick={loadJob} disabled={isLoading} className="mt-1 w-full">
               <RefreshCw size={16} />
-              {isLoading ? "Checking..." : "Check poster"}
+              {isLoading ? "Checking..." : "Check image"}
             </Button>
           )}
         </div>
@@ -194,7 +202,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           {isRedirecting ? "Processing..." : `Checkout — ${selectedOption.price}`}
         </Button>
         <p className="text-xs leading-5 text-[var(--muted)]">
-          Secure checkout. Delivered to your door or sent as a private download link.
+          Secure checkout. Cards and posters are registered as Printful draft orders; downloads are sent as private links.
         </p>
         {status && <p className="text-xs font-semibold leading-5 text-[var(--foreground)]">{status}</p>}
       </div>

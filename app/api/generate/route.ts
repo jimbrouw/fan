@@ -14,6 +14,7 @@ import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
 type GenerateBody = {
   sessionId: string;
   sourceImageUrl: string;
+  personReferenceImageUrls?: string[];
   teamId?: string;
   teamName: string;
   kitNotes: string;
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
     const referenceImageUrls = await buildUsableReferenceImageUrls({
       requiredSourceImageUrl: body.sourceImageUrl,
       optionalReferenceImageUrls: [
+        ...(body.matchContext ? [] : body.personReferenceImageUrls ?? []),
         body.matchContext?.opponentSourceImageUrl,
         kitSpec?.referenceImageUrl,
         homeKitSpec?.referenceImageUrl,

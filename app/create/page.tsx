@@ -4,6 +4,7 @@ import { BadgeCheck, ImagePlus, Shirt, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
+import { choosePrimaryReferenceCapture, choosePrimaryReferenceType, chooseSupportingReferenceUrls } from "@/lib/captureReferences";
 import { describeKitSpec, getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
 import { getDefaultPosterStyleIdForCreateMode, posterStyles } from "@/lib/posterTemplates";
 import { customTeamId, getTeamProfile, teamProfiles } from "@/lib/teamProfiles";
@@ -19,8 +20,93 @@ type LocalCapture = {
 type CreateMode = "single" | "vs";
 type MatchSide = "home" | "away";
 type OpponentMode = "club-players" | "another-person";
+type TeamGroup = (typeof teamProfiles)[number]["group"];
 
 const captureBucket = "fan-hero-captures";
+const visibleKitVariants = kitVariants.filter((variant) => variant.id !== "third");
+const teamGroupOrder: TeamGroup[] = [
+  "World Cup 2026",
+  "Premier League",
+  "International Giants",
+  "International",
+  "EFL League One",
+  "Custom"
+];
+const teamOrderByGroup: Partial<Record<TeamGroup, string[]>> = {
+  "World Cup 2026": [
+    "england-wc",
+    "scotland",
+    "brazil",
+    "argentina",
+    "france",
+    "germany",
+    "spain",
+    "portugal",
+    "netherlands",
+    "belgium",
+    "croatia",
+    "uruguay",
+    "colombia",
+    "mexico",
+    "usa",
+    "japan",
+    "canada",
+    "morocco",
+    "senegal",
+    "ghana",
+    "australia",
+    "new-zealand"
+  ],
+  "Premier League": [
+    "man-united",
+    "liverpool",
+    "arsenal",
+    "man-city",
+    "chelsea",
+    "tottenham",
+    "newcastle",
+    "aston-villa",
+    "nottingham-forest",
+    "west-ham",
+    "everton",
+    "leeds",
+    "brighton",
+    "crystal-palace",
+    "fulham",
+    "brentford",
+    "wolves",
+    "sunderland",
+    "burnley",
+    "bournemouth"
+  ],
+  "International Giants": ["real-madrid", "barcelona", "bayern-munich"],
+  International: ["england"],
+  "EFL League One": ["mansfield"],
+  Custom: [customTeamId]
+};
+
+function compareTeamsWithinGroup(group: TeamGroup, a: (typeof teamProfiles)[number], b: (typeof teamProfiles)[number]) {
+  const order = teamOrderByGroup[group] ?? [];
+  const aIndex = order.indexOf(a.id);
+  const bIndex = order.indexOf(b.id);
+
+  if (aIndex !== -1 || bIndex !== -1) {
+    return (aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex) - (bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex);
+  }
+
+  return a.name.localeCompare(b.name);
+}
+
+function buildOrderedTeamGroups<T extends (typeof teamProfiles)[number]>(teams: T[]) {
+  const grouped = teams.reduce<Record<TeamGroup, T[]>>((groups, team) => {
+    groups[team.group] = [...(groups[team.group] ?? []), team];
+    return groups;
+  }, {} as Record<TeamGroup, T[]>);
+
+  return teamGroupOrder
+    .filter((group) => grouped[group]?.length)
+    .map((group) => [group, [...grouped[group]].sort((a, b) => compareTeamsWithinGroup(group, a, b))] as const);
+}
 
 function buildPublicCaptureUrl(sessionId: string | null, type?: CaptureStepType) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,8 +120,8 @@ export default function CreatePage() {
   const [customTeamName, setCustomTeamName] = useState("");
   const [customKitNotes, setCustomKitNotes] = useState("");
   const [kitVariant, setKitVariant] = useState<KitVariant>("home");
-  const [homeTeamId, setHomeTeamId] = useState("man-united");
-  const [awayTeamId, setAwayTeamId] = useState("nottingham-forest");
+  const [homeTeamId, setHomeTeamId] = useState("england-wc");
+  const [awayTeamId, setAwayTeamId] = useState("scotland");
   const [homeKitVariant, setHomeKitVariant] = useState<KitVariant>("home");
   const [awayKitVariant, setAwayKitVariant] = useState<KitVariant>("away");
   const [userSide, setUserSide] = useState<MatchSide>("away");
@@ -140,33 +226,24 @@ export default function CreatePage() {
         matchdayNotes: matchdayNotes.trim().slice(0, 420) || undefined
       }
     : undefined;
-  const groupedTeams = useMemo(
-    () =>
-      teamProfiles.reduce<Record<string, typeof teamProfiles>>((groups, team) => {
-        groups[team.group] = [...(groups[team.group] ?? []), team];
-        return groups;
-      }, {}),
-    []
-  );
-  const groupedMatchTeams = useMemo(
-    () =>
-      matchTeams.reduce<Record<string, typeof matchTeams>>((groups, team) => {
-        groups[team.group] = [...(groups[team.group] ?? []), team];
-        return groups;
-      }, {}),
-    [matchTeams]
-  );
+  const groupedTeams = useMemo(() => buildOrderedTeamGroups(teamProfiles), []);
+  const groupedMatchTeams = useMemo(() => buildOrderedTeamGroups(matchTeams), [matchTeams]);
   const sourceImageUrl = useMemo(
     () => {
-      const primaryCapture = captures.find((capture) => capture.type === "neutral_front");
+      const primaryCapture = choosePrimaryReferenceCapture(captures);
+      const primaryCaptureType = choosePrimaryReferenceType(captures);
       const uploadedCapture = captures.find((capture) => capture.imageUrl);
       return (
         primaryCapture?.imageUrl ??
         uploadedCapture?.imageUrl ??
-        buildPublicCaptureUrl(sessionId, primaryCapture?.type ?? captures[0]?.type)
+        buildPublicCaptureUrl(sessionId, primaryCaptureType ?? captures[0]?.type)
       );
     },
     [captures, sessionId]
+  );
+  const supportingReferenceImageUrls = useMemo(
+    () => createMode === "single" ? chooseSupportingReferenceUrls(captures, sourceImageUrl) : [],
+    [captures, createMode, sourceImageUrl]
   );
   const hasTeamSelected = createMode !== "single" || selectedTeamId !== "";
   const hasValidMatch = createMode === "single" || homeTeamId !== awayTeamId;
@@ -291,6 +368,7 @@ export default function CreatePage() {
           body: JSON.stringify({
             sessionId,
             sourceImageUrl,
+            personReferenceImageUrls: supportingReferenceImageUrls,
             teamId: userTeamId,
             posterStyleId,
             model: "gpt-image-2",
@@ -363,9 +441,9 @@ export default function CreatePage() {
     <AppFrame>
       <section className="flex flex-1 flex-col gap-6 pb-4">
         <div className="space-y-3">
-          <h1 className="font-display text-[34px] leading-none text-[var(--foreground)]">Create.</h1>
+          <h1 className="font-display text-[34px] leading-none text-[var(--foreground)]">Choose your poster.</h1>
           <p className="text-sm leading-6 text-[var(--muted)]">
-            Choose the kit, poster style, and a small match note to include.
+            Pick a kit, add optional details, then make the poster.
           </p>
         </div>
 
@@ -405,12 +483,8 @@ export default function CreatePage() {
                 onChange={(event) => setSelectedTeamId(event.target.value)}
                 className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
               >
-                <option value="" disabled className="bg-[var(--surface)] text-[var(--muted)]">Premier League</option>
-                {Object.entries(groupedTeams)
-                  .sort(([a], [b]) => {
-                    const order = ["Premier League", "EFL League One", "International", "International Giants", "World Cup 2026", "Custom"];
-                    return order.indexOf(a) - order.indexOf(b);
-                  })
+                <option value="" disabled className="bg-[var(--surface)] text-[var(--muted)]">World Cup teams</option>
+                {groupedTeams
                   .map(([group, teams]) => (
                     <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
                       {teams.map((team) => (
@@ -435,11 +509,7 @@ export default function CreatePage() {
                       onChange={(event) => setHomeTeamId(event.target.value)}
                       className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                     >
-                      {Object.entries(groupedMatchTeams)
-                        .sort(([a], [b]) => {
-                          const order = ["Premier League", "EFL League One", "International", "International Giants", "World Cup 2026"];
-                          return order.indexOf(a) - order.indexOf(b);
-                        })
+                      {groupedMatchTeams
                         .map(([group, teams]) => (
                           <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
                             {teams.map((team) => (
@@ -451,8 +521,8 @@ export default function CreatePage() {
                         ))}
                     </select>
                   </label>
-                  <div className="grid grid-cols-4 gap-1">
-                    {kitVariants.map((v) => (
+                  <div className="grid grid-cols-3 gap-1">
+                    {visibleKitVariants.map((v) => (
                       <button key={v.id} type="button" onClick={() => setHomeKitVariant(v.id)}
                         className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
                           homeKitVariant === v.id
@@ -475,11 +545,7 @@ export default function CreatePage() {
                       onChange={(event) => setAwayTeamId(event.target.value)}
                       className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                     >
-                      {Object.entries(groupedMatchTeams)
-                        .sort(([a], [b]) => {
-                          const order = ["Premier League", "EFL League One", "International", "International Giants", "World Cup 2026"];
-                          return order.indexOf(a) - order.indexOf(b);
-                        })
+                      {groupedMatchTeams
                         .map(([group, teams]) => (
                           <optgroup key={group} label={group} className="bg-[var(--surface)] text-[var(--foreground)]">
                             {teams.map((team) => (
@@ -491,8 +557,8 @@ export default function CreatePage() {
                         ))}
                     </select>
                   </label>
-                  <div className="grid grid-cols-4 gap-1">
-                    {kitVariants.map((v) => (
+                  <div className="grid grid-cols-3 gap-1">
+                    {visibleKitVariants.map((v) => (
                       <button key={v.id} type="button" onClick={() => setAwayKitVariant(v.id)}
                         className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
                           awayKitVariant === v.id
@@ -627,8 +693,8 @@ export default function CreatePage() {
           {createMode === "single" && !isCustomTeam && selectedTeamId !== "" && (
             <fieldset className="space-y-2">
               <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Kit variant</legend>
-              <div className="grid grid-cols-4 gap-1.5">
-                {kitVariants.map((v) => (
+              <div className="grid grid-cols-3 gap-1.5">
+                {visibleKitVariants.map((v) => (
                   <button
                     key={v.id}
                     type="button"
@@ -820,8 +886,8 @@ export default function CreatePage() {
                 : sourceImageUrl
                   ? "Your photo set is ready for the poster."
                   : hasAnyCapture
-                    ? <>Photo upload didn&apos;t complete. <a href="/capture" className="underline">Retake your photos</a> to continue.</>
-                    : <>No photos yet. <a href="/capture" className="underline">Take photos first</a> to create a poster.</>}
+                    ? <>Upload failed. <a href="/capture" className="underline">Retake photos</a> to continue.</>
+                    : <>No photos yet. <a href="/capture" className="underline">Take photos</a> first.</>}
             </span>
           </div>
         </div>

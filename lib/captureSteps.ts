@@ -3,49 +3,49 @@ import type { CaptureStep } from "@/types/capture";
 export const captureSteps: CaptureStep[] = [
   {
     type: "neutral_front",
-    title: "Look straight at the camera",
+    title: "Face the camera",
     shortLabel: "Front",
-    instruction: "Hold still and look right into the camera.",
+    instruction: "Look straight ahead and hold still.",
     purpose: "Baseline facial structure",
     overlay: "portrait"
   },
   {
     type: "smiling_front",
-    title: "Now give a big smile!",
+    title: "Smile",
     shortLabel: "Smile",
-    instruction: "Same spot — this time show us your best smile.",
+    instruction: "Stay in the same spot and smile.",
     purpose: "Smile lines and mouth structure",
     overlay: "portrait"
   },
   {
     type: "left_45",
-    title: "Turn a little to the left",
+    title: "Turn left",
     shortLabel: "Left",
-    instruction: "Just a small turn — like you're looking at something nearby.",
+    instruction: "Turn your head a little to the left.",
     purpose: "Facial depth and jawline",
     overlay: "angle-left"
   },
   {
     type: "right_45",
-    title: "Now turn a little to the right",
+    title: "Turn right",
     shortLabel: "Right",
-    instruction: "Same thing, other side.",
+    instruction: "Turn your head a little to the right.",
     purpose: "Facial depth and ear structure",
     overlay: "angle-right"
   },
   {
     type: "celebration",
-    title: "Now celebrate!",
+    title: "Celebrate",
     shortLabel: "Celebrate",
-    instruction: "Big open-mouth shout, arms up, fist pump — your best winning reaction.",
+    instruction: "Show your best winning reaction.",
     purpose: "Celebration expression reference",
     overlay: "portrait"
   },
   {
     type: "torso",
-    title: "Show us your upper body",
+    title: "Step back",
     shortLabel: "Torso",
-    instruction: "Step back until your torso fits in the guide. Hit the button and strike a pose!",
+    instruction: "Fit your upper body in the guide. Tap once, then pose.",
     purpose: "Body build and posture reference",
     overlay: "torso",
     autoCapture: true,

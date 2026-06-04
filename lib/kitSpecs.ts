@@ -31,6 +31,20 @@ export const kitVariants: Array<{ id: KitVariant; label: string }> = [
   { id: "retro", label: "Retro" },
 ];
 
+const internationalAwayBaseColorByHome: Record<string, string> = {
+  black: "white",
+  blue: "white",
+  "dark blue": "white",
+  "navy blue": "white",
+  gold: "navy blue",
+  green: "white",
+  maroon: "white",
+  orange: "white",
+  red: "white",
+  white: "deep navy",
+  yellow: "deep blue"
+};
+
 const kitSpecs: KitSpec[] = [
   {
     teamId: "arsenal",
@@ -993,9 +1007,37 @@ export function getKitSpec(teamId: string, variant: KitVariant): KitSpec | undef
   else if (teamId === "congo-dr") normalizedId = "dr-congo";
   else if (teamId === "cabo-verde") normalizedId = "cape-verde";
 
-  return [...kitSpecs, ...fallbackKitSpecs, ...internationalKitSpecs].find(
+  const spec = [...kitSpecs, ...fallbackKitSpecs, ...internationalKitSpecs].find(
     (spec) => spec.teamId === normalizedId && spec.variant === variant
   );
+  if (spec) return spec;
+
+  if (variant === "away") {
+    const homeSpec = internationalKitSpecs.find(
+      (spec) => spec.teamId === normalizedId && spec.variant === "home"
+    );
+    if (!homeSpec) return undefined;
+
+    const homeBase = homeSpec.baseColor.toLowerCase();
+    const awayBase = Object.entries(internationalAwayBaseColorByHome).find(([color]) => homeBase.includes(color))?.[1] ?? "white";
+    const secondaryAccent = homeSpec.accentColors.find(
+      (accent) => !awayBase.toLowerCase().includes(accent.toLowerCase()) && !accent.toLowerCase().includes(awayBase.toLowerCase())
+    ) ?? homeSpec.baseColor;
+
+    return {
+      ...homeSpec,
+      variant: "away",
+      mainSponsor: "none",
+      baseColor: awayBase,
+      accentColors: [secondaryAccent, homeSpec.baseColor],
+      pattern: `${awayBase} away shirt with ${secondaryAccent} national-team trim and subtle federation-inspired detailing`,
+      shorts: awayBase,
+      socks: awayBase,
+      referenceImageUrl: undefined,
+      sourceUrls: homeSpec.sourceUrls,
+      confidence: "low"
+    };
+  }
 }
 
 export function describeKitSpec(spec: KitSpec, variant?: KitVariant): string {

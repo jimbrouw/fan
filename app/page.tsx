@@ -24,19 +24,17 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Real generated poster — angled card */}
           <div className="relative mx-auto w-[88%] rotate-[-3deg]">
-            <div className="overflow-hidden rounded-[16px] shadow-[0_32px_64px_rgba(42,0,79,0.22)]">
+            <div className="overflow-hidden rounded-[18px] border border-white/80 bg-[var(--surface)] shadow-[0_32px_64px_rgba(42,0,79,0.22)]">
               <Image
-                src="/example-poster.jpg"
-                alt="Example Kitface poster"
-                width={800}
-                height={1067}
+                src="/kitface-hero-poster-test.jpg"
+                alt="Example Kitface poster showing a middle-aged dad as the football poster hero"
+                width={853}
+                height={1280}
                 className="w-full object-cover"
                 priority
               />
             </div>
-            {/* Ramp glow behind card */}
             <div className="kitface-ramp absolute -inset-1 -z-10 rounded-[20px] opacity-30 blur-xl" />
           </div>
         </div>
