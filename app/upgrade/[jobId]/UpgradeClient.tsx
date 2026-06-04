@@ -142,7 +142,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           )}
         </div>
         <div className="flex flex-col justify-center gap-2">
-          <p className="text-sm font-semibold text-[var(--foreground)]">Card front {jobId.slice(0, 8)}</p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">Your poster preview</p>
           <p className="text-xs leading-5 text-[var(--muted)]">
             Status: {job?.status ?? "loading"}. The final poster becomes the front print for the selected card.
           </p>

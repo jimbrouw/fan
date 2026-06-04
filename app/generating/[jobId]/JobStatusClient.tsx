@@ -191,7 +191,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
           Keep this page open, or choose a notification for when it is ready.
         </p>
         <p className="text-xs leading-5 text-[var(--muted)]">
-          Poster <span className="font-mono text-[var(--foreground)]">{jobId.slice(0, 8)}</span> is {job.status ?? "processing"}.
+          Your poster is {job.status ?? "processing"}.
         </p>
       </div>
 

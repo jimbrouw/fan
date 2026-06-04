@@ -154,7 +154,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
       <div className="space-y-3">
         <h1 className="font-display text-[35px] leading-none text-[var(--foreground)]">Your poster.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          Poster <span className="font-mono text-[var(--foreground)]">{jobId.slice(0, 8)}</span> is {job?.status ?? "loading"}.
+          {job?.status === "completed" ? "Your Kitface poster is ready." : "Your Kitface poster is loading."}
         </p>
       </div>
 
