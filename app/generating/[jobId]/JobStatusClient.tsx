@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, RotateCcw, Bell, Mail, Smartphone, CheckCircle2 } from "lucide-react";
+import { LoaderCircle, RotateCcw, Bell, Mail, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/Button";
@@ -13,7 +13,6 @@ type JobResponse = {
 
 type NotificationPreferences = {
   emailEnabled: boolean;
-  pushEnabled: boolean;
   available: boolean;
 };
 
@@ -46,7 +45,6 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
   // Notification states
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     emailEnabled: false,
-    pushEnabled: false,
     available: false,
   });
   const [preferenceMessage, setPreferenceMessage] = useState<string | null>(null);
@@ -96,7 +94,6 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
 
         setPreferences({
           emailEnabled: Boolean(data.emailEnabled),
-          pushEnabled: Boolean(data.pushEnabled),
           available: Boolean(data.available),
         });
       } catch {
@@ -125,7 +122,6 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           emailEnabled: nextPreferences.emailEnabled,
-          pushEnabled: nextPreferences.pushEnabled,
         }),
       });
       const data = (await response.json()) as Partial<NotificationPreferences> & { error?: string };
@@ -134,7 +130,6 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
 
       setPreferences({
         emailEnabled: Boolean(data.emailEnabled),
-        pushEnabled: Boolean(data.pushEnabled),
         available: Boolean(data.available),
       });
 
@@ -150,31 +145,6 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
     await savePreferences({
       ...preferences,
       emailEnabled: !preferences.emailEnabled,
-    });
-  }
-
-  async function togglePush() {
-    if (!("Notification" in window)) {
-      setPreferenceMessage("Push notifications are not supported in this browser.");
-      return;
-    }
-
-    if (!preferences.pushEnabled && Notification.permission === "default") {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        setPreferenceMessage("Push notifications were not enabled.");
-        return;
-      }
-    }
-
-    if (!preferences.pushEnabled && Notification.permission !== "granted") {
-      setPreferenceMessage("Push notifications are blocked in this browser.");
-      return;
-    }
-
-    await savePreferences({
-      ...preferences,
-      pushEnabled: !preferences.pushEnabled,
     });
   }
 
@@ -212,35 +182,22 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
           </div>
           <div>
             <p className="font-semibold text-[var(--foreground)]">Get the final whistle</p>
-            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Pick how Kitface should nudge you.</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">We&apos;ll email you when your poster is ready.</p>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2">
+        <div className="mt-4">
           <button
             type="button"
             onClick={toggleEmail}
             disabled={!preferences.available}
-            className="flex min-h-12 items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="flex items-center gap-2">
               <Mail size={16} className="text-[var(--accent)]" />
-              Email
+              Email me when it&apos;s ready
             </span>
             {preferences.emailEnabled ? <CheckCircle2 size={18} className="text-[var(--accent)]" /> : <span className="text-xs text-[var(--muted)]">Off</span>}
-          </button>
-          
-          <button
-            type="button"
-            onClick={togglePush}
-            disabled={!preferences.available}
-            className="flex min-h-12 items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <span className="flex items-center gap-2">
-              <Smartphone size={16} className="text-[var(--accent)]" />
-              Push
-            </span>
-            {preferences.pushEnabled ? <CheckCircle2 size={18} className="text-[var(--accent)]" /> : <span className="text-xs text-[var(--muted)]">Off</span>}
           </button>
         </div>
 

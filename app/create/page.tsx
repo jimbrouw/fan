@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, ImagePlus, Shirt, WandSparkles } from "lucide-react";
+import { BadgeCheck, ImagePlus, Shirt, WandSparkles, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
@@ -15,6 +15,14 @@ type LocalCapture = {
   type: CaptureStepType;
   objectUrl?: string;
   imageUrl?: string;
+};
+
+type Usage = {
+  used: number;
+  freeLimit: number;
+  remainingFree: number;
+  credits: number;
+  exempt: boolean;
 };
 
 type CreateMode = "single" | "vs";
@@ -143,6 +151,55 @@ export default function CreatePage() {
   const [accessibilityNote, setAccessibilityNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [usage, setUsage] = useState<Usage | null>(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [creditMessage, setCreditMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function loadUsage() {
+      try {
+        const res = await fetch("/api/usage", { cache: "no-store" });
+        if (!res.ok || !active) return;
+        const data = (await res.json()) as Usage;
+        if (active) setUsage(data);
+      } catch {
+        // The usage badge is non-critical and must never block the create screen.
+      }
+    }
+    loadUsage();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const credits = params.get("credits");
+    if (credits === "success") {
+      setCreditMessage("Payment received — your credits have been added.");
+    } else if (credits === "cancel") {
+      setCreditMessage("Checkout cancelled. No payment was taken.");
+    }
+  }, []);
+
+  async function startUpgrade() {
+    setIsUpgrading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout/credits", { method: "POST" });
+      if (res.status === 401) {
+        window.location.href = "/login?next=/create";
+        return;
+      }
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Could not start checkout.");
+      window.location.href = data.url;
+    } catch (upgradeError) {
+      setError(upgradeError instanceof Error ? upgradeError.message : "Could not start checkout.");
+      setIsUpgrading(false);
+    }
+  }
   const [isRetryingUploads, setIsRetryingUploads] = useState(false);
 
 
@@ -446,6 +503,44 @@ export default function CreatePage() {
             Pick a kit, add optional details, then make the poster.
           </p>
         </div>
+
+        {creditMessage && (
+          <div className="rounded-[14px] border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-4 py-3 text-sm leading-5 text-[var(--foreground)]">
+            {creditMessage}
+          </div>
+        )}
+
+        {usage && !usage.exempt && (
+          <div className="flex items-center justify-between gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/65 px-4 py-3">
+            <div className="text-sm leading-5">
+              {usage.remainingFree > 0 ? (
+                <>
+                  <span className="font-semibold text-[var(--foreground)]">
+                    {usage.used}/{usage.freeLimit}
+                  </span>{" "}
+                  <span className="text-[var(--muted)]">free posters used</span>
+                </>
+              ) : usage.credits > 0 ? (
+                <>
+                  <span className="font-semibold text-[var(--foreground)]">{usage.credits}</span>{" "}
+                  <span className="text-[var(--muted)]">credits left</span>
+                </>
+              ) : (
+                <span className="font-semibold text-[var(--foreground)]">Free posters used up</span>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={startUpgrade}
+              disabled={isUpgrading}
+              className="shrink-0"
+            >
+              <Zap size={15} />
+              {isUpgrading ? "Opening…" : "Buy credits"}
+            </Button>
+          </div>
+        )}
 
         <form className="space-y-4">
 

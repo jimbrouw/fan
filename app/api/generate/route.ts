@@ -10,6 +10,7 @@ import { upsertUserProfile } from "@/lib/users";
 import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
 import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
+import { FREE_TIER_GENERATIONS, isExemptEmail } from "@/lib/credits";
 
 type GenerateBody = {
   sessionId: string;
@@ -50,6 +51,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in with Google before generating your poster." }, { status: 401 });
     }
     await upsertUserProfile(user);
+
+    const isExempt = isExemptEmail(user.email);
+    let consumeCreditAfterSuccess = false;
+    if (!isExempt) {
+      const usageClient = createServerSupabaseClient();
+      const { count, error: usageError } = await usageClient
+        .from("generation_jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      // Fail open if the user_id column isn't migrated yet so we never falsely block.
+      if (!usageError && (count ?? 0) >= FREE_TIER_GENERATIONS) {
+        // Free posters used up — this generation must be paid for with a credit.
+        const { data: profile } = await usageClient
+          .from("users")
+          .select("credits")
+          .eq("id", user.id)
+          .single<{ credits: number }>();
+
+        if ((profile?.credits ?? 0) <= 0) {
+          return NextResponse.json(
+            {
+              error: `You've used all ${FREE_TIER_GENERATIONS} of your free posters. Add credits to keep creating.`,
+              code: "free_tier_exhausted",
+            },
+            { status: 402 }
+          );
+        }
+        consumeCreditAfterSuccess = true;
+      }
+    }
 
     const body = (await request.json()) as GenerateBody;
     if (!body.sessionId || !body.sourceImageUrl || !body.teamName || !body.kitNotes || !body.teamProfile) {
@@ -152,6 +184,14 @@ export async function POST(request: Request) {
 
     if (insert.error) {
       return NextResponse.json({ error: insert.error.message }, { status: 500 });
+    }
+
+    // Spend a credit only once the paid job is safely recorded.
+    if (consumeCreditAfterSuccess) {
+      const { error: creditError } = await supabase.rpc("consume_user_credit", { p_user_id: user.id });
+      if (creditError) {
+        console.error("Credit consume failed:", creditError.message, { userId: user.id, jobId });
+      }
     }
 
     const sessionUpdate = await supabase
