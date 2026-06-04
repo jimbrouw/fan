@@ -12,6 +12,7 @@ create table if not exists public.users (
   full_name text,
   avatar_url text,
   provider text not null default 'google',
+  credits integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -114,6 +115,18 @@ begin
   new.updated_at = now();
   return new;
 end;
+$$;
+
+-- Atomically spend one credit. Returns the new balance, or null if the
+-- user had no credits to spend. Guards against negative balances.
+create or replace function public.consume_user_credit(p_user_id uuid)
+returns integer
+language sql
+as $$
+  update public.users
+  set credits = credits - 1
+  where id = p_user_id and credits > 0
+  returning credits;
 $$;
 
 drop trigger if exists set_capture_sessions_updated_at on public.capture_sessions;

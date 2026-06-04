@@ -55,6 +55,7 @@ export async function POST(request: Request) {
     await upsertUserProfile(user);
 
     const isExempt = RATE_LIMIT_EXEMPT_EMAILS.has((user.email ?? "").toLowerCase());
+    let consumeCreditAfterSuccess = false;
     if (!isExempt) {
       const usageClient = createServerSupabaseClient();
       const { count, error: usageError } = await usageClient
@@ -64,13 +65,23 @@ export async function POST(request: Request) {
 
       // Fail open if the user_id column isn't migrated yet so we never falsely block.
       if (!usageError && (count ?? 0) >= FREE_TIER_GENERATIONS) {
-        return NextResponse.json(
-          {
-            error: `You've used all ${FREE_TIER_GENERATIONS} of your free posters. Add credits to keep creating.`,
-            code: "free_tier_exhausted",
-          },
-          { status: 402 }
-        );
+        // Free posters used up — this generation must be paid for with a credit.
+        const { data: profile } = await usageClient
+          .from("users")
+          .select("credits")
+          .eq("id", user.id)
+          .single<{ credits: number }>();
+
+        if ((profile?.credits ?? 0) <= 0) {
+          return NextResponse.json(
+            {
+              error: `You've used all ${FREE_TIER_GENERATIONS} of your free posters. Add credits to keep creating.`,
+              code: "free_tier_exhausted",
+            },
+            { status: 402 }
+          );
+        }
+        consumeCreditAfterSuccess = true;
       }
     }
 
@@ -175,6 +186,14 @@ export async function POST(request: Request) {
 
     if (insert.error) {
       return NextResponse.json({ error: insert.error.message }, { status: 500 });
+    }
+
+    // Spend a credit only once the paid job is safely recorded.
+    if (consumeCreditAfterSuccess) {
+      const { error: creditError } = await supabase.rpc("consume_user_credit", { p_user_id: user.id });
+      if (creditError) {
+        console.error("Credit consume failed:", creditError.message, { userId: user.id, jobId });
+      }
     }
 
     const sessionUpdate = await supabase
