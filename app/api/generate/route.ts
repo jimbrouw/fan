@@ -43,6 +43,9 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
   return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
 }
 
+const GENERATIONS_PER_HOUR = 10;
+const RATE_LIMIT_EXEMPT_EMAILS = new Set(["jimbrouwer@gmail.com"]);
+
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
@@ -50,6 +53,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in with Google before generating your poster." }, { status: 401 });
     }
     await upsertUserProfile(user);
+
+    const isExempt = RATE_LIMIT_EXEMPT_EMAILS.has((user.email ?? "").toLowerCase());
+    if (!isExempt) {
+      const rateClient = createServerSupabaseClient();
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count, error: rateError } = await rateClient
+        .from("generation_jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gte("created_at", since);
+
+      // Fail open if the user_id column isn't migrated yet so we never falsely block.
+      if (!rateError && (count ?? 0) >= GENERATIONS_PER_HOUR) {
+        return NextResponse.json(
+          { error: `You've reached the limit of ${GENERATIONS_PER_HOUR} posters per hour. Please try again later.` },
+          { status: 429 }
+        );
+      }
+    }
 
     const body = (await request.json()) as GenerateBody;
     if (!body.sessionId || !body.sourceImageUrl || !body.teamName || !body.kitNotes || !body.teamProfile) {
