@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Copy, Download, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
+import { ArrowRight, Copy, Download, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -193,9 +193,23 @@ export function ResultClient({ jobId }: { jobId: string }) {
           <div className="grid size-12 shrink-0 place-items-center rounded-full bg-white/30 backdrop-blur-sm">
             <Package size={22} className="text-[var(--foreground)]" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-[var(--foreground)]">Upgrade your poster - from £3.99</p>
-            <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">No-watermark download, printed card, or A3 poster delivery.</p>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-base font-bold leading-tight text-[var(--foreground)]">Keep it, gift it, print it</p>
+                <p className="mt-1 text-xs leading-5 text-[var(--foreground)]/70">
+                  Remove the watermark or turn this poster into a delivered keepsake.
+                </p>
+              </div>
+              <ArrowRight size={18} className="mt-0.5 shrink-0 text-[var(--foreground)] transition group-hover:translate-x-0.5" />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {["Download £3.99", "Cards £7.99", "A3 £29.99"].map((label) => (
+                <span key={label} className="rounded-full bg-white/35 px-2.5 py-1 text-[10px] font-bold text-[var(--foreground)]">
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
         </button>
       )}
