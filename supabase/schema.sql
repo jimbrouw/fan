@@ -74,6 +74,7 @@ create table if not exists public.purchase_orders (
   amount_total integer,
   currency text,
   customer_email text,
+  customer_message text,
   printful_order_id text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

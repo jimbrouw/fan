@@ -62,6 +62,7 @@ export async function POST(request: Request) {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const jobId = session.metadata?.jobId;
   const optionId = session.metadata?.optionId as PrintfulProductOptionId | undefined;
+  const cardMessage = session.metadata?.cardMessage?.trim() || null;
 
   if (!jobId || !optionId) {
     throw new Error("Stripe session is missing jobId or optionId metadata.");
@@ -88,6 +89,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       amount_total: session.amount_total,
       currency: session.currency,
       customer_email: session.customer_details?.email ?? null,
+      customer_message: cardMessage,
       updated_at: new Date().toISOString()
     },
     { onConflict: "stripe_session_id" }

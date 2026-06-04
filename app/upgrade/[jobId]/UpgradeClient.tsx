@@ -24,26 +24,26 @@ type UpgradeOption = {
 
 const upgradeOptions: UpgradeOption[] = [
   {
-    id: "fathers-day-card",
-    name: "Father's Day card",
-    price: "£4.99",
-    icon: Gift,
-    description: "A printed card with their Kitface poster on the front.",
-    includes: ["Printful Greeting Card 4x6", "Printed front design", "Ready to post or gift"],
-    badge: "Best gift",
-  },
-  {
     id: "birthday-card",
     name: "Birthday card",
-    price: "£4.99",
+    price: "£7.99",
     icon: Gift,
-    description: "A cheaper keepsake card for birthdays, matchdays, and family gifts.",
-    includes: ["Printful Greeting Card 4x6", "Printed front design", "Uses your final poster"],
+    description: "A printed birthday card with their Kitface poster on the front.",
+    includes: ["Printful Greeting Card 4x6", "Printed front design", "Add a custom message"],
+  },
+  {
+    id: "fathers-day-card",
+    name: "Father's Day card",
+    price: "£7.99",
+    icon: Gift,
+    description: "A printed Father's Day card with their Kitface poster on the front.",
+    includes: ["Printful Greeting Card 4x6", "Printed front design", "Add a custom message"],
+    badge: "Best gift",
   },
   {
     id: "download",
     name: "Download — no watermark",
-    price: "£7.99",
+    price: "£3.99",
     icon: Download,
     description: "Full-resolution private file, yours to keep and share forever.",
     includes: ["High-res file", "No Kitface watermark", "Private download link"],
@@ -62,7 +62,8 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedOptionId, setSelectedOptionId] = useState<UpgradeOption["id"]>("fathers-day-card");
+  const [selectedOptionId, setSelectedOptionId] = useState<UpgradeOption["id"]>("birthday-card");
+  const [cardMessage, setCardMessage] = useState("");
   const [status, setStatus] = useState<string | null>(null);
 
   const loadJob = useCallback(async () => {
@@ -87,6 +88,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
 
   const selectedOption = upgradeOptions.find((option) => option.id === selectedOptionId) ?? upgradeOptions[0];
   const canContinue = job?.status === "completed" && Boolean(job.outputUrl);
+  const isCardOption = selectedOptionId === "birthday-card" || selectedOptionId === "fathers-day-card";
 
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -98,7 +100,11 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId, optionId: selectedOptionId }),
+        body: JSON.stringify({
+          jobId,
+          optionId: selectedOptionId,
+          cardMessage: isCardOption ? cardMessage.trim() : undefined,
+        }),
       });
 
       const data = await response.json();
@@ -196,6 +202,20 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           );
         })}
       </div>
+
+      {isCardOption && (
+        <label className="block space-y-2 rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-4">
+          <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Card message</span>
+          <textarea
+            value={cardMessage}
+            onChange={(event) => setCardMessage(event.target.value.slice(0, 240))}
+            placeholder={selectedOptionId === "birthday-card" ? "Happy birthday! Hope your day is Premier League level." : "Happy Father's Day! Thanks for being our captain."}
+            rows={4}
+            className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/60 px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.65)] focus:border-[var(--accent)]"
+          />
+          <span className="text-right text-[11px] font-semibold text-[var(--muted)]">{cardMessage.length}/240</span>
+        </label>
+      )}
 
       <div className="space-y-3 rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
         <Button type="button" className="w-full" disabled={!canContinue || isRedirecting} onClick={handleContinue}>

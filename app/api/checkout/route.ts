@@ -7,6 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 type CheckoutRequest = {
   jobId?: string;
   optionId?: PrintfulProductOptionId;
+  cardMessage?: string;
 };
 
 type JobRow = {
@@ -31,6 +32,15 @@ export async function POST(request: Request) {
     if (!product) {
       return NextResponse.json(
         { error: "Unknown checkout option." },
+        { status: 400 }
+      );
+    }
+
+    const cardMessage = typeof body.cardMessage === "string" ? body.cardMessage.trim() : "";
+
+    if (cardMessage.length > 240) {
+      return NextResponse.json(
+        { error: "Card message must be 240 characters or fewer." },
         { status: 400 }
       );
     }
@@ -83,12 +93,14 @@ export async function POST(request: Request) {
       ],
       metadata: {
         jobId: job.id,
-        optionId: product.id
+        optionId: product.id,
+        ...(cardMessage ? { cardMessage } : {})
       },
       payment_intent_data: {
         metadata: {
           jobId: job.id,
-          optionId: product.id
+          optionId: product.id,
+          ...(cardMessage ? { cardMessage } : {})
         }
       },
       customer_creation: "if_required",
