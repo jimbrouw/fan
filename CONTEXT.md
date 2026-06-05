@@ -20,6 +20,7 @@ This branch started from the completed broadcast rebrand and added the Kitface s
 - The result page has image/video sharing, video animation flow, correction flow, Printful draft-order action, and localhost-only `Regenerate test`. The previous `alert()` approval placeholder was replaced with inline status.
 - `supabase/schema.sql` includes users, notification preferences, notifications, video jobs, and user ownership columns. Runtime fallbacks tolerate older local/live schemas missing `generation_jobs.user_id`, `capture_sessions.user_id`, profile tables, or notification tables.
 - The live Supabase database migration was applied successfully in the Supabase SQL editor: `supabase/schema.sql` first, then `supabase/migrations/0001_add_credits_and_fix_drift.sql`. Free-tier enforcement and credits no longer need to fail open for missing live columns/functions.
+- Live verification confirmed the active capture flow now asks for two photos rather than six, and a non-exempt user reaches the out-of-credits/paywall state after 3 generations.
 - MuAPI now supports `gpt-image-2-fast` as a low-cost test mode mapped to GPT Image 2 image-to-image with `resolution: "1K"` and `quality: "low"`; standard `gpt-image-2` remains `2K`/`high`.
 
 Existing in-progress work also includes VS poster reliability improvements, `/api/jobs/[jobId]/image` sharing, and Printful draft-order fulfillment. Those changes were preserved and verified as part of this handover.

@@ -19,6 +19,8 @@
 - Added back-facing camera flip button (↔) on `/capture`: switches between `user` and `environment` facing modes, removes mirror flip for back camera. Pending real-device test for stream switching and image orientation.
 - Added optional shirt name and team slogan fields on `/create`, flowing through `buildPosterPrompt` as a `PERSONALISATION` section. Pending live generation test to verify model adherence.
 - Added accessibility/mobility-aid checkbox on `/create`: when checked, injects an `ACCESSIBILITY` section into the poster prompt instructing the model to represent the fan naturally with their wheelchair or mobility aid — no forced standing or running poses. Optional free-text detail field expands when checked.
+- Reduced the active capture flow to two photos and verified live that the app no longer asks for six captures.
+- Verified live free-tier enforcement with a non-exempt user: after 3 generations, the app reached the out-of-credits/paywall state.
 - Verified this commit with `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
 
 ## Next
@@ -36,22 +38,17 @@
 6. **Add generation analytics** — log each poster generation to an analytics table or service: user id, team, model, kit variant, timestamp, success/fail. Goal: know which teams and modes get used. Options: Supabase table (already available) or Vercel Analytics + custom events. Use Supabase table first — no extra service needed.
 7. **User history page** — Google login exists; add a `/history` page showing the logged-in user's past generations with thumbnail, team, and date. Data already in `generation_jobs` table filtered by `user_id`.
 
-### Rate limiting
-8. **Rate limit `/api/generate` per user** — tie to Google login (user id). Limit: e.g. 5 generations per hour per user while testing. Use Supabase to count recent jobs for the user before accepting new submission. Return 429 with clear message if exceeded.
-
-### Monetization groundwork
-9. **Design credit/paywall model** — still in testing phase, but define: free tier limit (e.g. 3 free posters), paid tier unlock mechanism, where credit balance lives (Supabase `users` table), and which flow enforces it. No Stripe integration yet — just document the model and add the balance field to schema so it's ready.
-
 ### Existing backlog
-10. Test end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
-11. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
-12. Smoke test VS mode with uploaded opponent photo.
-13. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
-14. Live camera walkthrough on real phone on secure URL.
-15. Tighten photo privacy: private Supabase bucket, signed URLs to providers, retention window.
-16. Fix result downloads to include Kitface watermark overlay.
-17. Fix WhatsApp sharing to use public URL, not localhost.
-18. Decide: keep CSS hero poster preview or replace with real generated image.
+8. Test end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
+9. Verify Stripe credits purchase grants credits exactly once and allows generation to resume after the paywall.
+10. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
+11. Smoke test VS mode with uploaded opponent photo.
+12. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
+13. Live camera walkthrough on real phone on secure URL.
+14. Tighten photo privacy: private Supabase bucket, signed URLs to providers, retention window.
+15. Fix result downloads to include Kitface watermark overlay.
+16. Fix WhatsApp sharing to use public URL, not localhost.
+17. Decide: keep CSS hero poster preview or replace with real generated image.
 
 ## Blockers
 

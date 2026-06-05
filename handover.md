@@ -105,6 +105,8 @@ Main entities configured or referenceable in the application:
 *   **Push Notifications**: Cancelled. Toggle removed from the UI; email covers the need.
 *   **Free-Tier Rate Limiting + Monetization**: Done. 3 free generations, then a credits paywall with Stripe top-up (see Session: Cost Controls & Monetization above). Live DB migration has been applied.
 *   **Credits DB Migration**: Done. `supabase/schema.sql` and `supabase/migrations/0001_add_credits_and_fix_drift.sql` were run successfully in Supabase.
+*   **Two-Photo Capture Flow**: Verified live. `/capture` now asks for two photos rather than six.
+*   **Free-Tier Cap Enforcement**: Verified live with a non-exempt user. After 3 generations, the app reached the out-of-credits/paywall state.
 
 ### Notifications & Communication
 4.  **Job-Completion Email Test**: Confirm a real Resend email fires end-to-end on a deployed generation (record exists in `notifications`, email delivered).
