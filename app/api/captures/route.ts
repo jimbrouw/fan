@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { captureBucket, createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/auth-server";
+import { decideOwnedResourceAccess } from "@/lib/authz";
 import type { CaptureStepType } from "@/types/capture";
 
 function isMissingSchemaColumn(error: { message?: string }, column: string) {
@@ -10,8 +12,18 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
   );
 }
 
+type CaptureSessionRow = {
+  id: string;
+  user_id: string | null;
+};
+
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Sign in to upload photos." }, { status: 401 });
+    }
+
     const form = await request.formData();
     const file = form.get("file");
     const sessionId = String(form.get("sessionId") ?? "");
@@ -26,10 +38,47 @@ export async function POST(request: Request) {
     const supabase = createServerSupabaseClient();
     const path = `${sessionId}/${type}.jpg`;
     const now = new Date().toISOString();
+    let userIdColumnMissing = false;
+
+    let existingSessionQuery = await supabase
+      .from("capture_sessions")
+      .select("id,user_id")
+      .eq("id", sessionId)
+      .maybeSingle<CaptureSessionRow>();
+
+    if (existingSessionQuery.error && isMissingSchemaColumn(existingSessionQuery.error, "user_id")) {
+      userIdColumnMissing = true;
+      const fallback = await supabase
+        .from("capture_sessions")
+        .select("id")
+        .eq("id", sessionId)
+        .maybeSingle<Omit<CaptureSessionRow, "user_id">>();
+
+      existingSessionQuery = {
+        ...fallback,
+        data: fallback.data ? { ...fallback.data, user_id: null } : null,
+      } as typeof existingSessionQuery;
+    }
+
+    if (existingSessionQuery.error) {
+      return NextResponse.json({ error: existingSessionQuery.error.message }, { status: 500 });
+    }
+
+    if (existingSessionQuery.data) {
+      const access = decideOwnedResourceAccess({
+        ownerColumnAvailable: !userIdColumnMissing,
+        resourceUserId: existingSessionQuery.data.user_id,
+        requesterUserId: user.id,
+      });
+
+      if (access === "deny") {
+        return NextResponse.json({ error: "Capture session not found." }, { status: 404 });
+      }
+    }
 
     const sessionInsert = {
       id: sessionId,
-      user_id: null,
+      user_id: user.id,
       status: "capturing",
       created_at: now,
       updated_at: now
