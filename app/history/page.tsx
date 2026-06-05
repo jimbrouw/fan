@@ -18,6 +18,11 @@ type GenerationJob = {
   created_at: string;
 };
 
+type HistoryResponse = {
+  jobs?: GenerationJob[];
+  error?: string;
+};
+
 export default function HistoryPage() {
   const [user, setUser] = useState<User | null>(null);
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
@@ -40,14 +45,15 @@ export default function HistoryPage() {
 
       setUser(data.user);
 
-      const { data: jobsData, error: jobsErr } = await supabase
-        .from("generation_jobs")
-        .select("id, team_name, kit_notes, status, output_url, error, created_at")
-        .eq("user_id", data.user.id)
-        .order("created_at", { ascending: false });
+      const jobsResponse = await fetch("/api/history", { cache: "no-store" });
+      if (jobsResponse.status === 401) {
+        window.location.href = "/login?next=/history";
+        return;
+      }
 
-      if (!jobsErr && jobsData) {
-        setJobs(jobsData as GenerationJob[]);
+      if (jobsResponse.ok) {
+        const history = (await jobsResponse.json()) as HistoryResponse;
+        setJobs(history.jobs ?? []);
       }
 
       setIsLoading(false);
