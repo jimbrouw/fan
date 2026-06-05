@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Copy, Download, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
+import { Copy, Download, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -19,9 +19,6 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [pageUrl, setPageUrl] = useState("");
-  const [correctionPrompt, setCorrectionPrompt] = useState("");
-  const [isCorrecting, setIsCorrecting] = useState(false);
-  const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
   const [showTestControls, setShowTestControls] = useState(false);
 
   const loadJob = useCallback(async () => {
@@ -48,8 +45,6 @@ export function ResultClient({ jobId }: { jobId: string }) {
     setPageUrl(window.location.href);
     setShowTestControls(["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
   }, []);
-
-
 
   const imageShareUrl = job?.outputUrl ? `/api/jobs/${jobId}/image` : "";
   const absoluteImageShareUrl = imageShareUrl && pageUrl ? new URL(imageShareUrl, pageUrl).href : imageShareUrl;
@@ -119,36 +114,6 @@ export function ResultClient({ jobId }: { jobId: string }) {
     await copyShareLink(absoluteImageShareUrl, "Native sharing is not available here. Image link copied.");
   }
 
-  async function submitCorrection() {
-    if (!correctionPrompt.trim()) return;
-
-    setIsCorrecting(true);
-    setCorrectionStatus(null);
-
-    try {
-      const response = await fetch(`/api/jobs/${jobId}/correct`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correctionPrompt }),
-      });
-      const data = (await response.json()) as { jobId?: string; error?: string };
-
-      if (!response.ok || !data.jobId) {
-        if (response.status === 401) {
-          window.location.href = `/login?next=${encodeURIComponent(`/result/${jobId}`)}`;
-          return;
-        }
-        throw new Error(data.error ?? "Correction job failed.");
-      }
-
-      window.location.href = `/generating/${data.jobId}`;
-    } catch (correctionError) {
-      setCorrectionStatus(correctionError instanceof Error ? correctionError.message : "Correction job failed.");
-    } finally {
-      setIsCorrecting(false);
-    }
-  }
-
   return (
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
@@ -193,23 +158,9 @@ export function ResultClient({ jobId }: { jobId: string }) {
           <div className="grid size-12 shrink-0 place-items-center rounded-full bg-white/30 backdrop-blur-sm">
             <Package size={22} className="text-[var(--foreground)]" />
           </div>
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-base font-bold leading-tight text-[var(--foreground)]">Keep it, gift it, print it</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--foreground)]/70">
-                  Remove the watermark or turn this poster into a delivered keepsake.
-                </p>
-              </div>
-              <ArrowRight size={18} className="mt-0.5 shrink-0 text-[var(--foreground)] transition group-hover:translate-x-0.5" />
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {["Download £3.99", "Cards £7.99", "A3 £29.99"].map((label) => (
-                <span key={label} className="rounded-full bg-white/35 px-2.5 py-1 text-[10px] font-bold text-[var(--foreground)]">
-                  {label}
-                </span>
-              ))}
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold text-[var(--foreground)]">Upgrade your poster - from £3.99</p>
+            <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">Remove the watermark, download the image, or order printed products.</p>
           </div>
         </button>
       )}
@@ -218,8 +169,8 @@ export function ResultClient({ jobId }: { jobId: string }) {
         {job?.status === "completed" ? (
           <>
             <div className="col-span-2 space-y-3 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" onClick={shareNative} className="col-span-2 w-full">
+              <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
+                <Button type="button" onClick={shareNative} className="w-full min-[380px]:col-span-2">
                   <Share2 size={17} />
                   Share image
                 </Button>
@@ -235,7 +186,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   <Copy size={17} />
                   Copy image link
                 </Button>
-                <Button type="button" variant="secondary" className="col-span-2" onClick={() => copyShareLink(pageShareUrl, "Page link copied.")}>
+                <Button type="button" variant="secondary" className="min-[380px]:col-span-2" onClick={() => copyShareLink(pageShareUrl, "Page link copied.")}>
                   <Copy size={17} />
                   Copy page link
                 </Button>
@@ -243,7 +194,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   href={`https://wa.me/?text=${encodeURIComponent(whatsappImageUrl)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98] min-[380px]:col-span-2"
                 >
                   <MessageCircle size={17} />
                   WhatsApp
@@ -260,21 +211,12 @@ export function ResultClient({ jobId }: { jobId: string }) {
                 </Button>
               </Link>
             )}
-            <div className="col-span-2 space-y-3 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">
-              <label className="block space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Correction</span>
-                <textarea
-                  value={correctionPrompt}
-                  onChange={(event) => setCorrectionPrompt(event.target.value)}
-                  placeholder="remove the scarf, make the number 10 not 7..."
-                  className="min-h-20 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/60 px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
-                />
-              </label>
-              <Button type="button" variant="secondary" className="w-full" onClick={submitCorrection} disabled={isCorrecting || !correctionPrompt.trim()}>
-                {isCorrecting ? "Revising..." : "Apply correction"}
-              </Button>
-              {correctionStatus && <p className="text-xs leading-5 text-[var(--accent)]">{correctionStatus}</p>}
-            </div>
+            <Link href="/create" className="col-span-2">
+              <span className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-center text-sm font-semibold leading-5 text-[var(--foreground)] transition hover:border-[rgba(42,0,79,0.2)] hover:bg-white active:scale-[0.98]">
+                <RotateCcw size={17} className="shrink-0" />
+                <span className="min-w-0 whitespace-normal">Make another poster with the same photos</span>
+              </span>
+            </Link>
           </>
         ) : (
           <>

@@ -31,7 +31,7 @@ This document provides a comprehensive snapshot of the current state of Kitface,
 *   **Usage UI on `/create`**: A compact counter shows `used/3 free posters used`, or `N credits left`, or `Free posters used up`, alongside a "Buy credits" button that opens Stripe Checkout. Backed by the new `app/api/usage/route.ts` endpoint. Exempt accounts see no counter. Returning from Stripe shows a success/cancel banner via the `?credits=success|cancel` query param.
 *   **Shared Monetization Config**: `lib/credits.ts` centralizes `FREE_TIER_GENERATIONS`, the exempt-email set (`isExemptEmail`), and `CREDIT_PACK`, consumed by the generate, usage, and credits-checkout routes.
 
-**⚠️ REQUIRED MANUAL STEP — run the migration before the cap/credits go live.** The free-tier cap, credits balance, and Stripe top-up all depend on DB columns/functions that are not yet on the live database. Until applied, the cap **fails open** (no enforcement). In the Supabase SQL editor: (1) run `supabase/schema.sql` (idempotent — creates any missing tables/policies), then (2) run `supabase/migrations/0001_add_credits_and_fix_drift.sql` (adds the drifted `user_id` columns, `users.credits`, the credit RPCs, and the `credit_purchases` table). `STRIPE_WEBHOOK_SECRET` and `RESEND_API_KEY` are already set in Vercel; no new env vars are needed.
+**Live DB migration applied.** The Supabase SQL editor reported success after running `supabase/schema.sql` followed by `supabase/migrations/0001_add_credits_and_fix_drift.sql`. This activates the free-tier cap, user credit balances, credit RPCs, and `credit_purchases` table on the live database. `STRIPE_WEBHOOK_SECRET` and `RESEND_API_KEY` are already set in Vercel; no new env vars are needed.
 
 ### Prior Session Changes
 
@@ -92,7 +92,8 @@ Main entities configured or referenceable in the application:
 ### Completed This Session
 *   **Email Provider**: Done. Resend is wired in `lib/notifications.ts`; `RESEND_API_KEY` is set in Vercel.
 *   **Push Notifications**: Cancelled. Toggle removed from the UI; email covers the need.
-*   **Free-Tier Rate Limiting + Monetization**: Done. 3 free generations, then a credits paywall with Stripe top-up (see Session: Cost Controls & Monetization above). **Pending the manual DB migration to activate.**
+*   **Free-Tier Rate Limiting + Monetization**: Done. 3 free generations, then a credits paywall with Stripe top-up (see Session: Cost Controls & Monetization above). Live DB migration has been applied.
+*   **Credits DB Migration**: Done. `supabase/schema.sql` and `supabase/migrations/0001_add_credits_and_fix_drift.sql` were run successfully in Supabase.
 
 ### Notifications & Communication
 4.  **Job-Completion Email Test**: Confirm a real Resend email fires end-to-end on a deployed generation (record exists in `notifications`, email delivered).
@@ -102,7 +103,7 @@ Main entities configured or referenceable in the application:
 7.  **User History Page**: A `/history` route exists; verify it lists the signed-in user's past generations once the migration is applied (depends on `generation_jobs.user_id`).
 
 ### Monetization & Fulfillment
-9.  **Credits Follow-ups**: (a) run the migration to activate the paywall; (b) verify the credits Stripe webhook grants credits on a real purchase; (c) optionally show the live credit balance on `/result` and `/upgrade`; (d) tune `CREDIT_PACK` pricing/quantity in `lib/credits.ts`.
+9.  **Credits Follow-ups**: (a) verify the credits Stripe webhook grants credits on a real purchase; (b) optionally show the live credit balance on `/result` and `/upgrade`; (c) tune `CREDIT_PACK` pricing/quantity in `lib/credits.ts`.
 10. **Printful Verification**: Test card and poster draft-order fulfillment on deployed URLs. Printful catalog lookup found Greeting Card variants `14457` (4x6), `14458` (5x7), and `14460` (5.83x8.27). They are `in stock` for `europe`/`worldwide`, but `not fulfillable` for the strict `uk` selling region, so live fulfillment should be tested before promising UK-local production.
 11. **Privacy Improvements**: Move capture storage to private buckets and issue short-lived signed URLs.
 

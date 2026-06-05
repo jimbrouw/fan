@@ -14,6 +14,7 @@
 - Added compatibility fallbacks for local Supabase schemas that are missing newer `user_id` columns or notification/profile tables, so testing can continue before migrations are applied.
 - Reworked SVG poster previews to use a light base, translucent diagonal ramp beams, indigo text, and club colours as content accents.
 - Added Printful draft-order fulfillment plumbing from the previous in-progress work and kept result-page sharing via `/api/jobs/[jobId]/image`.
+- Applied the live Supabase schema/credits migration via the Supabase SQL editor: `supabase/schema.sql` followed by `supabase/migrations/0001_add_credits_and_fix_drift.sql`. The editor reported success, so `generation_jobs.user_id`, `capture_sessions.user_id`, `users.credits`, credit RPCs, and `credit_purchases` should now exist live.
 - Ignored generated prompt-output folders (`Prompts-vs/`, `test-images/`) so regenerated demo prompt packs do not enter source control by accident.
 - Added back-facing camera flip button (↔) on `/capture`: switches between `user` and `environment` facing modes, removes mirror flip for back camera. Pending real-device test for stream switching and image orientation.
 - Added optional shirt name and team slogan fields on `/create`, flowing through `buildPosterPrompt` as a `PERSONALISATION` section. Pending live generation test to verify model adherence.
@@ -43,20 +44,19 @@
 
 ### Existing backlog
 10. Test end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
-11. Apply latest `supabase/schema.sql` to live project so notifications, video_jobs, and generation_jobs.user_id exist without fallbacks.
-12. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
-13. Smoke test VS mode with uploaded opponent photo.
-14. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
-15. Live camera walkthrough on real phone on secure URL.
-16. Tighten photo privacy: private Supabase bucket, signed URLs to providers, retention window.
-17. Fix result downloads to include Kitface watermark overlay.
-18. Fix WhatsApp sharing to use public URL, not localhost.
-19. Decide: keep CSS hero poster preview or replace with real generated image.
+11. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
+12. Smoke test VS mode with uploaded opponent photo.
+13. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
+14. Live camera walkthrough on real phone on secure URL.
+15. Tighten photo privacy: private Supabase bucket, signed URLs to providers, retention window.
+16. Fix result downloads to include Kitface watermark overlay.
+17. Fix WhatsApp sharing to use public URL, not localhost.
+18. Decide: keep CSS hero poster preview or replace with real generated image.
 
 ## Blockers
 
 - Live generation verification depends on valid `.env.local` credentials and provider access.
-- The local/live Supabase schema may be behind `supabase/schema.sql`; compatibility fallbacks are in code, but notifications, user history, and video ownership require the migration.
+- The live Supabase schema/credits migration has been applied successfully. Remaining DB-dependent work should now be verified against live behavior rather than blocked on schema drift.
 - Live team-news verification depends on `FOOTBALL_DATA_API_KEY`; without it, the API intentionally falls back to team-only notes.
 - Real camera verification needs a secure device/browser path when testing outside localhost.
 - Printful verification requires valid Printful credentials and a confirmed catalog variant mapping.
