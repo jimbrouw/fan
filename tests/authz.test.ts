@@ -63,3 +63,25 @@ test("decideOwnedResourceAccess: fails open while user_id column is missing", ()
     "allow"
   );
 });
+
+test("route policy: Printful fulfillment denies a different user's completed job", () => {
+  assert.equal(
+    decideOwnedResourceAccess({
+      ownerColumnAvailable: true,
+      resourceUserId: OWNER,
+      requesterUserId: OTHER,
+    }),
+    "deny"
+  );
+});
+
+test("route policy: capture upload denies writes into another user's session", () => {
+  assert.equal(
+    decideOwnedResourceAccess({
+      ownerColumnAvailable: true,
+      resourceUserId: OWNER,
+      requesterUserId: OTHER,
+    }),
+    "deny"
+  );
+});
