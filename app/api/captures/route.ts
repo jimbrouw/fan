@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { captureBucket, createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/auth-server";
 import type { CaptureStepType } from "@/types/capture";
 
 function isMissingSchemaColumn(error: { message?: string }, column: string) {
@@ -12,6 +13,11 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
 
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Sign in to upload photos." }, { status: 401 });
+    }
+
     const form = await request.formData();
     const file = form.get("file");
     const sessionId = String(form.get("sessionId") ?? "");
@@ -29,7 +35,7 @@ export async function POST(request: Request) {
 
     const sessionInsert = {
       id: sessionId,
-      user_id: null,
+      user_id: user.id,
       status: "capturing",
       created_at: now,
       updated_at: now

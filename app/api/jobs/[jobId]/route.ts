@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { notifyUser } from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/auth-server";
+import { decideOwnedResourceAccess } from "@/lib/authz";
 import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
 
 type JobRow = {
@@ -32,14 +34,21 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
 
 export async function GET(_request: Request, { params }: { params: Promise<{ jobId: string }> }) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Sign in to view this poster." }, { status: 401 });
+    }
+
     const { jobId } = await params;
     const supabase = createServerSupabaseClient();
+    let userIdColumnMissing = false;
     let jobQuery = await supabase
       .from("generation_jobs")
       .select("*")
       .eq("id", jobId)
       .single<JobRow>();
     if (jobQuery.error && isMissingSchemaColumn(jobQuery.error, "user_id")) {
+      userIdColumnMissing = true;
       const fallback = await supabase
         .from("generation_jobs")
         .select("id,session_id,team_name,kit_notes,target_poster_url,provider_job_id,status,output_url,error,created_at,updated_at")
@@ -54,6 +63,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
 
     if (error || !job) {
       return NextResponse.json({ error: error?.message ?? "Job not found." }, { status: 404 });
+    }
+
+    const access = decideOwnedResourceAccess({
+      ownerColumnAvailable: !userIdColumnMissing,
+      resourceUserId: job.user_id,
+      requesterUserId: user.id,
+    });
+    if (access === "deny") {
+      // 404 rather than 403 so we don't reveal that the job exists.
+      return NextResponse.json({ error: "Job not found." }, { status: 404 });
     }
 
     if ((job.status === "completed" && job.output_url) || job.status === "failed" || !job.provider_job_id) {
