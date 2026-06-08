@@ -10,9 +10,10 @@ export type ClientValidationResult = {
 };
 
 export async function validateImageBlob(blob: Blob): Promise<ClientValidationResult> {
-  const bitmap = await createImageBitmap(blob);
-  const sample = sampleBitmap(bitmap, 160, 160);
-  bitmap.close();
+  const sample = await sampleImageBlob(blob).catch(() => ({
+    brightness: 0,
+    blurScore: 0
+  }));
 
   const messages: string[] = [];
   if (sample.brightness < 42) {
@@ -30,7 +31,40 @@ export async function validateImageBlob(blob: Blob): Promise<ClientValidationRes
   };
 }
 
-function sampleBitmap(bitmap: ImageBitmap, width: number, height: number) {
+async function sampleImageBlob(blob: Blob) {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(blob);
+      const sample = sampleImageSource(bitmap, 160, 160);
+      bitmap.close();
+      return sample;
+    } catch {
+      // Safari can reject some user-selected files here even when <img> can decode them.
+    }
+  }
+
+  return sampleImageElement(blob, 160, 160);
+}
+
+async function sampleImageElement(blob: Blob, width: number, height: number) {
+  const objectUrl = URL.createObjectURL(blob);
+
+  try {
+    const image = new Image();
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("Image decode failed."));
+      image.decoding = "async";
+      image.src = objectUrl;
+    });
+
+    return sampleImageSource(image, width, height);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function sampleImageSource(source: CanvasImageSource, width: number, height: number) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -40,7 +74,7 @@ function sampleBitmap(bitmap: ImageBitmap, width: number, height: number) {
     return { brightness: 0, blurScore: 0 };
   }
 
-  context.drawImage(bitmap, 0, 0, width, height);
+  context.drawImage(source, 0, 0, width, height);
   const { data } = context.getImageData(0, 0, width, height);
   let brightness = 0;
   let contrast = 0;

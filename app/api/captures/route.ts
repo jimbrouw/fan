@@ -4,12 +4,31 @@ import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { decideOwnedResourceAccess } from "@/lib/authz";
 import type { CaptureStepType } from "@/types/capture";
 
+const captureStepTypes = [
+  "neutral_front",
+  "smiling_front",
+  "left_45",
+  "right_45",
+  "side_profile",
+  "torso",
+  "celebration",
+  "opponent_front"
+] as const satisfies readonly CaptureStepType[];
+
 function isMissingSchemaColumn(error: { message?: string }, column: string) {
   const message = error.message ?? "";
   return (
     new RegExp(`Could not find the '${column}' column`, "i").test(message) ||
     new RegExp(`column .*\\.${column} does not exist`, "i").test(message)
   );
+}
+
+function isCaptureStepType(value: string): value is CaptureStepType {
+  return captureStepTypes.includes(value as CaptureStepType);
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 type CaptureSessionRow = {
@@ -27,12 +46,27 @@ export async function POST(request: Request) {
     const form = await request.formData();
     const file = form.get("file");
     const sessionId = String(form.get("sessionId") ?? "");
-    const type = String(form.get("type") ?? "") as CaptureStepType;
+    const type = String(form.get("type") ?? "");
     const validationStatus = String(form.get("validationStatus") ?? "manual_review");
     const validationResults = String(form.get("validationResults") ?? "{}");
 
     if (!(file instanceof File) || !sessionId || !type) {
       return NextResponse.json({ error: "Missing file, sessionId, or type." }, { status: 400 });
+    }
+
+    if (!isUuid(sessionId)) {
+      return NextResponse.json({ error: "Capture session expired. Restart capture and try again." }, { status: 400 });
+    }
+
+    if (!isCaptureStepType(type)) {
+      return NextResponse.json({ error: "Unsupported capture photo type." }, { status: 400 });
+    }
+
+    let parsedValidationResults: unknown;
+    try {
+      parsedValidationResults = JSON.parse(validationResults);
+    } catch {
+      return NextResponse.json({ error: "Invalid capture validation data." }, { status: 400 });
     }
 
     const supabase = createServerSupabaseClient();
@@ -121,7 +155,7 @@ export async function POST(request: Request) {
         type,
         image_url: publicUrlData.publicUrl,
         validation_status: validationStatus,
-        validation_results: JSON.parse(validationResults),
+        validation_results: parsedValidationResults,
         created_at: now,
         updated_at: now
       },

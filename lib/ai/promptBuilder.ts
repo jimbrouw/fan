@@ -104,6 +104,7 @@ export function buildPosterPrompt(input: {
   const brandPlacementMode = input.brandPlacementMode ?? "original";
   const isNanoBanana = input.model === "nano-banana-2";
   const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
+  const isFootballCardStyle = input.posterStyle.id === "hero-card";
   const isNationalTeam = input.teamProfile.group === "International" || input.teamProfile.group === "World Cup 2026";
   const matchContext = input.matchContext;
   const isPremierLeagueMatch = matchContext?.homeTeam.group === "Premier League" && matchContext.awayTeam.group === "Premier League";
@@ -180,6 +181,11 @@ ${matchSection}
 
 COMPOSITION & POSES:
 ${isGptImage ? `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one huge chest-up selected-side hero portrait dominate the poster, with four to five smaller selected-side full-body action shots along the bottom third. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} as secondary match context only. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player only, never for the selected-side hero figures." : ""} Do not swap sides.` : `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player." : ""} Do not swap sides.`}`
+    : isFootballCardStyle
+      ? `Premium photorealistic football player card for ${input.teamProfile.name}, starring [img] as the collectible-card hero.
+
+COMPOSITION & POSES:
+${isGptImage ? "Use one clean hero figure or chest-up portrait of [img] as the central card subject. Keep the pose confident and readable, with optional subtle action silhouettes or pitch texture behind the main figure. Do not create a multi-pose collage; this should feel like one polished player card." : "Use [img] as one clear central card subject with a confident football-card pose. Keep background action subtle and secondary."}`
     : `Modern football ${isNationalTeam ? "tournament" : "league"} poster${isGptImage ? " starring [img] in a fresh football campaign concept" : ", surrounded by multiple versions of [img] in different athletic poses and kit colours"}.
 
 COMPOSITION & POSES:
@@ -207,7 +213,107 @@ ${flatteringAthleticDirection}
 
 Use a premium football broadcast environment: bright stadium atmosphere with curved stands and crowd texture, clean floodlit pitch, vibrant matchday energy, electric gradient light forms across the environment. The composition should feel like official sports campaign photography — sharp, premium, broadcast-quality. The people, pitch, lights, and crowd must feel integrated in one scene. Reproduce the shirt sponsor as the exact logo style from the kit reference, not plain typed text or a generic font. No plain studio background. No dark moody fog. No shadowy back-lit cinema look. No large poster title text, slogan text, fake readable banners, random advertising boards, old sponsors, trophies, cups, medals, or isolated cutout collage.`
     : isGptImage
-      ? `GPT IMAGE 2 DIRECTION:
+      ? matchContext
+        ? `GPT IMAGE 2 VS DIRECTION:
+Create a premium photorealistic Kitface VS match poster that looks like a real app result: official football broadcast campaign artwork, pre-match programme cover, and modern tournament media-day poster in one image. This must feel more detailed and composed than a simple split-screen graphic.
+
+MATCH POSTER CONCEPT:
+Friendly but electric home-vs-away poster. Home team is always LEFT. Away team is always RIGHT. The selected-side uploaded person [img1] is the emotional hero, shown as a real supporter having their dream football media-day moment. Opposition figures create match tension, but never steal the hero role.
+
+SIDE STRUCTURE:
+Build a strong two-sided composition with clear visual separation. The ${matchContext.homeTeam.name} side uses home-team colour energy, kit details, crowd cues, and lighting on the LEFT. The ${matchContext.awayTeam.name} side uses away-team colour energy, kit details, crowd cues, and lighting on the RIGHT. Use a subtle central rivalry zone, tunnel glow, pitch line, diagonal broadcast graphics, or controlled "VS" energy without random readable text.
+
+SELECTED-SIDE HERO:
+Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one huge chest-up hero portrait of [img1] occupy about 55-70% of the selected side and dominate the poster. Add four to five smaller selected-side full-body action versions: running, celebrating, badge-kiss pride, arms raised, kneeslide or fist-pump celebration, and match-action movement. Every selected-side figure must clearly be [img1].
+
+OPPOSITION HANDLING:
+Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side as secondary match context. ${matchContext.opponentMode === "another-person" ? "Use [img2] for exactly one opposing feature player only, wearing the opposition kit, positioned clearly on the opposition side. [img2] may have one strong portrait or action pose, but [img1] remains the main hero. Never use [img2] for selected-side hero figures." : "Use varied anonymous current-squad-style opposition players or named matchday players only when matchday notes allow them. Do not copy [img1] onto opposition players."} Keep opposition figures smaller, less prominent, and visually separated.
+
+IDENTITY LOCK:
+Preserve exact recognisable likeness for [img1]: head shape, hairline, eyes, nose, mouth, cheeks, jaw, skin texture, facial hair, age, body type, and natural proportions. Keep [img1] consistent across every selected-side appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but [img1] must still clearly look like the uploaded photo. ${matchContext.opponentMode === "another-person" ? "For [img2], preserve the second person's exact identity on the opposition side only. Never blend [img1] and [img2], never average their faces, and never swap kits or sides." : "Opposition faces must not resemble [img1]."} Do not beautify, de-age, slim, bulk up, average faces with footballers, or replace either uploaded person.
+
+REFERENCE PRIORITY:
+The first attached person image is [img1], the selected-side identity source. ${matchContext.opponentMode === "another-person" ? "The second attached person image is [img2], the opposing feature-player identity source. " : ""}Kit reference images are clothing only. Never borrow faces, bodies, poses, or lighting from kit images. Identity accuracy wins over poster style.
+
+PHOTO ENHANCEMENT:
+If uploaded photos have heavy shadows, dull expression, uneven exposure, tired eyes, harsh phone-camera lighting, or flat indoor light, improve naturally: lift shadows, even skin lighting, brighten eyes, correct exposure, and keep natural skin texture. Do not change age, face shape, nose, eyes, jaw, facial hair, or body type.
+
+PHYSICAL INTEGRATION:
+The head, neck, shoulders, and shirt must look photographed together in one real stadium shoot, not composited. Match face lighting to stadium key/rim light on each side. Add contact shadows where chin, neck, collar, sleeves, and shirt fabric meet. Keep correct neck thickness, shoulder connection, skin tone, perspective, scale, and believable fabric tension.
+
+KIT AND SIDE ACCURACY:
+Use selected home and away kit variables and kit reference images exactly: fabric texture, stitching, folds, crest, manufacturer mark, collar, trim, shorts, socks, sleeve details, and sponsor placement. The ${matchContext.homeTeam.name} kit belongs only on the LEFT home side. The ${matchContext.awayTeam.name} kit belongs only on the RIGHT away side. If Kitface sponsor mode is active, both chest sponsors must read exactly "kitface.app"; otherwise keep original sponsors.
+
+COMPOSITION DETAIL:
+Vertical 3:4 poster. Use layered sports-campaign depth: huge selected-side hero portrait, smaller action versions in the foreground, opposition figures opposite, pitch texture under feet, stadium crowd, floodlight beams, soft confetti or rain-like particles, subtle broadcast overlays, and controlled colour energy from both clubs. Keep natural overlap and realistic scale. Avoid a flat two-person cutout layout.
+
+EXPRESSION AND MOOD:
+The selected hero should feel proud, warm, joyful, and celebratory, like a normal supporter experiencing the biggest matchday of their life. Opposition energy should feel competitive but friendly: focused, proud, amused, or impressed. This is football banter and broadcast excitement, not a fight poster.
+
+ENVIRONMENT:
+Modern football stadium at night with bright floodlights, crowd texture, visible pitch, tunnel or matchday entrance depth, light haze, crisp commercial lighting, and premium broadcast atmosphere. Keep it light, electric, playful, official, and polished.
+
+DESIGN AND PALETTE:
+Use modern sports editorial layout, official matchday programme quality, tournament media asset polish, and professional broadcast graphics. Blend both team palettes cleanly. Use translucent cyan, lime, blue, or violet electric beams as environmental light. Keep faces and kits sharp.
+
+LIGHTING AND QUALITY:
+Stadium commercial lighting, soft key light on faces, controlled rim light separating both sides, natural skin tones, premium sports photography, sharp focus, realistic anatomy, hands, eyes, and facial proportions.
+
+${motifNotes ? `CLUB PERSONALITY:\nUse selected-side club personality lightly: ${motifNotes} Subtle background cues only; not literal mascots, large text, or the main subject.\n\n` : ""}NEGATIVE PROMPT:
+No trophy. No cartoon, illustration, CGI look, celebrity likeness, generic replacement face, face averaging, beautified stranger, copied pro-player face, mismatched identity, identity drift, swapped sides, home kit on away side, away kit on home side, [img1] face on opposition players, ${matchContext.opponentMode === "another-person" ? "[img2] face on selected-side players, blended [img1]/[img2] identity, " : ""}pasted-on head, mismatched head/body lighting, missing neck shadow, collar gap, sad hero face, stern passport-photo expression, tired dead-eyed portrait, flat two-person cutout poster, missing selected-side action figures, distorted anatomy, extra fingers, warped limbs, malformed hands, blurry faces, unrealistic body transformation, body-shaming caricature, random logos, watermarks, fake sponsor names, misspelled text, random titles, extra slogans, mascot costume, hooligan mood, fighting, violence, or aggressive confrontation.`
+        : isFootballCardStyle
+          ? `GPT IMAGE 2 FOOTBALL CARD DIRECTION:
+Create a premium photorealistic Kitface football card that looks like a real app result: official player-card collectible, modern football broadcast graphics, and clean club media design. This is a card-style poster, not a busy multi-pose campaign collage.
+
+SUBJECT:
+The hero is the uploaded person as a real football supporter presented on an official-style player card. Preserve realistic skin texture, natural imperfections, strong facial detail, natural eyes, realistic proportions, and a proud confident expression.
+
+CARD STRUCTURE:
+Vertical 3:4 poster. Build a strong collectible-card frame with rounded card geometry, team-colour panels, subtle pitch texture, clean lighting, crest/manufacturer/kit detail, and one clear central hero figure or portrait. Use the selected team palette for the frame and background energy. Keep any stats-style shapes abstract unless explicit text is allowed.
+
+IDENTITY LOCK:
+Preserve exact recognisable likeness above all style choices: head shape, baldness or hairline, eyes, nose, mouth shape, cheeks, jaw, skin texture, facial hair, age, body type, and natural facial proportions. Do not beautify, de-age, slim, bulk up, average the face with footballers, or replace them.
+
+REFERENCE PRIORITY:
+The first attached image is the primary identity source. Any additional person photos are the same person and may be used for smile, body build, and lighting correction. Kit reference images are clothing only: shirt, collar, crest, manufacturer, sponsor, pattern, shorts, and socks. Never borrow faces, bodies, poses, or lighting from kit images. Identity accuracy from the person photos wins over card style.
+
+PHOTO ENHANCEMENT:
+If the person photo has poor lighting, heavy shadows, dull expression, uneven exposure, tired eyes, harsh phone-camera lighting, or flat indoor light, improve it naturally: lift shadows, even skin lighting, brighten eyes, correct exposure, soften harsh under-eye shadows, and keep natural skin texture. Keep the same person; do not change age, face shape, nose, eyes, jaw, skin texture, facial hair, or body type.
+
+PHYSICAL INTEGRATION:
+The head, neck, shoulders, and shirt must look photographed together in one real studio or stadium card shoot, not composited. Match face lighting to the card environment. Add contact shadows where the chin, neck, and collar meet. Keep correct neck thickness, shoulder connection, skin tone, camera perspective, and lens scale.
+
+EXPRESSION:
+The hero portrait must feel proud, warm, and confident. Avoid sad, stern, tired, angry, blank, police-lineup, or dead-eyed expressions.
+
+KIT:
+Use the selected kit variables and kit reference images exactly. Render authentic fabric texture, stitching, folds, crest, manufacturer mark, collar, trim, shorts, and socks. The shirt must look physically worn, not pasted on. If Kitface sponsor mode is active, chest sponsor must read exactly "kitface.app" and be integrated into the fabric. If original sponsor mode is active, keep the original sponsor from the kit reference/profile.
+
+${flatteringAthleticDirection}
+
+COMPOSITION:
+Use a clean official football card aesthetic. Keep one dominant player-card subject, a premium frame, clear team-colour accents, and crisp sports editorial lighting. Do not add four or five duplicate versions of the person. Avoid clutter; the card should read instantly at phone size.
+
+ENVIRONMENT:
+Light premium broadcast-card environment with subtle stadium or pitch cues, soft floodlight glow, and clean commercial photography. Keep it official, electric, playful, and polished.
+
+DESIGN AND PALETTE:
+Modern player-card layout, club colour frame, clean white/light-grey sports campaign base, translucent cyan/lime/blue/violet accents when helpful, and sharp kit detail.
+
+BRANDING AND TEXT:
+Only include readable text explicitly allowed by the dynamic prompt: "Kitface", "YOUR POSTER", authentic shirt numbers or provided shirt-name personalisation, crests, maker logos, allowed sleeve sponsors, and selected shirt sponsor. Do not add random stats, ratings, poster titles, fake slogans, stadium copy, or extra readable advertising.
+
+LIGHTING AND QUALITY:
+Studio-card commercial lighting, soft key light on face, controlled rim light, natural skin tones, premium sports photography, professional retouching, photorealistic detail, sharp focus, realistic anatomy, hands, eyes, and facial proportions.
+
+MOOD:
+Confident, proud, collectible, and relatable. The person should feel like a typical supporter getting their official player-card moment, not like a celebrity or elite athlete.
+
+${motifNotes ? `CLUB PERSONALITY:\nUse club personality lightly: ${motifNotes} These should be subtle card-background cues, not literal mascots, not large text, and not the main subject.` : ""}
+
+NEGATIVE PROMPT:
+No trophy. No cartoon, illustration, painting, CGI look, AI-art style, celebrity likeness, child, generic replacement face, face averaging, beautified stranger, copied pro-player face, mismatched identity, identity drift, pasted-on head, cutout face, mismatched head/body lighting, halo edge around head, missing neck shadow, collar gap, sad hero face, stern passport-photo expression, tired dead-eyed portrait, busy multi-pose collage, distorted anatomy, extra fingers, warped limbs, malformed hands, blurry faces, unrealistic body transformation, body-shaming caricature, exaggerated belly, double chin, squeezed kit, random logos, watermarks, fake sponsor names, misspelled text, random ratings, random stats, random titles, extra slogans, mascot costume, giant nickname text, or fan face on opposition players.`
+          : `GPT IMAGE 2 STAR PLAYER DIRECTION:
 Create a premium photorealistic Kitface football poster that looks like a real app result: official international tournament media campaign meets modern sports broadcast advertising; not a single-player trading card.
 
 SUBJECT:

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Copy, Download, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
+import { Camera, Copy, Download, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -215,6 +215,12 @@ export function ResultClient({ jobId }: { jobId: string }) {
               <span className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-center text-sm font-semibold leading-5 text-[var(--foreground)] transition hover:border-[rgba(42,0,79,0.2)] hover:bg-white active:scale-[0.98]">
                 <RotateCcw size={17} className="shrink-0" />
                 <span className="min-w-0 whitespace-normal">Make another poster with the same photos</span>
+              </span>
+            </Link>
+            <Link href="/capture?restart=1" className="col-span-2">
+              <span className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-center text-sm font-semibold leading-5 text-[var(--foreground)] transition hover:border-[rgba(42,0,79,0.2)] hover:bg-white active:scale-[0.98]">
+                <Camera size={17} className="shrink-0" />
+                <span className="min-w-0 whitespace-normal">Redo photos again</span>
               </span>
             </Link>
           </>

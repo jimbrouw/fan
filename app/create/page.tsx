@@ -1,6 +1,7 @@
 "use client";
 
-import { BadgeCheck, ImagePlus, Shirt, WandSparkles, Zap } from "lucide-react";
+import { BadgeCheck, ImagePlus, WandSparkles, Zap } from "lucide-react";
+import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
@@ -120,6 +121,67 @@ function buildPublicCaptureUrl(sessionId: string | null, type?: CaptureStepType)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl || !sessionId || !type) return undefined;
   return `${supabaseUrl}/storage/v1/object/public/${captureBucket}/${sessionId}/${type}.jpg`;
+}
+
+function PosterStylePreview({
+  styleId,
+  primary,
+  accent,
+}: {
+  styleId: string;
+  primary: string;
+  accent: string;
+}) {
+  const baseStyle = {
+    "--preview-primary": primary,
+    "--preview-accent": accent,
+  } as CSSProperties;
+
+  if (styleId === "matchday") {
+    return (
+      <div
+        className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-white/60 bg-[linear-gradient(115deg,var(--preview-primary)_0_48%,var(--preview-accent)_52%_100%)]"
+        style={baseStyle}
+        aria-hidden="true"
+      >
+        <div className="absolute inset-y-0 left-1/2 w-px bg-white/70" />
+        <div className="absolute left-2 top-2 h-10 w-7 rounded-full bg-white/75 shadow-sm" />
+        <div className="absolute bottom-2 right-2 h-10 w-7 rounded-full bg-white/75 shadow-sm" />
+        <div className="absolute inset-0 grid place-items-center">
+          <span className="rounded-full bg-white/90 px-2 py-1 text-[10px] font-black leading-none text-[var(--foreground)] shadow-sm">
+            VS
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (styleId === "player-reveal") {
+    return (
+      <div
+        className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-white/60 bg-[radial-gradient(circle_at_50%_20%,white_0_14%,transparent_38%),linear-gradient(135deg,var(--preview-primary),var(--preview-accent))]"
+        style={baseStyle}
+        aria-hidden="true"
+      >
+        <div className="absolute inset-x-0 bottom-0 h-7 bg-white/25" />
+        <div className="absolute left-1/2 top-4 h-14 w-10 -translate-x-1/2 rounded-t-full bg-white/85 shadow-sm" />
+        <div className="absolute bottom-2 left-2 h-7 w-5 rounded-t-full bg-white/70" />
+        <div className="absolute bottom-2 right-2 h-7 w-5 rounded-t-full bg-white/70" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-white/60 bg-[linear-gradient(145deg,white_0_18%,var(--preview-primary)_19%_66%,var(--preview-accent)_67%_100%)]"
+      style={baseStyle}
+      aria-hidden="true"
+    >
+      <div className="absolute inset-2 rounded-[8px] border border-white/75" />
+      <div className="absolute left-1/2 top-3 h-12 w-9 -translate-x-1/2 rounded-t-full bg-white/85 shadow-sm" />
+      <div className="absolute bottom-3 left-3 right-3 h-3 rounded-full bg-white/80" />
+    </div>
+  );
 }
 
 export default function CreatePage() {
@@ -832,7 +894,7 @@ export default function CreatePage() {
                 />
               </label>
               <label className="block space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Kit profile</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Kit notes</span>
                 <textarea
                   value={customKitNotes}
                   onChange={(event) => setCustomKitNotes(event.target.value)}
@@ -875,32 +937,6 @@ export default function CreatePage() {
                 </div>
               );
             })}
-          </div>}
-
-          {(createMode === "vs" || selectedTeamId !== "") && <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">
-            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-              <Shirt size={15} />
-              Kit profile
-            </div>
-            <p className="text-sm leading-6 text-[var(--foreground)]">{kitNotes || "Add kit colours for your custom team."}</p>
-            {createMode === "vs" && (
-              <div className="mt-3 border-t border-[var(--line)] pt-3 text-xs leading-5 text-[var(--muted)]">
-                <p>{homeTeam.name} home vs {awayTeam.name} away</p>
-                <p>Your side: {userTeam.name}</p>
-              </div>
-            )}
-            {createMode === "single" && selectedKitSpec && (
-              <div className="mt-3 border-t border-[var(--line)] pt-3 text-xs leading-5 text-[var(--muted)]">
-                <p>{selectedKitSpec.manufacturer} · {selectedKitSpec.mainSponsor}</p>
-                <p>{selectedKitSpec.pattern}</p>
-              </div>
-            )}
-            {createMode === "vs" && (homeKitSpec || awayKitSpec || userKitSpec) && (
-              <div className="mt-3 border-t border-[var(--line)] pt-3 text-xs leading-5 text-[var(--muted)]">
-                {homeKitSpec && <p>{homeKitSpec.team} home: {homeKitSpec.manufacturer} · {homeKitSpec.mainSponsor}</p>}
-                {awayKitSpec && <p>{awayKitSpec.team} away: {awayKitSpec.manufacturer} · {awayKitSpec.mainSponsor}</p>}
-              </div>
-            )}
           </div>}
 
           <label className="block space-y-2">
@@ -951,23 +987,37 @@ export default function CreatePage() {
             )}
           </div>
 
-          <label className="block space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster style</span>
-            <select
-              value={posterStyleId}
-              onChange={(event) => setPosterStyleId(event.target.value)}
-              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-            >
-              {posterStyles.map((style) => (
-                <option key={style.id} value={style.id} className="bg-[var(--surface)] text-[var(--foreground)]">
-                  {style.name}
-                </option>
-              ))}
-            </select>
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster style</legend>
+            <div className="grid grid-cols-3 gap-2">
+              {posterStyles.map((style) => {
+                const isSelected = posterStyleId === style.id;
+                return (
+                  <button
+                    key={style.id}
+                    type="button"
+                    onClick={() => setPosterStyleId(style.id)}
+                    className={`min-w-0 rounded-[14px] border p-1.5 text-left transition active:scale-[0.98] ${
+                      isSelected
+                        ? "border-[var(--accent)] bg-[var(--accent)]/12 shadow-[0_10px_24px_rgba(49,240,213,0.18)]"
+                        : "border-[var(--line)] bg-[var(--surface)] hover:border-[var(--accent)]/60"
+                    }`}
+                    aria-pressed={isSelected}
+                  >
+                    <PosterStylePreview styleId={style.id} primary={userTeam.primary} accent={userTeam.accent} />
+                    <span className={`mt-2 block text-center text-[11px] font-bold leading-4 ${
+                      isSelected ? "text-[var(--foreground)]" : "text-[var(--muted)]"
+                    }`}>
+                      {style.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
             <p className="text-xs leading-5 text-[var(--muted)]">
               {posterStyles.find((style) => style.id === posterStyleId)?.description}
             </p>
-          </label>
+          </fieldset>
 
 
         </form>

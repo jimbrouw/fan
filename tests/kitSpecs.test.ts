@@ -10,6 +10,12 @@ const posterStyle = {
   description: "Clean football card composition with club colours."
 };
 
+const starPlayerPosterStyle = {
+  id: "player-reveal",
+  name: "Star Player Poster",
+  description: "Bold media-day poster with official campaign lighting."
+};
+
 test("Nottingham Forest home kit uses the current 2026/27 Premier League overlay", () => {
   const spec = getKitSpec("nottingham-forest", "home");
 
@@ -145,7 +151,7 @@ test("Nano Banana prompt uses joyful broadcast media-day direction", () => {
   assert.match(prompt, /NO stern blank central expression/i);
 });
 
-test("GPT Image 2 prompt uses the Kitface tournament poster structure", () => {
+test("GPT Image 2 football card prompt uses a clean card structure", () => {
   const kitSpec = getKitSpec("nottingham-forest", "home");
   assert.ok(kitSpec);
 
@@ -165,12 +171,55 @@ test("GPT Image 2 prompt uses the Kitface tournament poster structure", () => {
     model: "gpt-image-2"
   });
 
-  assert.match(prompt, /GPT IMAGE 2 DIRECTION/i);
+  assert.match(prompt, /GPT IMAGE 2 FOOTBALL CARD DIRECTION/i);
+  assert.match(prompt, /official player-card collectible/i);
+  assert.match(prompt, /real app result/i);
+  assert.match(prompt, /not a busy multi-pose campaign collage/i);
+  assert.match(prompt, /one clear central hero figure or portrait/i);
+  assert.match(prompt, /Do not add four or five duplicate versions/i);
+  assert.match(prompt, /Avoid clutter; the card should read instantly at phone size/i);
+  assert.match(prompt, /SUBJECT/i);
+  assert.match(prompt, /real football supporter/i);
+  assert.doesNotMatch(prompt, /One huge chest-up hero portrait occupies about 60-70%/i);
+  assert.doesNotMatch(prompt, /four to five smaller full-body action shots/i);
+  assert.match(prompt, /IDENTITY LOCK/i);
+  assert.match(prompt, /Do not beautify, de-age, slim, bulk up/i);
+  assert.match(prompt, /REFERENCE PRIORITY/i);
+  assert.match(prompt, /PHOTO ENHANCEMENT/i);
+  assert.match(prompt, /PHYSICAL INTEGRATION/i);
+  assert.match(prompt, /Use the selected kit variables and kit reference images exactly/i);
+  assert.match(prompt, /KIND ATHLETIC PRESENTATION/i);
+  assert.match(prompt, /NEGATIVE PROMPT/i);
+  assert.match(prompt, /random ratings/i);
+  assert.match(prompt, /Tricky Trees/i);
+  assert.match(prompt, /subtle tree silhouettes/i);
+  assert.ok(prompt.length <= 10000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
+});
+
+test("GPT Image 2 star player prompt uses the Kitface tournament poster structure", () => {
+  const kitSpec = getKitSpec("nottingham-forest", "home");
+  assert.ok(kitSpec);
+
+  const prompt = buildPosterPrompt({
+    teamProfile: {
+      name: "Nottingham Forest",
+      group: "Premier League",
+      primary: "#dd0000",
+      accent: "#ffffff",
+      kitNotes: "Red shirt, white shorts, clean Forest crest placement and simple trim.",
+      trophy: "Premier League Trophy",
+      nickname: "Tricky Trees",
+      visualMotifs: ["subtle tree silhouettes", "playful forest hints"]
+    },
+    posterStyle: starPlayerPosterStyle,
+    kitSpec,
+    model: "gpt-image-2"
+  });
+
+  assert.match(prompt, /GPT IMAGE 2 STAR PLAYER DIRECTION/i);
   assert.match(prompt, /official international tournament media campaign/i);
   assert.match(prompt, /real app result/i);
   assert.match(prompt, /not a single-player trading card/i);
-  assert.match(prompt, /SUBJECT/i);
-  assert.match(prompt, /real football supporter/i);
   assert.match(prompt, /One huge chest-up hero portrait occupies about 60-70%/i);
   assert.match(prompt, /four to five smaller full-body action shots/i);
   assert.match(prompt, /ACTION POSES/i);
@@ -227,6 +276,7 @@ test("poster prompt can frame an away VS match with the reference person on the 
     kitSpec,
     homeKitSpec: getKitSpec("man-united", "home"),
     awayKitSpec: kitSpec,
+    model: "gpt-image-2",
     matchContext: {
       homeTeam: {
         id: "man-united",
@@ -268,7 +318,24 @@ test("poster prompt can frame an away VS match with the reference person on the 
   assert.match(prompt, /Allowed Manchester United players: Bruno Fernandes, Kobbie Mainoo/i);
   assert.match(prompt, /Do not show Marcus Rashford or Scott McTominay/i);
   assert.match(prompt, /Only depict named real opposition players/i);
-  assert.ok(prompt.length <= 3000, `prompt length ${prompt.length} exceeds MuAPI limit`);
+  assert.match(prompt, /GPT IMAGE 2 VS DIRECTION/i);
+  assert.match(prompt, /official football broadcast campaign artwork/i);
+  assert.match(prompt, /pre-match programme cover/i);
+  assert.match(prompt, /This must feel more detailed and composed than a simple split-screen graphic/i);
+  assert.match(prompt, /strong two-sided composition/i);
+  assert.match(prompt, /huge chest-up hero portrait of \[img1\] occupy about 55-70%/i);
+  assert.match(prompt, /kneeslide or fist-pump celebration/i);
+  assert.match(prompt, /OPPOSITION HANDLING/i);
+  assert.match(prompt, /Opponents stay on the LEFT side as secondary match context/i);
+  assert.match(prompt, /PHYSICAL INTEGRATION/i);
+  assert.match(prompt, /KIT AND SIDE ACCURACY/i);
+  assert.match(prompt, /The Manchester United kit belongs only on the LEFT home side/i);
+  assert.match(prompt, /The Nottingham Forest kit belongs only on the RIGHT away side/i);
+  assert.match(prompt, /Avoid a flat two-person cutout layout/i);
+  assert.match(prompt, /football banter and broadcast excitement/i);
+  assert.match(prompt, /No trophy/i);
+  assert.match(prompt, /flat two-person cutout poster/i);
+  assert.ok(prompt.length <= 10000, `prompt length ${prompt.length} exceeds GPT Image 2 budget`);
 });
 
 test("poster prompt does not ask for a trophy or cup prop", () => {
@@ -291,8 +358,8 @@ test("poster prompt does not ask for a trophy or cup prop", () => {
 
   assert.doesNotMatch(prompt, /official .*trophy/i);
   assert.doesNotMatch(prompt, /situated prominently/i);
-  assert.match(prompt, /Do not include a trophy, cup, or medal as a central prop/i);
   assert.match(prompt, /NO trophies, cups, medals/i);
+  assert.match(prompt, /central silverware props/i);
 });
 
 test("poster prompt can assign a second person reference to the opposition feature player", () => {
@@ -308,6 +375,7 @@ test("poster prompt can assign a second person reference to the opposition featu
     posterStyle,
     homeKitSpec: getKitSpec("man-united", "home"),
     awayKitSpec: getKitSpec("nottingham-forest", "away"),
+    model: "gpt-image-2",
     matchContext: {
       homeTeam: {
         id: "man-united",
@@ -338,7 +406,11 @@ test("poster prompt can assign a second person reference to the opposition featu
   assert.match(prompt, /Secondary reference person \[img2\] plays for Manchester United/i);
   assert.match(prompt, /Use \[img2\] for one opposing feature player/i);
   assert.match(prompt, /NO applying \[img2\]'s face to the selected side/i);
-  assert.ok(prompt.length <= 3000, `prompt length ${prompt.length} exceeds MuAPI limit`);
+  assert.match(prompt, /Use \[img2\] for exactly one opposing feature player only/i);
+  assert.match(prompt, /For \[img2\], preserve the second person's exact identity on the opposition side only/i);
+  assert.match(prompt, /Never blend \[img1\] and \[img2\]/i);
+  assert.match(prompt, /\[img2\] face on selected-side players/i);
+  assert.ok(prompt.length <= 10000, `prompt length ${prompt.length} exceeds GPT Image 2 budget`);
 });
 
 test("VS poster prompt can apply Kitface sponsor and billboard mode to both kits", () => {

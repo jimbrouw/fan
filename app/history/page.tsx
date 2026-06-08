@@ -101,15 +101,15 @@ export default function HistoryPage() {
           </button>
         </div>
 
-        {/* Start New CTA */}
+        {/* Generate New CTA */}
         <div className="flex items-center justify-between rounded-[18px] bg-[var(--surface-soft)]/50 p-4 border border-[var(--line)]">
           <div>
-            <h3 className="text-sm font-bold text-[var(--foreground)]">Create a new poster</h3>
-            <p className="text-xs text-[var(--muted)]">Start a fresh match or single player poster.</p>
+            <h3 className="text-sm font-bold text-[var(--foreground)]">Generate a new image</h3>
+            <p className="text-xs text-[var(--muted)]">Make another poster with the same photos.</p>
           </div>
-          <Link href="/capture?restart=1">
+          <Link href="/create">
             <Button className="h-10 text-xs px-4 flex items-center gap-1.5">
-              Create New
+              Generate New
               <Sparkles size={13} />
             </Button>
           </Link>
