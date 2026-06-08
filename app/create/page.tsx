@@ -123,6 +123,20 @@ function buildPublicCaptureUrl(sessionId: string | null, type?: CaptureStepType)
   return `${supabaseUrl}/storage/v1/object/public/${captureBucket}/${sessionId}/${type}.jpg`;
 }
 
+function getOpponentUploadErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (/expected pattern/i.test(message)) {
+    return "That photo could not be read by this browser. Try a JPEG or PNG from your camera roll.";
+  }
+
+  if (/capture session expired/i.test(message)) {
+    return "Your capture session expired. Restart capture, then try this photo again.";
+  }
+
+  return message || "Other person photo upload failed.";
+}
+
 function PosterStylePreview({
   styleId,
   primary,
@@ -430,10 +444,11 @@ export default function CreatePage() {
     setIsUploadingOpponent(true);
     setOpponentUploadError(null);
 
-    const objectUrl = URL.createObjectURL(file);
+    let objectUrl: string | undefined;
     let imageUrl: string | undefined;
 
     try {
+      objectUrl = URL.createObjectURL(file);
       const validation = await validateImageBlob(file);
       const form = new FormData();
       form.append("file", file, "opponent_front.jpg");
@@ -468,8 +483,8 @@ export default function CreatePage() {
       ];
       localStorage.setItem("fan-hero-captures", JSON.stringify(next));
     } catch (uploadError) {
-      URL.revokeObjectURL(objectUrl);
-      setOpponentUploadError(uploadError instanceof Error ? uploadError.message : "Other person photo upload failed.");
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setOpponentUploadError(getOpponentUploadErrorMessage(uploadError));
     } finally {
       setIsUploadingOpponent(false);
     }
