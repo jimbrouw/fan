@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
-import { choosePrimaryReferenceCapture, choosePrimaryReferenceType, chooseSupportingReferenceUrls } from "@/lib/captureReferences";
+import { choosePrimaryReferenceCapture, chooseSupportingReferenceUrls } from "@/lib/captureReferences";
 import { describeKitSpec, getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
 import { getDefaultPosterStyleIdForCreateMode, posterStyles } from "@/lib/posterTemplates";
 import { customTeamId, getTeamProfile, teamProfiles } from "@/lib/teamProfiles";
@@ -31,7 +31,6 @@ type MatchSide = "home" | "away";
 type OpponentMode = "club-players" | "another-person";
 type TeamGroup = (typeof teamProfiles)[number]["group"];
 
-const captureBucket = "fan-hero-captures";
 const visibleKitVariants = kitVariants.filter((variant) => variant.id !== "third");
 const teamGroupOrder: TeamGroup[] = [
   "World Cup 2026",
@@ -115,12 +114,6 @@ function buildOrderedTeamGroups<T extends (typeof teamProfiles)[number]>(teams: 
   return teamGroupOrder
     .filter((group) => grouped[group]?.length)
     .map((group) => [group, [...grouped[group]].sort((a, b) => compareTeamsWithinGroup(group, a, b))] as const);
-}
-
-function buildPublicCaptureUrl(sessionId: string | null, type?: CaptureStepType) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl || !sessionId || !type) return undefined;
-  return `${supabaseUrl}/storage/v1/object/public/${captureBucket}/${sessionId}/${type}.jpg`;
 }
 
 function getOpponentUploadErrorMessage(error: unknown) {
@@ -219,6 +212,7 @@ export default function CreatePage() {
   const [opponentPreviewUrl, setOpponentPreviewUrl] = useState<string | undefined>();
   const [isUploadingOpponent, setIsUploadingOpponent] = useState(false);
   const [opponentUploadError, setOpponentUploadError] = useState<string | null>(null);
+  const [invalidSourceImageUrl, setInvalidSourceImageUrl] = useState<string | null>(null);
   const [failedKitImages, setFailedKitImages] = useState<Record<string, true>>({});
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [shirtName, setShirtName] = useState("");
@@ -364,35 +358,30 @@ export default function CreatePage() {
   const sourceImageUrl = useMemo(
     () => {
       const primaryCapture = choosePrimaryReferenceCapture(captures);
-      const primaryCaptureType = choosePrimaryReferenceType(captures);
-      const uploadedCapture = captures.find((capture) => capture.imageUrl);
+      const uploadedCapture = captures.find((capture) => capture.imageUrl && capture.type !== "opponent_front");
       return (
         primaryCapture?.imageUrl ??
-        uploadedCapture?.imageUrl ??
-        buildPublicCaptureUrl(sessionId, primaryCaptureType ?? captures[0]?.type)
+        uploadedCapture?.imageUrl
       );
     },
-    [captures, sessionId]
+    [captures]
   );
   const supportingReferenceImageUrls = useMemo(
     () => createMode === "single" ? chooseSupportingReferenceUrls(captures, sourceImageUrl) : [],
     [captures, createMode, sourceImageUrl]
   );
+  const hasUsableSourceImage = Boolean(sourceImageUrl && sourceImageUrl !== invalidSourceImageUrl);
   const hasTeamSelected = createMode !== "single" || selectedTeamId !== "";
   const hasValidMatch = createMode === "single" || homeTeamId !== awayTeamId;
   const needsOpponentImage = createMode === "vs" && opponentMode === "another-person";
   const hasOpponentImage = !needsOpponentImage || Boolean(opponentImageUrl);
   const hasAnyCapture = captures.some((c) => c.objectUrl || c.imageUrl);
-  const canSubmit = !isRetryingUploads && hasTeamSelected && teamName && kitNotes && posterStyleId && sourceImageUrl && sessionId && hasValidMatch && hasOpponentImage;
+  const canSubmit = !isRetryingUploads && hasTeamSelected && teamName && kitNotes && posterStyleId && hasUsableSourceImage && sessionId && hasValidMatch && hasOpponentImage;
 
   useEffect(() => {
     const sid = localStorage.getItem("fan-hero-session-id");
     setSessionId(sid);
-    const storedCaptures = (JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[])
-      .map((capture) => ({
-        ...capture,
-        imageUrl: capture.imageUrl ?? buildPublicCaptureUrl(sid, capture.type)
-      }));
+    const storedCaptures = JSON.parse(localStorage.getItem("fan-hero-captures") ?? "[]") as LocalCapture[];
     const storedOpponent = storedCaptures.find((capture) => capture.type === "opponent_front");
     setCaptures(storedCaptures);
     setOpponentImageUrl(storedOpponent?.imageUrl);
@@ -401,7 +390,7 @@ export default function CreatePage() {
 
     if (!sid) return;
     const needsUpload = storedCaptures.filter(
-      (c) => c.objectUrl && !c.imageUrl && c.type !== "opponent_front"
+      (c) => c.objectUrl && c.type !== "opponent_front"
     );
     if (needsUpload.length === 0) return;
 
@@ -425,7 +414,7 @@ export default function CreatePage() {
         } catch {
           // blob may have expired; user will need to retake
         }
-        return capture;
+        return capture.imageUrl ? capture : { ...capture, imageUrl: undefined };
       })
     ).then((retried) => {
       setCaptures((prev) => {
@@ -532,6 +521,9 @@ export default function CreatePage() {
         if (response.status === 401) {
           window.location.href = "/login?next=/create";
           return;
+        }
+        if (data.error?.includes("selected face reference image")) {
+          setInvalidSourceImageUrl(sourceImageUrl);
         }
         throw new Error(data.error ?? "Poster job failed.");
       }
@@ -1039,11 +1031,11 @@ export default function CreatePage() {
 
         <div className="rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/55 p-4 text-sm leading-6 text-[var(--foreground)]">
           <div className="flex gap-3">
-            <BadgeCheck size={18} className={sourceImageUrl ? "mt-1 text-[var(--accent)]" : "mt-1 text-[var(--muted)]"} />
+            <BadgeCheck size={18} className={hasUsableSourceImage ? "mt-1 text-[var(--accent)]" : "mt-1 text-[var(--muted)]"} />
             <span>
               {isRetryingUploads
                 ? "Uploading your photos…"
-                : sourceImageUrl
+                : hasUsableSourceImage
                   ? "Your photo set is ready for the poster."
                   : hasAnyCapture
                     ? <>Upload failed. <a href="/capture" className="underline">Retake photos</a> to continue.</>
