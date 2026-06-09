@@ -196,7 +196,7 @@ test("GPT Image 2 football card prompt uses a clean card structure", () => {
   assert.ok(prompt.length <= 10000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
 });
 
-test("GPT Image 2 star player prompt uses the Kitface tournament poster structure", () => {
+test("GPT Image 2 star player prompt uses the older campaign collage structure without trophies", () => {
   const kitSpec = getKitSpec("nottingham-forest", "home");
   assert.ok(kitSpec);
 
@@ -217,13 +217,18 @@ test("GPT Image 2 star player prompt uses the Kitface tournament poster structur
   });
 
   assert.match(prompt, /GPT IMAGE 2 STAR PLAYER DIRECTION/i);
-  assert.match(prompt, /official international tournament media campaign/i);
+  assert.match(prompt, /official EFL \/ Premier League launch-campaign collage/i);
+  assert.match(prompt, /high-end sportswear advertising/i);
   assert.match(prompt, /real app result/i);
-  assert.match(prompt, /not a single-player trading card/i);
-  assert.match(prompt, /One huge chest-up hero portrait occupies about 60-70%/i);
-  assert.match(prompt, /four to five smaller full-body action shots/i);
+  assert.match(prompt, /clean bright off-white stadium-poster background/i);
+  assert.match(prompt, /exactly three to four larger supporting player images/i);
+  assert.match(prompt, /not five tiny figures/i);
+  assert.match(prompt, /large enough for the face, hands, kit, and body to remain recognisable/i);
   assert.match(prompt, /ACTION POSES/i);
-  assert.match(prompt, /running, celebrating, match action/i);
+  assert.match(prompt, /roaring or shouting celebration/i);
+  assert.match(prompt, /side\/back number pose/i);
+  assert.match(prompt, /arms-folded captain-style portrait/i);
+  assert.match(prompt, /running or match-action movement/i);
   assert.match(prompt, /IDENTITY LOCK/i);
   assert.match(prompt, /one football media-day shoot/i);
   assert.match(prompt, /Do not beautify, de-age, slim, bulk up/i);
@@ -241,10 +246,15 @@ test("GPT Image 2 star player prompt uses the Kitface tournament poster structur
   assert.match(prompt, /Use the selected kit variables and kit reference images exactly/i);
   assert.match(prompt, /KIND ATHLETIC PRESENTATION/i);
   assert.match(prompt, /flattering kit fit/i);
-  assert.match(prompt, /Modern football stadium at night/i);
-  assert.match(prompt, /national-team media asset polish/i);
+  assert.match(prompt, /Bright premium stadium-commercial environment/i);
+  assert.match(prompt, /soft pink\/warm haze/i);
+  assert.match(prompt, /Avoid dark moody fog/i);
+  assert.match(prompt, /Official league launch poster meets high-end sportswear advertising campaign/i);
+  assert.match(prompt, /4K ultra-detailed finish/i);
   assert.match(prompt, /Only include readable text explicitly allowed by the dynamic prompt/i);
   assert.match(prompt, /NEGATIVE PROMPT/i);
+  assert.match(prompt, /No trophy\. No cup\. No medals\. No central silverware/i);
+  assert.match(prompt, /No tiny distorted duplicate players/i);
   assert.match(prompt, /No cartoon/i);
   assert.match(prompt, /sad hero face/i);
   assert.match(prompt, /stern passport-photo expression/i);
@@ -252,10 +262,12 @@ test("GPT Image 2 star player prompt uses the Kitface tournament poster structur
   assert.match(prompt, /mismatched head\/body lighting/i);
   assert.match(prompt, /collar gap/i);
   assert.match(prompt, /single generic footballer portrait/i);
-  assert.match(prompt, /missing bottom action figures/i);
+  assert.match(prompt, /missing supporting campaign figures/i);
   assert.match(prompt, /Tricky Trees/i);
   assert.match(prompt, /subtle tree silhouettes/i);
   assert.match(prompt, /not literal mascots/i);
+  assert.doesNotMatch(prompt, /four to five smaller full-body action shots/i);
+  assert.doesNotMatch(prompt, /bottom-third action figures/i);
   assert.ok(prompt.length <= 10000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
 });
 

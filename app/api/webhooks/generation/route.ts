@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { notifyUser } from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
+import { decodeFalGptImageProviderJobId, encodeFalGptImageProviderJobId, FalGptImage2GenerationProvider } from "@/lib/ai/providers/fal";
+import type { GenerationResponse } from "@/lib/ai/types";
 
 type WebhookBody = {
   request_id?: string;
@@ -26,30 +28,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing request id." }, { status: 400 });
     }
 
-    // Instead of parsing the provider-specific webhook payload,
-    // we use the provider to fetch the definitive status.
-    const provider = new MuapiGenerationProvider();
-    const statusResult = await provider.getJobStatus(requestId);
-
     const supabase = createServerSupabaseClient();
 
+    let providerJobId = requestId;
     let existingJobQuery = await supabase
       .from("generation_jobs")
       .select("id,user_id,status")
-      .eq("provider_job_id", requestId)
-      .single<GenerationJobRow>();
+      .eq("provider_job_id", providerJobId)
+      .maybeSingle<GenerationJobRow>();
+
+    if (!existingJobQuery.data) {
+      const falProviderJobId = encodeFalGptImageProviderJobId(requestId);
+      const falJobQuery = await supabase
+        .from("generation_jobs")
+        .select("id,user_id,status")
+        .eq("provider_job_id", falProviderJobId)
+        .maybeSingle<GenerationJobRow>();
+
+      if (falJobQuery.data) {
+        providerJobId = falProviderJobId;
+        existingJobQuery = falJobQuery;
+      }
+    }
+
     if (existingJobQuery.error && isMissingSchemaColumn(existingJobQuery.error, "user_id")) {
       const fallback = await supabase
         .from("generation_jobs")
         .select("id,status")
-        .eq("provider_job_id", requestId)
-        .single<Omit<GenerationJobRow, "user_id">>();
+        .eq("provider_job_id", providerJobId)
+        .maybeSingle<Omit<GenerationJobRow, "user_id">>();
       existingJobQuery = {
         ...fallback,
         data: fallback.data ? { ...fallback.data, user_id: null } : null,
       } as typeof existingJobQuery;
     }
     const { data: existingJob } = existingJobQuery;
+    const statusResult = await getStaticGenerationStatus(providerJobId);
 
     const { error } = await supabase
       .from("generation_jobs")
@@ -59,7 +73,7 @@ export async function POST(request: Request) {
         error: statusResult.error,
         updated_at: new Date().toISOString()
       })
-      .eq("provider_job_id", requestId);
+      .eq("provider_job_id", providerJobId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -84,4 +98,12 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+async function getStaticGenerationStatus(providerJobId: string): Promise<GenerationResponse> {
+  if (decodeFalGptImageProviderJobId(providerJobId)) {
+    return new FalGptImage2GenerationProvider().getJobStatus(providerJobId);
+  }
+
+  return new MuapiGenerationProvider().getJobStatus(providerJobId);
 }

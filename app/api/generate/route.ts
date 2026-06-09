@@ -3,6 +3,7 @@ import { getPosterStyle } from "@/lib/posterTemplates";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
+import { FalGptImage2GenerationProvider } from "@/lib/ai/providers/fal";
 import { buildPosterPrompt, normalizeKitBrandPlacementMode } from "@/lib/ai/promptBuilder";
 import { getKitSpec, type KitVariant } from "@/lib/kitSpecs";
 import { buildUsableReferenceImageUrls } from "@/lib/remoteImages";
@@ -132,9 +133,7 @@ export async function POST(request: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/generation` : undefined;
 
-    const provider = new MuapiGenerationProvider();
-
-    const { providerJobId } = await provider.submitJob({
+    const providerJobId = await submitStaticGenerationJob({
       prompt,
       referenceImageUrls,
       model: body.model,
@@ -164,7 +163,7 @@ export async function POST(request: Request) {
         body.matchContext?.matchdayNotes ? `Matchday notes: ${body.matchContext.matchdayNotes}` : undefined,
         `Brand placement mode: ${brandPlacementMode}`,
         `Model: ${body.model || "wan2.7-image-edit"}`,
-        body.model === "gpt-image-2" || body.model === "gpt-image-2-fast" ? `GPT Image test mode: ${body.gptImageTestMode || "fast-1k-low"}` : undefined,
+        body.model === "gpt-image-2" || body.model === "gpt-image-2-fast" ? `GPT Image test mode: ${body.gptImageTestMode || "final-4k-high"}` : undefined,
         `Poster style: ${posterStyle.name}`
       ].filter(Boolean).join("\n"),
       target_poster_url: "", // Not used in this generation mode, but required by schema
@@ -218,5 +217,40 @@ export async function POST(request: Request) {
       { error: message },
       { status: 500 }
     );
+  }
+}
+
+async function submitStaticGenerationJob(input: {
+  prompt: string;
+  referenceImageUrls: string[];
+  model?: string;
+  gptImageTestMode?: MuapiGptImageTestMode;
+  webhookUrl?: string;
+}) {
+  const muapiProvider = new MuapiGenerationProvider();
+
+  try {
+    const { providerJobId } = await muapiProvider.submitJob(input);
+    return providerJobId;
+  } catch (error) {
+    const shouldFallbackToFal =
+      input.model === "gpt-image-2" &&
+      input.gptImageTestMode === "final-4k-high" &&
+      Boolean(process.env.FAL_KEY);
+
+    if (!shouldFallbackToFal) {
+      throw error;
+    }
+
+    console.warn("MUAPI 4K GPT Image 2 submission failed; falling back to fal GPT Image 2.", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    const falProvider = new FalGptImage2GenerationProvider();
+    const { providerJobId } = await falProvider.submitJob({
+      prompt: input.prompt,
+      referenceImageUrls: input.referenceImageUrls,
+    });
+    return providerJobId;
   }
 }

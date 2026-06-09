@@ -495,7 +495,7 @@ export default function CreatePage() {
             teamId: userTeamId,
             posterStyleId,
             model: "gpt-image-2",
-            gptImageTestMode: "final-2k-high",
+            gptImageTestMode: "final-4k-high",
             kitVariant: userKitVariant,
             matchContext,
             teamProfile: {

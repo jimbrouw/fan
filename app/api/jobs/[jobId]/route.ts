@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { decideOwnedResourceAccess } from "@/lib/authz";
 import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
+import { decodeFalGptImageProviderJobId, FalGptImage2GenerationProvider } from "@/lib/ai/providers/fal";
+import type { GenerationResponse } from "@/lib/ai/types";
 
 type JobRow = {
   id: string;
@@ -79,8 +81,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
       return NextResponse.json(await toResponse(job, supabase));
     }
 
-    const provider = new MuapiGenerationProvider();
-    const providerStatus = await provider.getJobStatus(job.provider_job_id);
+    const providerStatus = await getStaticGenerationStatus(job.provider_job_id);
 
     // Only update if something changed
     if (providerStatus.status !== job.status || providerStatus.outputUrl || providerStatus.error) {
@@ -121,6 +122,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
       { status: 500 }
     );
   }
+}
+
+async function getStaticGenerationStatus(providerJobId: string): Promise<GenerationResponse> {
+  if (decodeFalGptImageProviderJobId(providerJobId)) {
+    return new FalGptImage2GenerationProvider().getJobStatus(providerJobId);
+  }
+
+  return new MuapiGenerationProvider().getJobStatus(providerJobId);
 }
 
 async function toResponse(job: JobRow, supabase: ReturnType<typeof createServerSupabaseClient>) {

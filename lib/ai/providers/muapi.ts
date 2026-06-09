@@ -21,7 +21,7 @@ type MuapiSubmitBody = {
 
 export type MuapiImageResolution = "1K" | "2K" | "4K";
 export type MuapiImageQuality = "low" | "medium" | "high";
-export type MuapiGptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high";
+export type MuapiGptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high" | "final-4k-high";
 
 export function getMuapiGptImageSettings(testMode?: MuapiGptImageTestMode): {
   resolution: MuapiImageResolution;
@@ -33,6 +33,10 @@ export function getMuapiGptImageSettings(testMode?: MuapiGptImageTestMode): {
 
   if (testMode === "final-2k-high") {
     return { resolution: "2K", quality: "high" };
+  }
+
+  if (testMode === "final-4k-high") {
+    return { resolution: "4K", quality: "high" };
   }
 
   return { resolution: "1K", quality: "low" };

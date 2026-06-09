@@ -53,3 +53,16 @@ test("gpt-image-2 can use high-quality final settings", () => {
   assert.equal(request.body.resolution, "2K");
   assert.equal(request.body.quality, "high");
 });
+
+test("gpt-image-2 can use maximum 4K high-quality final settings", () => {
+  const request = buildMuapiSubmitRequest({
+    prompt: "Create a maximum-quality football poster",
+    referenceImageUrls: ["https://example.com/person.jpg"],
+    model: "gpt-image-2",
+    gptImageTestMode: "final-4k-high"
+  });
+
+  assert.equal(request.endpoint, "gpt-image-2-image-to-image");
+  assert.equal(request.body.resolution, "4K");
+  assert.equal(request.body.quality, "high");
+});
