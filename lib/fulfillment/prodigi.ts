@@ -119,7 +119,16 @@ export class ProdigiFulfillmentProvider {
       body: JSON.stringify(buildProdigiOrderPayload(input))
     });
 
-    const data = (await response.json().catch(() => null)) as any;
+    interface ProdigiApiResponse {
+      outcome?: string;
+      error?: { message?: string };
+      order?: {
+        id?: string;
+        status?: { stage?: string };
+      };
+    }
+
+    const data = (await response.json().catch(() => null)) as ProdigiApiResponse | null;
 
     if (!response.ok) {
       const errorMessage = data?.outcome || data?.error?.message || `Prodigi request failed with status ${response.status}.`;

@@ -1,163 +1,83 @@
 # Kitface Project Handover
 
-This document provides a comprehensive snapshot of the current state of Kitface, the mobile-first football poster app, including recent implementations, architectural decisions, and the roadmap forward.
+This document provides a comprehensive snapshot of the work completed on **June 10, 2026**, for the Kitface mobile-first football poster application. It is designed to allow another agent or engineer to quickly resume development.
 
 ---
 
-## 1. Project Snapshot
+## 1. Project & Stack Snapshot
 
-*   **Product**: Kitface — a mobile-first football poster app that turns personal photos into official-style football media.
-*   **Stack**: Next.js 16, React 19, Tailwind CSS v4, `lucide-react`, Supabase, MUAPI (with fallback options).
-*   **Current UI Direction**: Official, electric, playful football broadcast media.
-    *   **Colors**: Light canvas (`#F5F5F7`), deep indigo ink, vibrant cyan CTAs, white cards/panels, and translucent gradient beams (lime, cyan, blue, violet).
-    *   **Aesthetics**: Sleek, modern broadcast feel. Avoid previous dark gamer or vintage ivory/serif keepsake styling unless explicitly requested.
+*   **Product**: Kitface — a mobile-first football poster app turning personal photos into official-style broadcast football media.
+*   **Stack**: Next.js 16, React 19, Tailwind CSS v4, `lucide-react`, Supabase, MUAPI & FAL AI image providers.
+*   **Current UI/Brand Direction** (from `BRANDING.md`):
+    *   **Theme**: Light, official, electric, playful football broadcast media.
+    *   **Colors**: Light canvas (`#F5F5F7`), deep indigo ink, vibrant cyan CTAs, white panels, and translucent diagonal gradient beams (lime, cyan, blue, violet).
+    *   **Style**: Avoid the old warm ivory/sage/burgundy/serif keepsake styling and dark "gamer" aesthetics.
 *   **Primary Flow**: `/` (Home) $\rightarrow$ `/capture` (Camera) $\rightarrow$ `/review` (Review photos) $\rightarrow$ `/create` (Configure details) $\rightarrow$ `/generating/[jobId]` (Loading status) $\rightarrow$ `/result/[jobId]` (Final poster).
-*   **Vercel Deployments**:
-    *   **Production / Canonical App Domain**: [app.kitface.app](https://app.kitface.app)
-    *   **Vercel Production Alias**: [kitface-app.vercel.app](https://kitface-app.vercel.app) serves the same app but may redirect to the canonical custom domain in browsers.
-    *   **Branch Preview**: No active working branch preview is confirmed right now. The previous preview hostname `kitface-app-git-feat-football-waiting-messages-jimbrouws-projects.vercel.app` no longer resolves in DNS.
+*   **Deployments**:
+    *   **Production Custom Domain**: [https://app.kitface.app](https://app.kitface.app)
+    *   **Latest Production Vercel Deploy**: [https://kitface-qfh15vgj3-jims-projects-b7cb6c2e.vercel.app](https://kitface-qfh15vgj3-jims-projects-b7cb6c2e.vercel.app)
 
 ---
 
-## 2. Current Branch & Recent Changes
+## 2. Key Accomplishments Today (June 10, 2026)
 
-### Session: Security Hardening — IDOR / Authorization (branch `claude/optimistic-feynman-d71d04`)
+### 2.1 Fulfillment Migration (Printful $\rightarrow$ Prodigi)
+*   **Replaced Printful with Prodigi**: Fully migrated print-on-demand fulfillment provider. Removed the Printful client wrapper (`lib/fulfillment/printful.ts`) and tests, replacing them with a custom Prodigi client (`lib/fulfillment/prodigi.ts`) and integration tests (`tests/prodigiProvider.test.ts`).
+*   **Order Webhooks**: Added `app/api/webhooks/prodigi/route.ts` to process order status updates (e.g., transit, delivery, cancellation) from Prodigi.
+*   **Stripe Webhook Update**: Updated `app/api/webhooks/stripe/route.ts` to call the new Prodigi order creation logic upon successful checkout sessions.
+*   **Product Map**: Configured Prodigi custom product definitions (cards and posters) in `lib/checkout/products.ts`.
 
-*   **Centralized ownership authorization**: New `lib/authz.ts` exposes `isResourceOwner()` and `decideOwnedResourceAccess()` — a single, unit-tested decision point for owned-resource access. It **fails open while the `user_id` column is missing** (pre-migration) so legitimate owners are never locked out, then strictly enforces ownership once the migration is applied. Covered by `tests/authz.test.ts` (9 tests).
-*   **`/api/jobs/[jobId]` (status)**: now requires auth and enforces job ownership; returns `404` (not `403`) on a non-owner so job existence isn't revealed.
-*   **`/api/checkout`**: now requires auth and verifies the target job belongs to the requester before creating a Stripe session (closes checkout-for-anyone's-job abuse).
-*   **`/api/fulfillment/printful`**: now requires auth and verifies the target job belongs to the requester before creating a Printful draft order. This closes the post-checkout/mock-checkout path that could previously act on any completed `jobId`.
-*   **`/api/captures` (upload)**: now requires auth, ties new capture sessions to `user_id`, and verifies an existing `capture_sessions.user_id` before writing to `${sessionId}/${type}.jpg`. Non-owners receive `404` so session existence is not revealed.
-*   **Deliberately NOT locked — `/api/jobs/[jobId]/image`**: this serves the **watermarked final poster**, which users share via WhatsApp/copy-link to non-logged-in recipients. Locking it to the owner would break sharing. The genuinely sensitive asset is the raw capture photo (face), addressed by the private-bucket migration (still outstanding). A signed/tokenized share URL is the proper follow-up if the poster image must be access-controlled.
-*   **Activation note**: like the rate limit, these ownership checks only enforce once `generation_jobs.user_id` exists live (run migration `0001`). Until then they fail open and preserve current behaviour.
-*   **Verification**: branch head `e3e625a` passed `npm test` (48 tests), `npm run typecheck`, `npm run lint`, `npm run build`, and `git diff --check` under Node 24.
+### 2.2 Security Hardening & Vulnerability Remediation
+*   **Unauthenticated IDOR Fix**: Secured `/api/jobs/[jobId]/image/route.ts` to ensure users cannot download or view generated poster images belonging to other users unless the request matches an active paid Stripe checkout success session.
+*   **Credit Race Condition Mitigation**: Moved the atomic `consume_user_credit` RPC call in `/api/generate/route.ts` to execute *before* calling the external image generation providers, preventing infinite free generations. Added a robust refund mechanism to return the credit on generation failure.
+*   **SSRF Protection**: Secured remote image downloads in `lib/remoteImages.ts` by introducing an `isSafeRemoteUrl` blocklist that blocks fetching private/internal IPs, localhost, and non-HTTP schemes.
 
-### Session: Cost Controls & Monetization (branch `claude/optimistic-feynman-d71d04`)
+### 2.3 VS Mode & Generator Reliability
+*   **VS Layout Balance**: Adjusted the prompt builder instructions to enforce using `[img2]` as the identity source for all away-side players and explicitly instructed the image generator to mirror the home-side structure, correcting visual layout imbalances.
+*   **Reference Image Limit**: Capped the maximum number of person reference images sent to MUAPI at 2, avoiding prediction failures due to heavy payloads.
+*   **FAL Test Mode**: Standardized dynamic test routing to use FAL as a primary engine for GPT Image 2 when debugging prompt quality.
+*   **Error Recovery UI**: Updated generating status client and result screens to show detailed, recoverable error logs and retry actions instead of leaving users stuck.
 
-*   **Download Watermark Fix**: The poster download route (`app/api/jobs/[jobId]/image/route.ts`) was producing an unwatermarked image on Vercel because the SVG watermark used `Arial/Helvetica` fonts that are absent from the Linux Lambda runtime (librsvg renders nothing without the font). Replaced the runtime SVG with a pre-baked PNG tile (`public/watermark-tile.png`, generated by `scripts/gen-watermark.mjs`) composited with `tile: true`. Also fixed an unsafe `Buffer.buffer` cast that could corrupt the response body (now `new Uint8Array(watermarked)`).
-*   **Push Notifications Removed**: Email (Resend) works, so the unimplemented push toggle was removed from the generating screen (`app/generating/[jobId]/JobStatusClient.tsx`). The panel is now a single "Email me when it's ready" toggle. The server-side push stub in `lib/notifications.ts` remains dormant and unused.
-*   **Free Tier Cap (3 lifetime generations)**: `app/api/generate/route.ts` now counts a user's total `generation_jobs` before calling MUAPI. Within the free tier (3) it proceeds; once exhausted it requires a credit. Returns `402` with `code: free_tier_exhausted` when out of both. The MUAPI call is never made for a blocked request, so the provider is never billed. Fails open if `generation_jobs.user_id` is not migrated yet. `jimbrouwer@gmail.com` is exempt (see `lib/credits.ts`).
-*   **Credits Balance (Phase 2)**: Added `users.credits` plus atomic `consume_user_credit()` / `add_user_credits()` Postgres functions. A generation is allowed when within the free tier OR `credits > 0`; one credit is spent (via the atomic RPC) only after the paid job is safely recorded.
-*   **Stripe Credit Top-Up (Phase 3)**: New `app/api/checkout/credits/route.ts` creates a Stripe Checkout session for the single credit pack defined in `lib/credits.ts` (`CREDIT_PACK`: 10 credits for £4.99). The existing `app/api/webhooks/stripe/route.ts` now branches on `metadata.kind === "credits"` and grants credits exactly once, keyed by Stripe session id in the new `credit_purchases` table (duplicate webhook deliveries hit the primary-key conflict and are ignored).
-*   **Usage UI on `/create`**: A compact counter shows `used/3 free posters used`, or `N credits left`, or `Free posters used up`, alongside a "Buy credits" button that opens Stripe Checkout. Backed by the new `app/api/usage/route.ts` endpoint. Exempt accounts see no counter. Returning from Stripe shows a success/cancel banner via the `?credits=success|cancel` query param.
-*   **Shared Monetization Config**: `lib/credits.ts` centralizes `FREE_TIER_GENERATIONS`, the exempt-email set (`isExemptEmail`), and `CREDIT_PACK`, consumed by the generate, usage, and credits-checkout routes.
+### 2.4 UI Polish & Paid Traffic (Designer.md) Alignment
+*   **Landing Page Upgrade**: Replaced CSS-only poster preview boxes on the homepage with high-quality pre-rendered poster images (`/kitface-hero-poster-test.jpg`).
+*   **Kit Selection Controls**: Hid Away and Retro kit buttons for International teams (since national teams typically only use Home and Away patterns).
+*   **Notification UI Polish**: Reverted the generic `GlobalToast` element back to the custom, theme-compliant `NotificationBell` layout, and fixed layout/aspect-ratio calculations for poster previews.
+*   **Team Configurations**: Added Premier League 2026/27 teams and Notts County to the application team selector configurations.
 
-**Live DB migration applied.** The Supabase SQL editor reported success after running `supabase/schema.sql` followed by `supabase/migrations/0001_add_credits_and_fix_drift.sql`. This activates the free-tier cap, user credit balances, credit RPCs, and `credit_purchases` table on the live database. `STRIPE_WEBHOOK_SECRET` and `RESEND_API_KEY` are already set in Vercel; no new env vars are needed.
-
-### Prior Session Changes
-
-Earlier work on branch `codex/smile-reference-generation`. Recent additions and fixes include:
-
-### UI & Styling System (`BRANDING.md` alignment)
-*   **Design Tokens**: Integrated a clean, light broadcast palette in `app/globals.css` using custom `--ramp` styles and diagonal gradient borders.
-*   **Layout & Fonts**: Configured Geist sans-serif weights through `900` in `app/layout.tsx`.
-*   **Flow Redesign**: Restyled `/`, `/capture`, `/review`, `/create`, `/generating/[jobId]`, and `/result/[jobId]` pages to omit legacy sage, burgundy, or serif tokens.
-*   **Homepage Hero**: Set hero copy to "Pick your kit. Make it yours." with subtext "Turn your photos into official-style football posters."
-*   **Homepage Preview Fix**: Replaced the fragile/abstract homepage preview with a poster-result style asset (`public/kitface-dad-poster-preview.svg`) showing a generic 48-year-old UK dad in a Kitface football poster, closer to the real output users are making.
-*   **Mobile Capture Layout Fix**: Hardened `/capture` to use a fixed `100dvh` viewport with explicit safe-area padding, shorter controls, and a minimum camera frame so the shutter stays pinned on small iPhones without page scroll or visual jumps.
-*   **Simplified Onboarding Copy**: Shortened the capture step titles/instructions and simplified `/review` and `/create` headers/status messages so the path reads as "take photos, check photos, choose poster."
-*   **Kit Spec Test Fixture Repair**: Updated the metadata-only kit prompt test to construct a metadata-only fixture explicitly, because every current curated kit now has a `referenceImageUrl`.
-
-### Core Application Logic & Prompting
-*   **Sponsor Experiment**: Introduced `KITFACE_BRAND_PLACEMENT_MODE=kitface` mode. Replaces chest sponsors with `kitface.app` and displays subtle pitch-side LED boards in generated art. Unset or any other mode keeps original kit sponsors.
-*   **Personalization Inputs**: Added team slogan, custom shirt name/number, and an **Accessibility / Mobility Aid** toggle. The accessibility toggle injects instructions into the prompt to represent the user naturally with their wheelchair or mobility aid without forcing running/standing poses.
-*   **VS Mode (Separation)**: Shortened prompt length and enforced prompt isolation between `[img1]` and `[img2]` to respect MuAPI's budget and support two-person captures (`opponent_front`).
-*   **Back Camera Toggle**: Implemented a lens switcher (↔) on `/capture` supporting both front (`user`) and back (`environment`) cameras. Disables mirror-flip automatically when using the rear camera.
-*   **Card-First Printful Flow**: Result and upgrade pages now lead with cheaper printed cards instead of A3 posters. Father&apos;s Day and Birthday card options map to Printful Greeting Card product `568`, default variant `14457` (4x6), `front` placement, `digital` technique. A3 poster remains available as a secondary option using the existing poster env mapping.
-*   **GPT Image 2 Variation Prompt**: Updated the MUAPI GPT Image 2 prompt to avoid repeated centre-face collage outputs. The active prompt now asks for fresh poster concepts, varied camera/lighting/layout/action choices, and strict identity/reference priority. The previous GPT Image 2 wording is preserved in `lib/ai/promptBuilder.ts` as a rollback reference.
-*   **Homepage Hero Poster Test Asset**: Swapped the homepage preview from the temporary SVG illustration to `public/kitface-hero-poster-test.jpg`, using the approved Kitface-style dad poster image. The source prompt is documented in `docs/kitface-hero-poster-test-prompt.md`; the old SVG remains in `public/kitface-dad-poster-preview.svg` for rollback.
-*   **Generation Prompt Aligned to Hero Poster**: Updated the active MUAPI GPT Image 2 generation prompt to match the approved Kitface tournament-poster prompt: huge 60-70% chest-up hero portrait, four to five same-person bottom action figures, international tournament media campaign styling, strict identity lock, exact kit-variable usage, and stronger negatives against single generic footballer portraits. Existing dynamic inputs remain in place: uploaded photos, kit specs/reference images, VS match context, Kitface/original sponsor mode, shirt name/slogan, accessibility, and correction prompts. The active test prompt is intentionally long for the experiment (~11k chars in the Nottingham Forest fixture) rather than shortened prematurely.
-*   **Team Picker Ordering**: `/create` now orders team dropdowns with World Cup 2026 first, starting with England and Scotland, then major World Cup teams, followed by Premier League, International Giants, International, EFL League One, and Custom. The single-team select starts on a disabled grey "World Cup teams" placeholder instead of "Premier League". VS team selectors use the same ordering.
-*   **VS Match Defaults & Kit Controls**: VS mode now defaults to England vs Scotland so native dropdowns open around World Cup teams instead of Premier League teams. The visible kit controls now show Home, Away, and Retro only; the internal `third` kit type remains for old data/curated specs but is no longer offered in the create form.
-*   **World Cup Away Kit Fallbacks**: World Cup/international teams now receive generated away-kit metadata when no curated away reference exists. The fallback keeps sponsor as `none`, marks confidence low, avoids claiming an attached reference image, and uses contrasting national-team away colours instead of reusing home notes or showing unknown/blank away kit details.
-*   **Primary Photo Reference Priority**: Generation now prefers the smile capture as the main identity reference, then celebration, torso, and only then neutral/front. This avoids using a badly lit or stern first photo as the hero face when better celebratory references exist.
-*   **Multi-Reference Single-Team Generation**: Single-team poster requests now send the smile/primary person photo plus up to two supporting person references (celebration, torso, or neutral/front) before the kit reference. VS mode still keeps person separation strict and does not inject extra same-person references into the `[img1]` / `[img2]` contract.
-*   **MUAPI GPT Image 2 Failure Mitigation**: Investigated failed job `280458bb-abc5-4ea7-a0c8-29bb07595294` / MUAPI prediction `bba90d98-850a-4177-a090-02d27e36ca3d`, which failed with `invalid_request_error` and trace id `69bd8d7f65d2b518a9f9354645e723a9`. The failed request used a ~12,041-character prompt and only two images: one person photo plus one kit reference. The active GPT Image 2 prompt is now compacted to preserve the tournament-poster structure, identity lock, lighting correction, expression guidance, kit accuracy, and negative prompt while reducing the reconstructed England request to ~9,554 prompt characters and four images (primary person, two supporting person refs, kit).
-*   **Hero Head/Body Integration Prompt Fix**: Added a GPT Image 2 `PHYSICAL INTEGRATION` block after photo enhancement. It tells the model to make the head, neck, shoulders, and shirt look photographed together, match face lighting to stadium key/rim light, add chin/neck/collar contact shadows, preserve neck thickness/shoulder connection, and avoid pasted-on heads, cutout faces, mismatched head/body lighting, halo edges, missing neck shadow, and collar gaps.
-
-### Backend, Auth, & Schema
-*   **Supabase Auth**: Hardened Google Sign-In with `@supabase/ssr` cookies and an auth callback callback route. Prevents app crashes if optional tables (e.g. user profiles) are missing during signup.
-*   **MuAPI Fast Engine**: Added `gpt-image-2-fast` mapping to GPT Image 2 image-to-image with `resolution: "1K"` and `quality: "low"` for fast and cost-effective testing.
-*   **Schema Fallbacks**: Configured runtime fallbacks in API routes to handle local databases missing migration columns (e.g., `user_id` on jobs, notification preference tables). The full schema is detailed in `supabase/schema.sql`.
+### 2.5 Personalisation Safety Filter
+*   **Server-Side Content Filtering**: Added `lib/safety/profanity.ts` utilizing base64-encoded NSFW/abusive word maps. Intercepts custom slogans, names, match notes, and correction prompts. Enforces validation client-side in the form fields and server-side in `/api/generate`.
 
 ---
 
-## 3. Current Database Schema (`supabase/schema.sql`)
+## 3. Database Schema Status (`supabase/schema.sql`)
 
-Main entities configured or referenceable in the application:
-1.  **Users & Profiles**: Google Auth mapped profiles.
-2.  **Capture Sessions**: Tracking uploads and temporary capture images.
-3.  **Generation Jobs**: Storing inputs, selected teams/kits, selected model engines, job statuses, and the final generated image URL.
-4.  **Notifications & Preferences**: In-app notifications and user settings for email/push preferences.
-5.  **Video Jobs**: Generation jobs for match-day/poster animation files.
+All credit tracking and session storage tables have been migrated successfully in the live Supabase SQL editor:
+1.  **`users` / `profiles`**: Holds user profiles and active notification preferences.
+2.  **`credits` & `credit_purchases`**: Implements credits balance, atomic RPC credit deductions (`consume_user_credit`), and Stripe purchase mapping.
+3.  **`generation_jobs` & `capture_sessions`**: Tie generation tasks and captured images securely to `user_id` values.
+4.  **`generation_analytics`**: Logs statistics on poster generation (model used, target team, success rate, latency).
 
 ---
 
-## 4. Next Steps
+## 4. Operational Next Steps & Blockers
 
-### Completed High Priority UI Fixes
-1.  **Homepage Kit Preview**: Fixed. The homepage now renders a poster-style Kitface result preview showing the kind of football poster the app creates.
-2.  **iPhone Camera Layout**: Fixed. The `/capture` page is locked to the mobile viewport and keeps the shutter/control area anchored at the bottom.
-3.  **Onboarding Flow Copy**: Fixed. Capture, review, and create copy now uses simpler first-time-user language.
-
-### Completed This Session
-*   **Email Provider**: Done. Resend is wired in `lib/notifications.ts`; `RESEND_API_KEY` is set in Vercel.
-*   **Push Notifications**: Cancelled. Toggle removed from the UI; email covers the need.
-*   **Free-Tier Rate Limiting + Monetization**: Done. 3 free generations, then a credits paywall with Stripe top-up (see Session: Cost Controls & Monetization above). Live DB migration has been applied.
-*   **Credits DB Migration**: Done. `supabase/schema.sql` and `supabase/migrations/0001_add_credits_and_fix_drift.sql` were run successfully in Supabase.
-*   **Two-Photo Capture Flow**: Verified live. `/capture` now asks for two photos rather than six.
-*   **Free-Tier Cap Enforcement**: Verified live with a non-exempt user. After 3 generations, the app reached the out-of-credits/paywall state.
-
-### Notifications & Communication
-4.  **Job-Completion Email Test**: Confirm a real Resend email fires end-to-end on a deployed generation (record exists in `notifications`, email delivered).
-
-### Analytics & History
-6.  **Generation Analytics**: Log poster details (user ID, team ID, model, success rate) to a Supabase analytics table.
-7.  **User History Page**: A `/history` route exists; verify it lists the signed-in user's past generations once the migration is applied (depends on `generation_jobs.user_id`).
-
-### Monetization & Fulfillment
-9.  **Credits Follow-ups**: (a) verify the credits Stripe webhook grants credits on a real purchase; (b) optionally show the live credit balance on `/result` and `/upgrade`; (c) tune `CREDIT_PACK` pricing/quantity in `lib/credits.ts`.
-10. **Printful Verification**: Test card and poster draft-order fulfillment on deployed URLs. Printful catalog lookup found Greeting Card variants `14457` (4x6), `14458` (5x7), and `14460` (5.83x8.27). They are `in stock` for `europe`/`worldwide`, but `not fulfillable` for the strict `uk` selling region, so live fulfillment should be tested before promising UK-local production.
-11. **Privacy Improvements**: Move capture storage to private buckets and issue short-lived signed URLs.
+*   **Prodigi Webhook Verification**: Ensure the live webhook listener route `/api/webhooks/prodigi` is registered in the Prodigi dashboard to receive shipping and print status updates.
+*   **Physical Product Test Orders**: While Stripe digital checkouts are verified, the physical card/poster draft fulfillment via Prodigi needs a test purchase to confirm the print vendor receives correct dimensions and layout instructions.
+*   **Vercel secrets checklist**:
+    *   Ensure `PRODIGI_API_KEY` and `PRODIGI_BASE_URL` are configured on Vercel.
+    *   Ensure `KITFACE_HEALTH_CHECK_SECRET` matches monitoring integrations.
+    *   Verify `ANTHROPIC_API_KEY` is present in GitHub repo secrets (used in PR readiness checks).
+*   **Health Checks**: Integrate monitoring checks on `/api/health` using the authorization headers.
 
 ---
 
 ## 5. Verification Commands
 
-Latest verification on `codex/smile-reference-generation`:
+Run these standard verification checks before making changes or committing:
 ```bash
-npm run typecheck    # passed
-npm run lint         # passed
-npm run build        # passed
-git diff --check     # passed
-npm test             # passed, 39 tests
+npm run typecheck    # Verify TypeScript compiles without issues
+npm run lint         # Run ESLint validation
+npm test             # Run unit tests (including authz and Prodigi providers)
+npm run build        # Build Next.js application locally
+git diff --check     # Inspect code style and formatting anomalies
 ```
-
-Latest production deploy:
-*   Deployed to Vercel production: `https://kitface-nd4i4r2as-jims-projects-b7cb6c2e.vercel.app`
-*   Aliased live app: `https://app.kitface.app`
-*   Live smoke check: `https://app.kitface.app/` returned 200 and `https://app.kitface.app/create` returned 200 after deployment. Browser check on `/create` passed: VS defaults are England vs Scotland, both team selects start with `World Cup 2026` and first options England, Scotland, Brazil, Argentina, and the visible kit buttons are Home/Away/Retro only.
-
-Browser smoke-checks:
-*   `/` at 390x844 and 1280x900: passed, no page errors, no horizontal overflow, new broadcast preview rendered.
-*   `/` at 390x844 after hero swap: passed, no page errors, no horizontal overflow, image source resolves to `/kitface-hero-poster-test.jpg`.
-*   `/review` at 390x844: passed, no page errors, simplified copy rendered.
-*   `/create` at 390x844: passed, no page errors, simplified copy rendered.
-*   `/create` team selects: passed. Single-team select starts with disabled "World Cup teams", then World Cup 2026 with England, Scotland, Brazil, Argentina, France, Germany, Spain, Portugal; VS selectors also start with World Cup 2026.
-*   `/capture?restart=1` at 390x844: redirected to `/login?next=/capture?restart=1` in the unauthenticated local session. The protected capture viewport change was verified by typecheck/lint/build and code inspection.
-
-Run these standard verification commands prior to any session commit:
-```bash
-npm run typecheck    # Verify TypeScript types
-npm run lint         # Lint project files
-npm test             # Run test suite
-npm run build        # Verify production build builds cleanly
-git diff --check     # Check for trailing whitespace
-```
-
----
-
-## 6. Session Protocols
-
-*   **Commit Protocol**: When closing, run the full banana hunt loop in `BANANAS.md`. Fix any issues, and update `AGENTS.md`, `TASK.md`, `CONTEXT.md`, and `BANANAS.md`.
-*   **Resume Protocol**: Read `AGENTS.md`, `TASK.md`, and `CONTEXT.md`. Brief the user on the project, previous progress, and next steps. Wait for confirmation before beginning implementation.

@@ -17,9 +17,9 @@ test("buildProdigiOrderPayload creates an order with the correct sku and image U
   });
 
   assert.equal(payload.merchantReference, "kitface-job-123");
-  assert.equal(payload.recipient.countryCode, "GB");
+  assert.equal(payload.recipient.address.countryCode, "GB");
   assert.equal(payload.items[0].sku, "ART-FAP-BAP-A3");
-  assert.equal(payload.items[0].quantity, 1);
+  assert.equal(payload.items[0].copies, 1);
   assert.deepEqual(payload.items[0].assets[0], {
     printArea: "default",
     url: "https://example.com/upscaled-poster.png"

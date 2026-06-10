@@ -316,7 +316,33 @@ async function sendPrintFulfillmentEmail(
 }
 
 function buildProdigiRecipient(session: Stripe.Checkout.Session): ProdigiRecipient {
-  const shipping = session.collected_information?.shipping_details || (session as any).shipping_details;
+  const sessionObj = session as unknown as {
+    collected_information?: {
+      shipping_details?: {
+        name?: string;
+        address?: {
+          line1?: string;
+          line2?: string;
+          city?: string;
+          state?: string;
+          country?: string;
+          postal_code?: string;
+        };
+      };
+    };
+    shipping_details?: {
+      name?: string;
+      address?: {
+        line1?: string;
+        line2?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+        postal_code?: string;
+      };
+    };
+  };
+  const shipping = sessionObj.collected_information?.shipping_details || sessionObj.shipping_details;
   const address = shipping?.address;
 
   if (!shipping?.name || !address?.line1 || !address.city || !address.country || !address.postal_code) {
