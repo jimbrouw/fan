@@ -297,7 +297,7 @@ async function submitStaticGenerationJob(input: {
 
   if (useFalPrimary) {
     try {
-      console.log("Testing with FAL GPT Image 2 as primary provider...");
+      // Testing with FAL GPT Image 2 as primary provider...
       const falProvider = new FalGptImage2GenerationProvider();
       const { providerJobId } = await falProvider.submitJob({
         prompt: input.prompt,
