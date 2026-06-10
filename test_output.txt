@@ -1,0 +1,284 @@
+
+> fan@1.0.0 test
+> node --test --experimental-strip-types tests/*.test.ts
+
+(node:4701) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4701) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/authz.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ isResourceOwner: matching ids are owner (0.69075ms)
+✔ isResourceOwner: different ids are not owner (0.069292ms)
+✔ isResourceOwner: null/undefined owner is never owner (0.128459ms)
+✔ decideOwnedResourceAccess: owner is allowed once column exists (0.06675ms)
+✔ decideOwnedResourceAccess: non-owner is denied once column exists (0.05725ms)
+✔ decideOwnedResourceAccess: orphan row (null owner) is denied once column exists (0.068458ms)
+✔ decideOwnedResourceAccess: fails open while user_id column is missing (6.067417ms)
+✔ route policy: Printful fulfillment denies a different user's completed job (0.069459ms)
+✔ route policy: capture upload denies writes into another user's session (0.342584ms)
+(node:4702) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4702) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/captureReferences.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ primary generation reference prefers smile over neutral front (0.513875ms)
+✔ primary generation reference falls back through celebration, torso, then neutral (0.081292ms)
+✔ supporting generation references exclude primary and keep priority order (0.421541ms)
+(node:4703) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4703) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/captureSteps.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ capture flow asks for only front and smile photos (0.641916ms)
+(node:4704) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4704) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/corrections.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ parses explicit deletion conservatively (0.71225ms)
+✔ parses numbered value revisions as exact replacements (0.600417ms)
+✔ parses implicit identity correction without restyling (2.33775ms)
+✔ formats ambiguity warnings for risky broad corrections (0.437375ms)
+(node:4705) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4705) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/falProvider.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ fal GPT Image 2 edit input uses maximum 3:4 high-quality PNG settings (2.083625ms)
+✔ fal GPT Image 2 provider ids round-trip with a stable prefix (0.1215ms)
+(node:4706) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4706) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/falVideoProvider.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ FAL Seedance video input preserves aspect ratio and disables audio (0.399666ms)
+✔ FAL Seedance video result extracts MP4 output URL (0.075292ms)
+(node:4707) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4707) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/footballData.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ team news notes restrict generated opposition players to current squad names (0.598042ms)
+(node:4708) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4708) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/health.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ buildHealthResponse marks all-ok checks healthy (4.622208ms)
+✔ buildHealthResponse marks degraded checks unhealthy (0.103292ms)
+✔ isHealthTokenAuthorized requires both configured secret and matching token (0.965083ms)
+✔ getRequiredEnvironmentChecks reports missing production variables (0.15075ms)
+(node:4709) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4709) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/kitSpecs.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ Nottingham Forest home kit uses the current 2026/27 Premier League overlay (0.762959ms)
+✔ poster prompt includes current 2026/27 kit mandate (11.602125ms)
+✔ World Cup teams can fall back to away kit metadata (1.06625ms)
+✔ poster prompt can replace the main shirt sponsor with Kitface branding (0.247834ms)
+✔ Kitface sponsor mode is the default unless original sponsors are explicitly requested (0.098917ms)
+✔ poster prompt does not claim an image reference for metadata-only kits (0.108458ms)
+✔ Nano Banana prompt uses joyful broadcast media-day direction (0.32725ms)
+✔ GPT Image 2 football card prompt uses a clean card structure (0.404542ms)
+✔ GPT Image 2 star player prompt uses the older campaign collage structure without trophies (3.872333ms)
+✔ poster prompt can frame an away VS match with the reference person on the selected side (1.090584ms)
+✔ poster prompt does not ask for a trophy or cup prop (0.262666ms)
+✖ poster prompt can assign a second person reference to the opposition feature player (1.120541ms)
+✔ VS poster prompt can apply Kitface sponsor and billboard mode to both kits (0.18925ms)
+✔ VS create mode defaults to the VS Match Poster style (0.051458ms)
+(node:4758) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4758) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/muapiProvider.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ wan2.7-image-edit maps to the MuAPI image-edit endpoint with image references (0.769667ms)
+✔ gpt-image-2 defaults to the smallest fastest MuAPI image-to-image settings (0.082083ms)
+✔ gpt-image-2 can use medium 1K draft settings (0.066333ms)
+✔ gpt-image-2 can use high-quality final settings (0.825291ms)
+✔ gpt-image-2 unknown modes fall back to safe low settings (0.059542ms)
+✔ MuAPI transient status errors are retryable instead of terminal failures (0.128083ms)
+(node:4759) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4759) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/muapiVideoProvider.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ Seedance Lite MuAPI video request uses cheap 480p poster animation settings (0.474875ms)
+✔ WAN 2.7 MuAPI video request sends image URL and negative prompt (0.149833ms)
+✔ Veo 3 Fast MuAPI video request uses images_list schema (0.436125ms)
+✔ MuAPI video output URL extractor handles common response shapes (0.082208ms)
+(node:4760) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4760) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/printfulProvider.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ buildPrintfulDraftOrderPayload creates a draft catalog order with the poster file layer (1.548083ms)
+✔ readPrintfulDraftOrderConfig defaults card orders to the Printful greeting card front (3.203583ms)
+✔ readPrintfulDraftOrderConfig keeps A3 poster mapping for poster orders (0.216334ms)
+(node:4761) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4761) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/profanity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ personalisation filter allows normal football wording (8.522375ms)
+✔ personalisation filter blocks exact unsafe terms (0.113292ms)
+✔ personalisation filter blocks simple spacing and symbol obfuscation (0.074709ms)
+✔ personalisation filter blocks leetspeak obfuscation (0.059542ms)
+✔ personalisation filter reports slogan errors (0.131208ms)
+✔ personalisation filter reports errors for extended fields (0.073458ms)
+(node:4786) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4786) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/remoteImages.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ detects supported image signatures (0.409167ms)
+✔ rejects html masquerading as an image URL response (0.079208ms)
+(node:4819) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4819) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/storage.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ buildSupabaseStorageUri creates stable private storage references (0.396833ms)
+✔ parseSupabaseStorageUri returns bucket and path (1.457958ms)
+✔ parseSupabaseStorageUri rejects non-storage URLs (0.09075ms)
+✔ getCaptureSignedUrlTtlSeconds uses a six-hour default (0.169208ms)
+✔ getCaptureSignedUrlTtlSeconds ignores invalid values (0.114584ms)
+(node:4824) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4824) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/standard/Developer/fan/tests/videoTestImages.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/standard/Developer/fan/package.json.
+✔ video test image path filter accepts supported image files (0.468584ms)
+✔ video test image path filter rejects unsupported files (0.059917ms)
+✔ Supabase storage URI is stable for video test job reuse (0.064375ms)
+ℹ tests 69
+ℹ suites 0
+ℹ pass 68
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 554.122583
+
+✖ failing tests:
+
+test at tests/kitSpecs.test.ts:380:1
+✖ poster prompt can assign a second person reference to the opposition feature player (1.120541ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /second person reference \[img2\] is the opposing feature player/i. Input:
+  
+  'IDENTITY MANDATE:\n' +
+    'The first person reference [img1] is the selected side person for Nottingham Forest.\n' +
+    'The second person reference [img2] is the identity source for all opposing players for Manchester United.\n' +
+    'Never blend identities, never swap sides, and never apply [img1] to the opposition or [img2] to the selected side.\n' +
+    '\n' +
+    'SCENE:\n' +
+    'Photorealistic League football poster collage. Bright premium broadcast stadium, clean floodlit pitch, vibrant crowd energy, light editorial composition with translucent electric gradient forms.\n' +
+    '\n' +
+    'Photorealistic Premier League VS poster. Home LEFT, away RIGHT.\n' +
+    '\n' +
+    'MATCH:\n' +
+    'Competition: Premier League.\n' +
+    'LEFT SIDE: Manchester United, the HOME side, wearing the home kit.\n' +
+    'RIGHT SIDE: Nottingham Forest, the AWAY side, wearing the away kit.\n' +
+    'Primary reference person [img1] plays for Nottingham Forest; never apply [img1] to Manchester United.\n' +
+    'Secondary reference person [img2] plays for Manchester United; use [img2] for all opposing players.\n' +
+    'Use anonymous current-squad-style opponents unless matchday notes name players.\n' +
+    'Home kit: 2026/27 Manchester United home; adidas; sponsor Snapdragon; red; 2026/27 Manchester United home shirt listed by Football Kit Archive; red adidas home identity with black-and-white detailing\n' +
+    "Away kit: 2025/26 Nottingham Forest away; adidas; sponsor Bally's; off-white; subtle lace-inspired tonal graphic pattern across the shirt body\n" +
+    'Opponent colours: #da291c, #111111\n' +
+    '\n' +
+    'COMPOSITION & POSES:\n' +
+    'Use [img1] only for Nottingham Forest on the RIGHT side. Make one accurate selected-side hero portrait dominate the poster, with one or two smaller selected-side action shots only if identity stays accurate. Opponents stay LEFT as secondary match context only. Use [img2] for all opposing players, never for the selected-side hero figures. Do not swap sides.\n' +
+    '\n' +
+    'REFERENCE PRIORITY:\n' +
+    'First person image = [img1]. Second person image = [img2]. Kit reference images are for shirts only: sponsor logo, crest, manufacturer, pattern, collar, shorts, and socks. Do not blend kit-reference or pro-player faces into [img1].\n' +
+    '\n' +
+    'MOOD:\n' +
+    'Premium tournament-final poster energy; confident, proud, relatable supporter expression; preserve identity.\n' +
+    '\n' +
+    '\n' +
+    'Kit styling for Nottingham Forest (Premier League):\n' +
+    'Off-white away kit with dark navy details.\n' +
+    'Colors: Primary #dd0000, Accent #ffffff\n' +
+    'Render as a modern football kit with realistic fabric, stitching, and emblems.\n' +
+    '\n' +
+    'BRAND PLACEMENT MODE: Original kit sponsors. Keep the real main shirt sponsor from the kit reference or written kit profile.\n' +
+    '\n' +
+    'GPT IMAGE 2 VS DIRECTION:\n' +
+    'Create a premium photorealistic Kitface VS match poster that looks like a real app result: official football broadcast campaign artwork, pre-match programme cover, and modern tournament media-day poster in one image. This must feel more detailed and composed than a simple split-screen graphic.\n' +
+    '\n' +
+    'MATCH POSTER CONCEPT:\n' +
+    'Friendly but electric home-vs-away poster. Home team is always LEFT. Away team is always RIGHT. The selected-side uploaded person [img1] is the emotional hero, shown as a real supporter having their dream football media-day moment. Opposition figures create match tension, but never steal the hero role.\n' +
+    '\n' +
+    'SIDE STRUCTURE:\n' +
+    'Build a strong two-sided composition with clear visual separation. The Manchester United side uses home-team colour energy, kit details, crowd cues, and lighting on the LEFT. The Nottingham Forest side uses away-team colour energy, kit details, crowd cues, and lighting on the RIGHT. Use a subtle central rivalry zone, tunnel glow, pitch line, diagonal broadcast graphics, or controlled "VS" energy without random readable text.\n' +
+    '\n' +
+    'SELECTED-SIDE HERO:\n' +
+    'Use [img1] only for Nottingham Forest on the RIGHT side. Make one clear chest-up hero portrait of [img1] dominate the selected side. Add only one or two smaller selected-side action versions if identity stays accurate. Every selected-side figure must clearly be [img1]. If identity or rendering becomes uncertain, use fewer figures and keep one accurate hero portrait.\n' +
+    '\n' +
+    'OPPOSITION HANDLING:\n' +
+    'Opponents stay on the LEFT side as secondary match context. Use [img2] for all opposing players, wearing the opposition kit, positioned clearly on the opposition side. [img2] may have multiple action poses, but [img1] remains the main hero. Never use [img2] for selected-side hero figures. Keep opposition figures smaller, less prominent, and visually separated.\n' +
+    '\n' +
+    'IDENTITY LOCK:\n' +
+    "Preserve exact recognisable likeness for [img1]: head shape, hairline, eyes, nose, mouth, cheeks, jaw, skin texture, facial hair, age, body type, and natural proportions. Keep [img1] consistent across every selected-side appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but [img1] must still clearly look like the uploaded photo. For [img2], preserve the second person's exact identity for all players on the opposition side. Never blend [img1] and [img2], never average their faces, and never swap kits or sides. Do not beautify, de-age, slim, bulk up, average faces with footballers, or replace either uploaded person.\n" +
+    '\n' +
+    'REFERENCE PRIORITY:\n' +
+    'The first attached person image is [img1], the selected-side identity source. The second attached person image is [img2], the identity source for all opposing players. Kit reference images are clothing only. Never borrow faces, bodies, poses, or lighting from kit images. Identity accuracy wins over poster style.\n' +
+    '\n' +
+    'PHOTO ENHANCEMENT:\n' +
+    'If uploaded photos have heavy shadows, dull expression, uneven exposure, tired eyes, harsh phone-camera lighting, or flat indoor light, improve naturally: lift shadows, even skin lighting, brighten eyes, correct exposure, and keep natural skin texture. Do not change age, face shape, nose, eyes, jaw, facial hair, or body type.\n' +
+    '\n' +
+    'PHYSICAL INTEGRATION:\n' +
+    'The head, neck, shoulders, and shirt must look photographed together in one real stadium shoot, not composited. Match face lighting to stadium key/rim light on each side. Add contact shadows where chin, neck, collar, sleeves, and shirt fabric meet. Keep correct neck thickness, shoulder connection, skin tone, perspective, scale, and believable fabric tension.\n' +
+    '\n' +
+    'KIT AND SIDE ACCURACY:\n' +
+    'Use selected home and away kit variables and kit reference images exactly: fabric texture, stitching, folds, crest, manufacturer mark, collar, trim, shorts, socks, sleeve details, and sponsor placement. The Manchester United kit belongs only on the LEFT home side. The Nottingham Forest kit belongs only on the RIGHT away side. If Kitface sponsor mode is active, both chest sponsors must read exactly "kitface.app"; otherwise keep original sponsors.\n' +
+    '\n' +
+    'COMPOSITION DETAIL:\n' +
+    'Vertical 3:4 poster. Use layered sports-campaign depth: selected-side hero portrait, one or two smaller action versions when safe, opposition figures opposite, pitch texture under feet, stadium crowd, floodlight beams, subtle broadcast overlays, and controlled colour energy from both clubs. Keep natural overlap and realistic scale. Avoid a flat two-person cutout layout and avoid overcrowding.\n' +
+    '\n' +
+    'EXPRESSION AND MOOD:\n' +
+    'Give repeated [img1] figures silly, memeable emotional variety: huge grin, roaring joy, badge-kiss love/pride, wild happiness, and comic mock-anger. Keep each face recognisably [img1]; no repeated blank face or same smile. Opposition stays friendly-competitive. Football banter, not a fight poster.\n' +
+    '\n' +
+    'ENVIRONMENT:\n' +
+    'Modern football stadium at night with bright floodlights, crowd texture, visible pitch, tunnel or matchday entrance depth, light haze, crisp commercial lighting, and premium broadcast atmosphere. Keep it light, electric, playful, official, and polished.\n' +
+    '\n' +
+    'DESIGN AND PALETTE:\n' +
+    'Use modern sports editorial layout, official matchday programme quality, tournament media asset polish, and professional broadcast graphics. Blend both team palettes cleanly. Use translucent cyan, lime, blue, or violet electric beams as environmental light. Keep faces and kits sharp.\n' +
+    '\n' +
+    'LIGHTING AND QUALITY:\n' +
+    'Stadium commercial lighting, soft key light on faces, controlled rim light separating both sides, natural skin tones, premium sports photography, sharp focus, realistic anatomy, hands, eyes, and facial proportions.\n' +
+    '\n' +
+    'NEGATIVE PROMPT:\n' +
+    'No trophy. No cartoon, illustration, CGI look, celebrity likeness, generic replacement face, face averaging, beautified stranger, copied pro-player face, mismatched identity, identity drift, swapped sides, home kit on away side, away kit on home side, [img1] face on opposition players, [img2] face on selected-side players, blended [img1]/[img2] identity, pasted-on head, mismatched head/body lighting, missing neck shadow, collar gap, sad hero face, stern passport-photo expression, tired dead-eyed portrait, flat two-person cutout poster, missing selected-side action figures, distorted anatomy, extra fingers, warped limbs, malformed hands, blurry faces, unrealistic body transformation, body-shaming caricature, random logos, watermarks, fake sponsor names, misspelled text, random titles, extra slogans, mascot costume, hooligan mood, fighting, violence, or aggressive confrontation.\n' +
+    '\n' +
+    'Style:\n' +
+    'Hero Card. Kits from Nottingham Forest, opposition colours from Manchester United. Subtle #dd0000/#ffffff accents.\n' +
+    '\n' +
+    'CRITICAL RESTRICTIONS:\n' +
+    '* NO altering of the face from [img1]\n' +
+    '\n' +
+    '* NO unrealistic body transformation, body-shaming caricature, exaggerated belly, double chin, or squeezed kit\n' +
+    "* NO applying [img1]'s face to opposition players\n" +
+    "* NO applying [img2]'s face to the selected side\n" +
+    '* NO swapping home and away sides; home is left, away is right\n' +
+    '* NO trophies, cups, medals, trophy ribbons, cup finals, or central silverware props\n' +
+    '* NO Champions League, European Cup, FA Cup, World Cup, or UEFA badges\n' +
+    '* NO text except exact realistic shirt numbers, crests, maker logos, and sponsor logos from the kit reference\n' +
+    '* NO cartoon style\n' +
+    '\n' +
+    '* Realistic sports photography aesthetic'
+  
+      at TestContext.<anonymous> (file:///Users/standard/Developer/fan/tests/kitSpecs.test.ts:420:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1062:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:752:18)
+      at Test.postRun (node:internal/test_runner/test:1191:19)
+      at Test.run (node:internal/test_runner/test:1119:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:752:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: `IDENTITY MANDATE:\nThe first person reference [img1] is the selected side person for Nottingham Forest.\nThe second person reference [img2] is the identity source for all opposing players for Manchester United.\nNever blend identities, never swap sides, and never apply [img1] to the opposition or [img2] to the selected side.\n\nSCENE:\nPhotorealistic League football poster collage. Bright premium broadcast stadium, clean floodlit pitch, vibrant crowd energy, light editorial composition with translucent electric gradient forms.\n\nPhotorealistic Premier League VS poster. Home LEFT, away RIGHT.\n\nMATCH:\nCompetition: Premier League.\nLEFT SIDE: Manchester United, the HOME side, wearing the home kit.\nRIGHT SIDE: Nottingham Forest, the AWAY side, wearing the away kit.\nPrimary reference person [img1] plays for Nottingham Forest; never apply [img1] to Manchester United.\nSecondary reference person [img2] plays for Manchester United; use [img2] for all opposing players.\nUse anonymous current-squad-style opponents unless matchday notes name players.\nHome kit: 2026/27 Manchester United home; adidas; sponsor Snapdragon; red; 2026/27 Manchester United home shirt listed by Football Kit Archive; red adidas home identity with black-and-white detailing\nAway kit: 2025/26 Nottingham Forest away; adidas; sponsor Bally's; off-white; subtle lace-inspired tonal graphic pattern across the shirt body\nOpponent colours: #da291c, #111111\n\nCOMPOSITION & POSES:\nUse [img1] only for Nottingham Forest on the RIGHT side. Make one accurate selected-side hero portrait dominate the poster, with one or two smaller selected-side action shots only if identity stays accurate. Opponents stay LEFT as secondary match context only. Use [img2] for all opposing players, never for the selected-side hero figures. Do not swap sides.\n\nREFERENCE PRIORITY:\nFirst person image = [img1]. Second person image = [img2]. Kit reference images are for shirts only: sponsor logo, crest, manufacturer, pattern, collar, shorts, and socks. Do not blend kit-reference or pro-player faces into [img1].\n\nMOOD:\nPremium tournament-final poster energy; confident, proud, relatable supporter expression; preserve identity.\n\n\nKit styling for Nottingham Forest (Premier League):\nOff-white away kit with dark navy details.\nColors: Primary #dd0000, Accent #ffffff\nRender as a modern football kit with realistic fabric, stitching, and emblems.\n\nBRAND PLACEMENT MODE: Original kit sponsors. Keep the real main shirt sponsor from the kit reference or written kit profile.\n\nGPT IMAGE 2 VS DIRECTION:\nCreate a premium photorealistic Kitface VS match poster that looks like a real app result: official football broadcast campaign artwork, pre-match programme cover, and modern tournament media-day poster in one image. This must feel more detailed and composed than a simple split-screen graphic.\n\nMATCH POSTER CONCEPT:\nFriendly but electric home-vs-away poster. Home team is always LEFT. Away team is always RIGHT. The selected-side uploaded person [img1] is the emotional hero, shown as a real supporter having their dream football media-day moment. Opposition figures create match tension, but never steal the hero role.\n\nSIDE STRUCTURE:\nBuild a strong two-sided composition with clear visual separation. The Manchester United side uses home-team colour energy, kit details, crowd cues, and lighting on the LEFT. The Nottingham Forest side uses away-team colour energy, kit details, crowd cues, and lighting on the RIGHT. Use a subtle central rivalry zone, tunnel glow, pitch line, diagonal broadcast graphics, or controlled "VS" energy without random readable text.\n\nSELECTED-SIDE HERO:\nUse [img1] only for Nottingham Forest on the RIGHT side. Make one clear chest-up hero portrait of [img1] dominate the selected side. Add only one or two smaller selected-side action versions if identity stays accurate. Every selected-side figure must clearly be [img1]. If identity or rendering becomes uncertain, use fewer figures and keep one accurate hero portrait.\n\nOPPOSITION HANDLING:\nOpponents stay on the LEFT side as secondary match context. Use [img2] for all opposing players, wearing the opposition kit, positioned clearly on the opposition side. [img2] may have multiple action poses, but [img1] remains the main hero. Never use [img2] for selected-side hero figures. Keep opposition figures smaller, less prominent, and visually separated.\n\nIDENTITY LOCK:\nPreserve exact recognisable likeness for [img1]: head shape, hairline, eyes, nose, mouth, cheeks, jaw, skin texture, facial hair, age, body type, and natural proportions. Keep [img1] consistent across every selected-side appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but [img1] must still clearly look like the uploaded photo. For [img2], preserve the second person's exact identity for all players on the opposition side. Never blend [img1] and [img2], never average their faces, and never swap kits or sides. Do not beautify, de-age, slim, bulk up, average faces with footballers, or replace either uploaded person.\n\nREFERENCE PRIORITY:\nThe first attached person image is [img1], the selected-side identity source. The second attached person image is [img2], the identity source for all opposing players. Kit reference images are clothing only. Never borrow faces, bodies, poses, or lighting from kit images. Identity accuracy wins over poster style.\n\nPHOTO ENHANCEMENT:\nIf uploaded photos have heavy shadows, dull expression, uneven exposure, tired eyes, harsh phone-camera lighting, or flat indoor light, improve naturally: lift shadows, even skin lighting, brighten eyes, correct exposure, and keep natural skin texture. Do not change age, face shape, nose, eyes, jaw, facial hair, or body type.\n\nPHYSICAL INTEGRATION:\nThe head, neck, shoulders, and shirt must look photographed together in one real stadium shoot, not composited. Match face lighting to stadium key/rim light on each side. Add contact shadows where chin, neck, collar, sleeves, and shirt fabric meet. Keep correct neck thickness, shoulder connection, skin tone, perspective, scale, and believable fabric tension.\n\nKIT AND SIDE ACCURACY:\nUse selected home and away kit variables and kit reference images exactly: fabric texture, stitching, folds, crest, manufacturer mark, collar, trim, shorts, socks, sleeve details, and sponsor placement. The Manchester United kit belongs only on the LEFT home side. The Nottingham Forest kit belongs only on the RIGHT away side. If Kitface sponsor mode is active, both chest sponsors must read exactly "kitface.app"; otherwise keep original sponsors.\n\nCOMPOSITION DETAIL:\nVertical 3:4 poster. Use layered sports-campaign depth: selected-side hero portrait, one or two smaller action versions when safe, opposition figures opposite, pitch texture under feet, stadium crowd, floodlight beams, subtle broadcast overlays, and controlled colour energy from both clubs. Keep natural overlap and realistic scale. Avoid a flat two-person cutout layout and avoid overcrowding.\n\nEXPRESSION AND MOOD:\nGive repeated [img1] figures silly, memeable emotional variety: huge grin, roaring joy, badge-kiss love/pride, wild happiness, and comic mock-anger. Keep each face recognisably [img1]; no repeated blank face or same smile. Opposition stays friendly-competitive. Football banter, not a fight poster.\n\nENVIRONMENT:\nModern football stadium at night with bright floodlights, crowd texture, visible pitch, tunnel or matchday entrance depth, light haze, crisp commercial lighting, and premium broadcast atmosphere. Keep it light, electric, playful, official, and polished.\n\nDESIGN AND PALETTE:\nUse modern sports editorial layout, official matchday programme quality, tournament media asset polish, and professional broadcast graphics. Blend both team palettes cleanly. Use translucent cyan, lime, blue, or violet electric beams as environmental light. Keep faces and kits sharp.\n\nLIGHTING AND QUALITY:\nStadium commercial lighting, soft key light on faces, controlled rim light separating both sides, natural skin tones, premium sports photography, sharp focus, realistic anatomy, hands, eyes, and facial proportions.\n\nNEGATIVE PROMPT:\nNo trophy. No cartoon, illustration, CGI look, celebrity likeness, generic replacement face, face averaging, beautified stranger, copied pro-player face, mismatched identity, identity drift, swapped sides, home kit on away side, away kit on home side, [img1] face on opposition players, [img2] face on selected-side players, blended [img1]/[img2] identity, pasted-on head, mismatched head/body lighting, missing neck shadow, collar gap, sad hero face, stern passport-photo expression, tired dead-eyed portrait, flat two-person cutout poster, missing selected-side action figures, distorted anatomy, extra fingers, warped limbs, malformed hands, blurry faces, unrealistic body transformation, body-shaming caricature, random logos, watermarks, fake sponsor names, misspelled text, random titles, extra slogans, mascot costume, hooligan mood, fighting, violence, or aggressive confrontation.\n\nStyle:\nHero Card. Kits from Nottingham Forest, opposition colours from Manchester United. Subtle #dd0000/#ffffff accents.\n\nCRITICAL RESTRICTIONS:\n* NO altering of the face from [img1]\n\n* NO unrealistic body transformation, body-shaming caricature, exaggerated belly, double chin, or squeezed kit\n* NO applying [img1]'s face to opposition players\n* NO applying [img2]'s face to the selected side\n* NO swapping home and away sides; home is left, away is right\n* NO trophies, cups, medals, trophy ribbons, cup finals, or central silverware props\n* NO Champions League, European Cup, FA Cup, World Cup, or UEFA badges\n* NO text except exact realistic shirt numbers, crests, maker logos, and sponsor logos from the kit reference\n* NO cartoon style\n\n* Realistic sports photography aesthetic`,
+    expected: /second person reference \[img2\] is the opposing feature player/i,
+    operator: 'match'
+  }

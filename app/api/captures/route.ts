@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { captureBucket, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { decideOwnedResourceAccess } from "@/lib/authz";
+import { buildSupabaseStorageUri, createSignedStorageUrl } from "@/lib/supabase/storage";
 import type { CaptureStepType } from "@/types/capture";
 
 const captureStepTypes = [
@@ -145,7 +146,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: upload.error.message }, { status: 500 });
     }
 
-    const { data: publicUrlData } = supabase.storage.from(captureBucket).getPublicUrl(path);
+    const imageUrl = await createSignedStorageUrl(supabase, captureBucket, path);
+    const storageUri = buildSupabaseStorageUri(captureBucket, path);
     const id = crypto.randomUUID();
 
     const insert = await supabase.from("captures").upsert(
@@ -153,7 +155,7 @@ export async function POST(request: Request) {
         id,
         session_id: sessionId,
         type,
-        image_url: publicUrlData.publicUrl,
+        image_url: storageUri,
         validation_status: validationStatus,
         validation_results: parsedValidationResults,
         created_at: now,
@@ -171,7 +173,7 @@ export async function POST(request: Request) {
       id,
       sessionId,
       type,
-      imageUrl: publicUrlData.publicUrl,
+      imageUrl,
       validationStatus,
       createdAt: now
     });

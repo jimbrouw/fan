@@ -7,6 +7,7 @@ import {
   type PrintfulProductOptionId,
   type PrintfulRecipient
 } from "@/lib/fulfillment/printful";
+import { sendTransactionalEmail } from "@/lib/notifications";
 import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,10 @@ type PurchaseOrderRow = {
   stripe_session_id: string;
   status: "processing" | "fulfilled" | "failed";
   printful_order_id: string | null;
+};
+
+type UserEmailRow = {
+  email: string;
 };
 
 export async function POST(request: Request) {
@@ -93,7 +98,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       status: "processing",
       amount_total: session.amount_total,
       currency: session.currency,
-      customer_email: session.customer_details?.email ?? null,
+      customer_email: await resolveCheckoutEmail(supabase, session),
       customer_message: cardMessage,
       updated_at: new Date().toISOString()
     },
@@ -106,6 +111,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (!isPhysicalCheckoutOption(optionId)) {
     await markOrderFulfilled(supabase, session.id, null);
+    if (optionId === "download") {
+      await sendDownloadFulfillmentEmail(supabase, session, jobId);
+    }
     return;
   }
 
@@ -208,6 +216,64 @@ async function markOrderFulfilled(
 
   if (error) {
     throw new Error(error.message);
+  }
+}
+
+async function resolveCheckoutEmail(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  session: Stripe.Checkout.Session
+) {
+  const userId = session.metadata?.userId;
+
+  if (userId) {
+    const { data: user } = await supabase
+      .from("users")
+      .select("email")
+      .eq("id", userId)
+      .maybeSingle<UserEmailRow>();
+
+    if (user?.email) return user.email;
+  }
+
+  return session.customer_details?.email ?? session.customer_email ?? null;
+}
+
+async function sendDownloadFulfillmentEmail(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  session: Stripe.Checkout.Session,
+  jobId: string
+) {
+  const to = await resolveCheckoutEmail(supabase, session);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kitface-app.vercel.app";
+  const downloadUrl = `${appUrl}/api/jobs/${jobId}/image?download=1&noWatermark=1&session_id=${encodeURIComponent(session.id)}`;
+  const resultUrl = `${appUrl}/result/${jobId}`;
+
+  if (!to) return;
+
+  try {
+    await sendTransactionalEmail({
+      to,
+      subject: "Your Kitface download is ready",
+      text: `Your paid Kitface poster download is ready with no watermark.\n\nDownload: ${downloadUrl}\n\nView in app: ${resultUrl}`,
+      html: `
+        <div style="margin:0;padding:24px;background:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1C1936;">
+          <div style="max-width:480px;margin:0 auto;background:#fff;border:1px solid #E4E4E7;border-radius:20px;overflow:hidden;">
+            <div style="padding:28px 24px;background:#1C1936;color:#fff;text-align:center;">
+              <h1 style="margin:0;font-size:26px;line-height:1.2;">Kitface</h1>
+              <p style="margin:6px 0 0;color:#31F0D5;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Download ready</p>
+            </div>
+            <div style="padding:28px 24px;text-align:center;">
+              <h2 style="margin:0 0 10px;font-size:22px;line-height:1.25;">Your no-watermark poster is ready.</h2>
+              <p style="margin:0 0 22px;color:#69697A;font-size:14px;line-height:1.6;">Tap the button below to download the full-resolution image to your phone.</p>
+              <a href="${downloadUrl}" style="display:inline-block;background:#00CDAC;color:#1C1936;text-decoration:none;font-weight:800;font-size:15px;padding:14px 28px;border-radius:14px;">Download</a>
+              <p style="margin:18px 0 0;color:#9A9AB0;font-size:12px;line-height:1.5;">You can also view it in the app: <a href="${resultUrl}" style="color:#00A88D;font-weight:700;text-decoration:none;">open poster</a>.</p>
+            </div>
+          </div>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Download fulfillment email failed:", error instanceof Error ? error.message : error);
   }
 }
 

@@ -11,8 +11,43 @@ export function hasSupportedImageSignature(bytes: Uint8Array) {
   );
 }
 
-export async function isUsableRemoteImageUrl(url: string) {
+function isSafeRemoteUrl(url: string): boolean {
   if (!url || !url.startsWith("http")) return false;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".local")) {
+      return false;
+    }
+
+    const isIpv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+    if (isIpv4) {
+      const p1 = parseInt(isIpv4[1], 10);
+      const p2 = parseInt(isIpv4[2], 10);
+      if (
+        p1 === 10 ||
+        p1 === 127 ||
+        (p1 === 169 && p2 === 254) ||
+        (p1 === 192 && p2 === 168) ||
+        (p1 === 172 && p2 >= 16 && p2 <= 31)
+      ) {
+        return false;
+      }
+    }
+
+    if (host.includes(":") && (host.startsWith("[fd") || host.startsWith("[fc") || host.startsWith("[fe80"))) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function isUsableRemoteImageUrl(url: string) {
+  if (!isSafeRemoteUrl(url)) return false;
 
   try {
     // Try a HEAD request first to check content type without downloading

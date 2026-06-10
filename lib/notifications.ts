@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import webpush from "web-push";
 
 export type NotificationType = "image_completed" | "image_failed" | "video_completed" | "video_failed";
 
@@ -14,6 +15,7 @@ type NotifyInput = {
 type UserPreferenceRow = {
   email_enabled: boolean;
   push_enabled: boolean;
+  web_push_subscription: Record<string, unknown>;
 };
 
 type UserRow = {
@@ -176,13 +178,13 @@ async function sendWebPushNotification(input: NotifyInput) {
   const supabase = createServerSupabaseClient();
   const { data: preferences } = await supabase
     .from("user_notification_preferences")
-    .select("email_enabled,push_enabled")
+    .select("email_enabled,push_enabled,web_push_subscription")
     .eq("user_id", input.userId)
     .single<UserPreferenceRow>();
 
-  if (!preferences?.push_enabled) return;
+  if (!preferences?.push_enabled || !preferences?.web_push_subscription) return;
 
-  const result = await supabase.from("notifications").upsert(
+  const inserted = await supabase.from("notifications").insert(
     {
       id: crypto.randomUUID(),
       user_id: input.userId,
@@ -192,17 +194,53 @@ async function sendWebPushNotification(input: NotifyInput) {
       title: input.title,
       body: input.body,
       action_url: input.actionUrl ?? null,
-      error: "Web push adapter is reserved for a future subscription-backed implementation.",
-    },
-    { onConflict: "event_key", ignoreDuplicates: true }
-  );
+    }
+  ).select("id").single<{ id: string }>();
 
-  if (result.error) {
-    console.error("Push notification record failed:", result.error.message);
+  if (inserted.error) {
+    if (inserted.error.code !== "23505") {
+      console.error("Push notification record failed:", inserted.error.message);
+    }
+    return;
+  }
+
+  try {
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+    
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      throw new Error("VAPID keys not configured");
+    }
+
+    webpush.setVapidDetails(
+      "mailto:notifications@kitface.app",
+      vapidPublicKey,
+      vapidPrivateKey
+    );
+
+    const payload = JSON.stringify({
+      title: input.title,
+      body: input.body,
+      url: input.actionUrl ?? "/",
+    });
+
+    await webpush.sendNotification(preferences.web_push_subscription as unknown as webpush.PushSubscription, payload);
+
+    await supabase
+      .from("notifications")
+      .update({ sent_at: new Date().toISOString(), error: null })
+      .eq("id", inserted.data.id);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Web push send failed.";
+    await supabase
+      .from("notifications")
+      .update({ error: message })
+      .eq("id", inserted.data.id);
+    console.error("Web push notification failed:", message);
   }
 }
 
-async function sendTransactionalEmail(input: { to: string; subject: string; text: string; html?: string }) {
+export async function sendTransactionalEmail(input: { to: string; subject: string; text: string; html?: string }) {
   const resendApiKey = process.env.RESEND_API_KEY;
   const emailFrom = process.env.EMAIL_FROM ?? "Kitface <notifications@kitface.app>";
 

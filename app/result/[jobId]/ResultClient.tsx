@@ -47,11 +47,17 @@ export function ResultClient({ jobId }: { jobId: string }) {
   }, []);
 
   const imageShareUrl = job?.outputUrl ? `/api/jobs/${jobId}/image` : "";
+  const imageDownloadUrl = job?.outputUrl ? `/api/jobs/${jobId}/image?download=1` : "";
   const absoluteImageShareUrl = imageShareUrl && pageUrl ? new URL(imageShareUrl, pageUrl).href : imageShareUrl;
   const pageShareUrl = pageUrl;
   const shareText = "I made a Kitface matchday poster.";
-  const productionBase = process.env.NEXT_PUBLIC_APP_URL ?? pageUrl;
-  const whatsappImageUrl = imageShareUrl && productionBase ? new URL(imageShareUrl, productionBase).href : absoluteImageShareUrl;
+  const publicBase = process.env.NEXT_PUBLIC_APP_URL || "https://kitface-app.vercel.app";
+  const whatsappImageUrl = imageShareUrl ? new URL(imageShareUrl, publicBase).href : absoluteImageShareUrl;
+  const statusText = job?.status === "completed"
+    ? "Your Kitface poster is ready."
+    : job?.status === "failed"
+      ? "Your Kitface poster needs another try."
+      : "Your Kitface poster is loading.";
 
   async function copyShareLink(url: string, message = "Link copied.") {
     if (!url) return;
@@ -117,9 +123,11 @@ export function ResultClient({ jobId }: { jobId: string }) {
   return (
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
-        <h1 className="font-display text-[35px] leading-none text-[var(--foreground)]">Your poster.</h1>
+        <h1 className="font-display text-[35px] leading-none text-[var(--foreground)]">
+          {job?.status === "completed" ? "Ready for the group chat." : "Your matchday poster."}
+        </h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          {job?.status === "completed" ? "Your Kitface poster is ready." : "Your Kitface poster is loading."}
+          {statusText}
         </p>
       </div>
 
@@ -144,7 +152,9 @@ export function ResultClient({ jobId }: { jobId: string }) {
           </div>
         ) : (
           <div className="p-8">
-            {error ?? job?.error ?? "The generated poster image is not available yet."}
+            {job?.status === "failed"
+              ? "The image service hit an internal error. Try again with the same photos."
+              : error ?? job?.error ?? "The generated poster image is not available yet."}
           </div>
         )}
       </div>
@@ -159,7 +169,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
             <Package size={22} className="text-[var(--foreground)]" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-[var(--foreground)]">Upgrade your poster - from £3.99</p>
+            <p className="text-base font-bold text-[var(--foreground)]">Upgrade from £3.99</p>
             <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">Remove the watermark, download the image, or order printed products.</p>
           </div>
         </button>
@@ -172,32 +182,15 @@ export function ResultClient({ jobId }: { jobId: string }) {
               <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
                 <Button type="button" onClick={shareNative} className="w-full min-[380px]:col-span-2">
                   <Share2 size={17} />
-                  Share image
+                  Share poster
                 </Button>
                 <a
-                  href={imageShareUrl}
+                  href={imageDownloadUrl}
                   download={`kitface-${jobId}.png`}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98] min-[380px]:col-span-2"
                 >
                   <Download size={17} />
                   Download
-                </a>
-                <Button type="button" variant="secondary" onClick={() => copyShareLink(absoluteImageShareUrl, "Image link copied.")}>
-                  <Copy size={17} />
-                  Copy image link
-                </Button>
-                <Button type="button" variant="secondary" className="min-[380px]:col-span-2" onClick={() => copyShareLink(pageShareUrl, "Page link copied.")}>
-                  <Copy size={17} />
-                  Copy page link
-                </Button>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(whatsappImageUrl)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98] min-[380px]:col-span-2"
-                >
-                  <MessageCircle size={17} />
-                  WhatsApp
                 </a>
               </div>
               {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}
@@ -214,18 +207,34 @@ export function ResultClient({ jobId }: { jobId: string }) {
             <Link href="/create" className="col-span-2">
               <span className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-center text-sm font-semibold leading-5 text-[var(--foreground)] transition hover:border-[rgba(42,0,79,0.2)] hover:bg-white active:scale-[0.98]">
                 <RotateCcw size={17} className="shrink-0" />
-                <span className="min-w-0 whitespace-normal">Make another poster with the same photos</span>
+                <span className="min-w-0 whitespace-normal">Make another with these photos</span>
               </span>
             </Link>
             <Link href="/capture?restart=1" className="col-span-2">
               <span className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-center text-sm font-semibold leading-5 text-[var(--foreground)] transition hover:border-[rgba(42,0,79,0.2)] hover:bg-white active:scale-[0.98]">
                 <Camera size={17} className="shrink-0" />
-                <span className="min-w-0 whitespace-normal">Redo photos again</span>
+                <span className="min-w-0 whitespace-normal">Retake photos</span>
               </span>
             </Link>
           </>
         ) : (
-          <>
+          job?.status === "failed" ? (
+            <>
+              <Link href="/create" className="col-span-2">
+                <Button className="w-full">
+                  <RotateCcw size={17} />
+                  Try again with same photos
+                </Button>
+              </Link>
+              <Link href="/capture?restart=1" className="col-span-2">
+                <Button variant="secondary" className="w-full">
+                  <Camera size={17} />
+                  Retake photos
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
             <Button type="button" variant="secondary" onClick={loadJob} disabled={isLoading}>
               <RefreshCw size={17} />
               {isLoading ? "Checking..." : "Check Status"}
@@ -236,7 +245,8 @@ export function ResultClient({ jobId }: { jobId: string }) {
                 New photos
               </Button>
             </Link>
-          </>
+            </>
+          )
         )}
       </div>
     </section>

@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 type PreferenceRow = {
   email_enabled: boolean;
   push_enabled: boolean;
+  web_push_subscription?: Record<string, unknown>;
 };
 
 function isMissingPreferenceTable(error: { code?: string; message?: string }) {
@@ -20,7 +21,7 @@ export async function GET() {
   const supabase = createServerSupabaseClient();
   const { data, error } = await supabase
     .from("user_notification_preferences")
-    .select("email_enabled,push_enabled")
+    .select("email_enabled,push_enabled,web_push_subscription")
     .eq("user_id", user.id)
     .maybeSingle<PreferenceRow>();
 
@@ -35,6 +36,7 @@ export async function GET() {
   return NextResponse.json({
     emailEnabled: data?.email_enabled ?? true,
     pushEnabled: data?.push_enabled ?? false,
+    webPushSubscription: data?.web_push_subscription ?? null,
     available: true,
   });
 }
@@ -48,6 +50,7 @@ export async function PATCH(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     emailEnabled?: boolean;
     pushEnabled?: boolean;
+    webPushSubscription?: Record<string, unknown>;
   };
 
   const supabase = createServerSupabaseClient();
@@ -56,6 +59,7 @@ export async function PATCH(request: Request) {
       user_id: user.id,
       email_enabled: body.emailEnabled ?? true,
       push_enabled: body.pushEnabled ?? false,
+      ...(body.webPushSubscription !== undefined ? { web_push_subscription: body.webPushSubscription } : {}),
     },
     { onConflict: "user_id" }
   );
@@ -71,6 +75,7 @@ export async function PATCH(request: Request) {
   return NextResponse.json({
     emailEnabled: body.emailEnabled ?? true,
     pushEnabled: body.pushEnabled ?? false,
+    webPushSubscription: body.webPushSubscription ?? null,
     available: true,
   });
 }

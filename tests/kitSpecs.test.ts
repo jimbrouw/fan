@@ -196,7 +196,7 @@ test("GPT Image 2 football card prompt uses a clean card structure", () => {
   assert.ok(prompt.length <= 10000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
 });
 
-test("GPT Image 2 star player prompt uses the Kitface tournament poster structure", () => {
+test("GPT Image 2 star player prompt uses the older campaign collage structure without trophies", () => {
   const kitSpec = getKitSpec("nottingham-forest", "home");
   assert.ok(kitSpec);
 
@@ -217,13 +217,18 @@ test("GPT Image 2 star player prompt uses the Kitface tournament poster structur
   });
 
   assert.match(prompt, /GPT IMAGE 2 STAR PLAYER DIRECTION/i);
-  assert.match(prompt, /official international tournament media campaign/i);
+  assert.match(prompt, /official EFL \/ Premier League launch-campaign collage/i);
+  assert.match(prompt, /high-end sportswear advertising/i);
   assert.match(prompt, /real app result/i);
-  assert.match(prompt, /not a single-player trading card/i);
-  assert.match(prompt, /One huge chest-up hero portrait occupies about 60-70%/i);
-  assert.match(prompt, /four to five smaller full-body action shots/i);
+  assert.match(prompt, /clean bright off-white stadium-poster background/i);
+  assert.match(prompt, /exactly three to four larger supporting player images/i);
+  assert.match(prompt, /not five tiny figures/i);
+  assert.match(prompt, /large enough for the face, hands, kit, and body to remain recognisable/i);
   assert.match(prompt, /ACTION POSES/i);
-  assert.match(prompt, /running, celebrating, match action/i);
+  assert.match(prompt, /roaring or shouting celebration/i);
+  assert.match(prompt, /side\/back number pose/i);
+  assert.match(prompt, /arms-folded captain-style portrait/i);
+  assert.match(prompt, /running or match-action movement/i);
   assert.match(prompt, /IDENTITY LOCK/i);
   assert.match(prompt, /one football media-day shoot/i);
   assert.match(prompt, /Do not beautify, de-age, slim, bulk up/i);
@@ -236,15 +241,21 @@ test("GPT Image 2 star player prompt uses the Kitface tournament poster structur
   assert.match(prompt, /head, neck, shoulders, and shirt must look photographed together/i);
   assert.match(prompt, /contact shadows where the chin, neck, and collar meet/i);
   assert.match(prompt, /EXPRESSION/i);
-  assert.match(prompt, /proud, warm, joyful, and celebratory/i);
+  assert.match(prompt, /proud, joyful, silly, and memeable/i);
+  assert.match(prompt, /comic mock-anger/i);
   assert.match(prompt, /not a passport photo/i);
   assert.match(prompt, /Use the selected kit variables and kit reference images exactly/i);
   assert.match(prompt, /KIND ATHLETIC PRESENTATION/i);
   assert.match(prompt, /flattering kit fit/i);
-  assert.match(prompt, /Modern football stadium at night/i);
-  assert.match(prompt, /national-team media asset polish/i);
+  assert.match(prompt, /Bright premium stadium-commercial environment/i);
+  assert.match(prompt, /soft pink\/warm haze/i);
+  assert.match(prompt, /Avoid dark moody fog/i);
+  assert.match(prompt, /Official league launch poster meets high-end sportswear advertising campaign/i);
+  assert.match(prompt, /High-detail finish/i);
   assert.match(prompt, /Only include readable text explicitly allowed by the dynamic prompt/i);
   assert.match(prompt, /NEGATIVE PROMPT/i);
+  assert.match(prompt, /No trophy\. No cup\. No medals\. No central silverware/i);
+  assert.match(prompt, /No tiny distorted duplicate players/i);
   assert.match(prompt, /No cartoon/i);
   assert.match(prompt, /sad hero face/i);
   assert.match(prompt, /stern passport-photo expression/i);
@@ -252,10 +263,12 @@ test("GPT Image 2 star player prompt uses the Kitface tournament poster structur
   assert.match(prompt, /mismatched head\/body lighting/i);
   assert.match(prompt, /collar gap/i);
   assert.match(prompt, /single generic footballer portrait/i);
-  assert.match(prompt, /missing bottom action figures/i);
+  assert.match(prompt, /missing supporting campaign figures/i);
   assert.match(prompt, /Tricky Trees/i);
   assert.match(prompt, /subtle tree silhouettes/i);
   assert.match(prompt, /not literal mascots/i);
+  assert.doesNotMatch(prompt, /four to five smaller full-body action shots/i);
+  assert.doesNotMatch(prompt, /bottom-third action figures/i);
   assert.ok(prompt.length <= 10000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
 });
 
@@ -323,16 +336,18 @@ test("poster prompt can frame an away VS match with the reference person on the 
   assert.match(prompt, /pre-match programme cover/i);
   assert.match(prompt, /This must feel more detailed and composed than a simple split-screen graphic/i);
   assert.match(prompt, /strong two-sided composition/i);
-  assert.match(prompt, /huge chest-up hero portrait of \[img1\] occupy about 55-70%/i);
-  assert.match(prompt, /kneeslide or fist-pump celebration/i);
+  assert.match(prompt, /one clear chest-up hero portrait of \[img1\]/i);
+  assert.match(prompt, /add one or two smaller selected-side action versions of \[img1\]/i);
   assert.match(prompt, /OPPOSITION HANDLING/i);
-  assert.match(prompt, /Opponents stay on the LEFT side as secondary match context/i);
+  assert.match(prompt, /Opponents stay on the LEFT side/i);
   assert.match(prompt, /PHYSICAL INTEGRATION/i);
   assert.match(prompt, /KIT AND SIDE ACCURACY/i);
   assert.match(prompt, /The Manchester United kit belongs only on the LEFT home side/i);
   assert.match(prompt, /The Nottingham Forest kit belongs only on the RIGHT away side/i);
   assert.match(prompt, /Avoid a flat two-person cutout layout/i);
-  assert.match(prompt, /football banter and broadcast excitement/i);
+  assert.match(prompt, /silly, memeable emotional variety/i);
+  assert.match(prompt, /huge grin, roaring joy, badge-kiss love\/pride/i);
+  assert.match(prompt, /Football banter, not a fight poster/i);
   assert.match(prompt, /No trophy/i);
   assert.match(prompt, /flat two-person cutout poster/i);
   assert.ok(prompt.length <= 10000, `prompt length ${prompt.length} exceeds GPT Image 2 budget`);
@@ -402,12 +417,12 @@ test("poster prompt can assign a second person reference to the opposition featu
   });
 
   assert.match(prompt, /first person reference \[img1\] is the selected side person/i);
-  assert.match(prompt, /second person reference \[img2\] is the opposing feature player/i);
+  assert.match(prompt, /second person reference \[img2\] is the identity source for all opposing players/i);
   assert.match(prompt, /Secondary reference person \[img2\] plays for Manchester United/i);
-  assert.match(prompt, /Use \[img2\] for one opposing feature player/i);
+  assert.match(prompt, /Use \[img2\] for all opposing players/i);
   assert.match(prompt, /NO applying \[img2\]'s face to the selected side/i);
-  assert.match(prompt, /Use \[img2\] for exactly one opposing feature player only/i);
-  assert.match(prompt, /For \[img2\], preserve the second person's exact identity on the opposition side only/i);
+  assert.match(prompt, /Use \[img2\] for all opposing players/i);
+  assert.match(prompt, /For \[img2\], preserve the second person's exact identity for all players on the opposition side/i);
   assert.match(prompt, /Never blend \[img1\] and \[img2\]/i);
   assert.match(prompt, /\[img2\] face on selected-side players/i);
   assert.ok(prompt.length <= 10000, `prompt length ${prompt.length} exceeds GPT Image 2 budget`);

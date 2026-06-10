@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildMuapiSubmitRequest } from "../lib/ai/providers/muapi.ts";
+import { buildMuapiSubmitRequest, isTransientMuapiStatusError } from "../lib/ai/providers/muapi.ts";
 
 test("wan2.7-image-edit maps to the MuAPI image-edit endpoint with image references", () => {
   const request = buildMuapiSubmitRequest({
@@ -52,4 +52,24 @@ test("gpt-image-2 can use high-quality final settings", () => {
   assert.equal(request.endpoint, "gpt-image-2-image-to-image");
   assert.equal(request.body.resolution, "2K");
   assert.equal(request.body.quality, "high");
+});
+
+test("gpt-image-2 unknown modes fall back to safe low settings", () => {
+  const request = buildMuapiSubmitRequest({
+    prompt: "Create a maximum-quality football poster",
+    referenceImageUrls: ["https://example.com/person.jpg"],
+    model: "gpt-image-2",
+    gptImageTestMode: "unknown-mode" as never
+  });
+
+  assert.equal(request.endpoint, "gpt-image-2-image-to-image");
+  assert.equal(request.body.resolution, "1K");
+  assert.equal(request.body.quality, "low");
+});
+
+test("MuAPI transient status errors are retryable instead of terminal failures", () => {
+  assert.equal(isTransientMuapiStatusError(500, { error: "Internal Error. Please try again later." }), true);
+  assert.equal(isTransientMuapiStatusError(502, {}), true);
+  assert.equal(isTransientMuapiStatusError(429, { message: "Rate limit" }), true);
+  assert.equal(isTransientMuapiStatusError(400, { error: "Invalid image URL" }), false);
 });

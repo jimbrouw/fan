@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, RotateCcw, Bell, Mail, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, LoaderCircle, RotateCcw, Bell, Mail, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/Button";
@@ -13,8 +13,21 @@ type JobResponse = {
 
 type NotificationPreferences = {
   emailEnabled: boolean;
+  pushEnabled: boolean;
+  webPushSubscription?: Record<string, unknown>;
   available: boolean;
 };
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 const waitingMessages = [
   { emoji: "⏱️", text: "The fourth official is holding up the board… just one more minute." },
@@ -45,6 +58,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
   // Notification states
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     emailEnabled: false,
+    pushEnabled: false,
     available: false,
   });
   const [preferenceMessage, setPreferenceMessage] = useState<string | null>(null);
@@ -94,6 +108,8 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
 
         setPreferences({
           emailEnabled: Boolean(data.emailEnabled),
+          pushEnabled: Boolean(data.pushEnabled),
+          webPushSubscription: data.webPushSubscription,
           available: Boolean(data.available),
         });
       } catch {
@@ -122,6 +138,8 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           emailEnabled: nextPreferences.emailEnabled,
+          pushEnabled: nextPreferences.pushEnabled,
+          webPushSubscription: nextPreferences.webPushSubscription,
         }),
       });
       const data = (await response.json()) as Partial<NotificationPreferences> & { error?: string };
@@ -130,6 +148,8 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
 
       setPreferences({
         emailEnabled: Boolean(data.emailEnabled),
+        pushEnabled: Boolean(data.pushEnabled),
+        webPushSubscription: data.webPushSubscription,
         available: Boolean(data.available),
       });
 
@@ -148,31 +168,82 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
     });
   }
 
+  async function togglePush() {
+    if (preferences.pushEnabled) {
+      await savePreferences({ ...preferences, pushEnabled: false });
+      return;
+    }
+
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        throw new Error("Push notifications are not supported in this browser.");
+      }
+
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey) throw new Error("Push configuration missing.");
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        throw new Error("Notification permission denied. Please enable them in your browser settings.");
+      }
+
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        });
+      }
+
+      await savePreferences({
+        ...preferences,
+        pushEnabled: true,
+        webPushSubscription: subscription as unknown as Record<string, unknown>,
+      });
+    } catch (err) {
+      setPreferenceMessage(err instanceof Error ? err.message : "Could not enable push notifications.");
+    }
+  }
+
   return (
     <section className="flex flex-1 flex-col justify-center gap-7 pb-4 text-center">
       <div className="mx-auto grid size-24 place-items-center rounded-full bg-[var(--surface-soft)]/70">
-        <LoaderCircle size={42} className="animate-spin text-[var(--accent)]" />
+        {job.status === "failed" ? (
+          <AlertTriangle size={42} className="text-[var(--accent)]" />
+        ) : (
+          <LoaderCircle size={42} className="animate-spin text-[var(--accent)]" />
+        )}
       </div>
       
       <div className="space-y-3">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Creating now</p>
-        <h1 className="font-display text-[44px] leading-none text-[var(--foreground)]">Making your poster.</h1>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">
+          {job.status === "failed" ? "Needs another try" : "Creating now"}
+        </p>
+        <h1 className="font-display text-[44px] leading-none text-[var(--foreground)]">
+          {job.status === "failed" ? "Your poster needs another try." : "Making your poster."}
+        </h1>
         <p className="mx-auto max-w-[19rem] text-base leading-6 text-[var(--muted)]">
-          Keep this page open, or choose a notification for when it is ready.
+          {job.status === "failed"
+            ? "The image service hit an internal error. Try again with the same photos."
+            : "Keep this page open, or choose a notification for when it is ready."}
         </p>
         <p className="text-xs leading-5 text-[var(--muted)]">
           Your poster is {job.status ?? "processing"}.
         </p>
       </div>
 
-      {/* Waiting panel */}
-      <div className="rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/65 px-5 py-5 text-center">
-        <p className="text-3xl" aria-hidden="true">{waitingMessage.emoji}</p>
-        <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">{waitingMessage.text}</p>
-        <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-          Sit tight — you&apos;ll be redirected automatically.
-        </p>
-      </div>
+      {job.status !== "failed" && (
+        <div className="rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/65 px-5 py-5 text-center">
+          <p className="text-3xl" aria-hidden="true">{waitingMessage.emoji}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">{waitingMessage.text}</p>
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+            Sit tight — you&apos;ll be redirected automatically.
+          </p>
+        </div>
+      )}
 
       {/* Notification Toggle Panel */}
       <div className="rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/65 p-4 text-left">
@@ -186,7 +257,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 space-y-2">
           <button
             type="button"
             onClick={toggleEmail}
@@ -198,6 +269,19 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
               Email me when it&apos;s ready
             </span>
             {preferences.emailEnabled ? <CheckCircle2 size={18} className="text-[var(--accent)]" /> : <span className="text-xs text-[var(--muted)]">Off</span>}
+          </button>
+          
+          <button
+            type="button"
+            onClick={togglePush}
+            disabled={!preferences.available}
+            className="flex min-h-12 w-full items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="flex items-center gap-2">
+              <Bell size={16} className="text-[var(--accent)]" />
+              Notify me on this device
+            </span>
+            {preferences.pushEnabled ? <CheckCircle2 size={18} className="text-[var(--accent)]" /> : <span className="text-xs text-[var(--muted)]">Off</span>}
           </button>
         </div>
 
@@ -230,7 +314,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         <div className="space-y-4">
           <p className="text-sm leading-6 text-[var(--muted)]">{job.error ?? "The poster could not be made."}</p>
           <Button type="button" variant="secondary" onClick={() => router.push("/create")}>
-            Try Again
+            Try again with same photos
           </Button>
         </div>
       )}

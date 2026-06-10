@@ -131,15 +131,18 @@ export async function POST(request: Request) {
       metadata: {
         jobId: job.id,
         optionId: product.id,
+        userId: user.id,
         ...(cardMessage ? { cardMessage } : {})
       },
       payment_intent_data: {
         metadata: {
           jobId: job.id,
           optionId: product.id,
+          userId: user.id,
           ...(cardMessage ? { cardMessage } : {})
         }
       },
+      customer_email: user.email ?? undefined,
       customer_creation: "if_required",
       phone_number_collection: {
         enabled: product.requiresShipping
