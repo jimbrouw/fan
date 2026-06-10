@@ -39,6 +39,7 @@ const teamGroupOrder: TeamGroup[] = [
   "International Giants",
   "International",
   "EFL League One",
+  "EFL League Two",
   "Custom"
 ];
 const teamOrderByGroup: Partial<Record<TeamGroup, string[]>> = {
@@ -76,21 +77,22 @@ const teamOrderByGroup: Partial<Record<TeamGroup, string[]>> = {
     "newcastle",
     "aston-villa",
     "nottingham-forest",
-    "west-ham",
     "everton",
     "leeds",
     "brighton",
     "crystal-palace",
     "fulham",
     "brentford",
-    "wolves",
     "sunderland",
-    "burnley",
-    "bournemouth"
+    "bournemouth",
+    "coventry",
+    "ipswich",
+    "hull"
   ],
   "International Giants": ["real-madrid", "barcelona", "bayern-munich"],
   International: ["england"],
   "EFL League One": ["mansfield"],
+  "EFL League Two": ["notts-county"],
   Custom: [customTeamId]
 };
 

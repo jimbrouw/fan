@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NotificationBell } from "@/components/NotificationBell";
+
 import { AccountButton } from "@/components/AccountButton";
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
@@ -11,7 +11,6 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
             Kitface
           </Link>
           <div className="flex items-center gap-2 text-[var(--foreground)]">
-            <NotificationBell />
             <AccountButton />
           </div>
         </header>
