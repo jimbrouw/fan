@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { choosePrimaryReferenceCapture, chooseSupportingReferenceUrls } from "@/lib/captureReferences";
 import { describeKitSpec, getKitSpec, kitVariants, type KitVariant } from "@/lib/kitSpecs";
 import { getDefaultPosterStyleIdForCreateMode, posterStyles } from "@/lib/posterTemplates";
+import { validatePosterPersonalisation } from "@/lib/safety/profanity";
 import { customTeamId, getTeamProfile, teamProfiles } from "@/lib/teamProfiles";
 import { validateImageBlob } from "@/lib/validation";
 import type { CaptureStepType } from "@/types/capture";
@@ -376,9 +377,12 @@ export default function CreatePage() {
   const needsOpponentImage = createMode === "vs" && opponentMode === "another-person";
   const hasOpponentImage = !needsOpponentImage || Boolean(opponentImageUrl);
   const hasAnyCapture = captures.some((c) => c.objectUrl || c.imageUrl);
-  const canSubmit = !isRetryingUploads && hasTeamSelected && teamName && kitNotes && posterStyleId && hasUsableSourceImage && sessionId && hasValidMatch && hasOpponentImage;
+  const personalisationSafetyError = validatePosterPersonalisation({ shirtName, teamSlogan });
+  const canSubmit = !personalisationSafetyError && !isRetryingUploads && hasTeamSelected && teamName && kitNotes && posterStyleId && hasUsableSourceImage && sessionId && hasValidMatch && hasOpponentImage;
   const missingSubmitReason = isRetryingUploads
     ? "Uploading your photos..."
+    : personalisationSafetyError
+      ? personalisationSafetyError.message
     : !hasUsableSourceImage || !sessionId
       ? "Take photos first."
       : !hasTeamSelected || !teamName || !kitNotes

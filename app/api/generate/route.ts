@@ -12,6 +12,7 @@ import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
 import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
 import { FREE_TIER_GENERATIONS, isExemptEmail } from "@/lib/credits";
+import { validatePosterPersonalisation } from "@/lib/safety/profanity";
 
 type GenerateBody = {
   sessionId: string;
@@ -96,6 +97,22 @@ export async function POST(request: Request) {
     if (!body.sessionId || !body.sourceImageUrl || !body.teamName || !body.kitNotes || !body.teamProfile) {
       return NextResponse.json(
         { error: "Missing sessionId, sourceImageUrl, teamName, kitNotes, or teamProfile." },
+        { status: 400 }
+      );
+    }
+
+    const personalisationSafetyError = validatePosterPersonalisation({
+      shirtName: body.shirtName,
+      teamSlogan: body.teamSlogan
+    });
+
+    if (personalisationSafetyError) {
+      return NextResponse.json(
+        {
+          error: personalisationSafetyError.message,
+          field: personalisationSafetyError.field,
+          code: "unsafe_personalisation"
+        },
         { status: 400 }
       );
     }
