@@ -9,6 +9,7 @@
     "start": "next start",
     "demo:prompts": "node --experimental-strip-types scratch/make_demo_prompts.ts",
     "demo:prompts:vs": "node --experimental-strip-types scratch/make_vs_demo_prompts.ts",
+    "ci": "npm run typecheck && npm run lint && npm test && npm run build",
     "lint": "eslint .",
     "test": "node --test --experimental-strip-types tests/*.test.ts",
     "test:kits": "node --test --experimental-strip-types tests/kitSpecs.test.ts",

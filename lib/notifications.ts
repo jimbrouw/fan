@@ -202,7 +202,7 @@ async function sendWebPushNotification(input: NotifyInput) {
   }
 }
 
-async function sendTransactionalEmail(input: { to: string; subject: string; text: string; html?: string }) {
+export async function sendTransactionalEmail(input: { to: string; subject: string; text: string; html?: string }) {
   const resendApiKey = process.env.RESEND_API_KEY;
   const emailFrom = process.env.EMAIL_FROM ?? "Kitface <notifications@kitface.app>";
 

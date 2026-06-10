@@ -19,7 +19,7 @@ export function buildFalGptImage2EditInput(input: {
 }) {
   return {
     prompt: input.prompt,
-    image_urls: input.referenceImageUrls,
+    image_urls: input.referenceImageUrls.slice(0, 2),
     image_size: {
       width: 2496,
       height: 3312,

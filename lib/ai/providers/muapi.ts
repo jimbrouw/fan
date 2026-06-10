@@ -91,7 +91,7 @@ export function buildMuapiSubmitRequest(input: {
       endpoint: "gpt-image-2-image-to-image",
       body: {
         ...body,
-        images_list: input.referenceImageUrls,
+        images_list: input.referenceImageUrls.slice(0, 2),
         resolution: gptImageSettings.resolution,
         quality: gptImageSettings.quality,
       }

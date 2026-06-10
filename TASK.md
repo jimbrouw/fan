@@ -49,9 +49,9 @@
 ## Next
 
 ### UI fixes (high priority — broken or confusing)
-1. **Check the paid download delivery** — Apple Pay took payment successfully. Next, confirm the customer can actually download the no-watermark file from the success page and email link.
-2. **Fix camera layout on iPhone** — live capture works, but the camera screen can still feel too tall or jumpy on phones. Keep the shutter and controls stable at the bottom.
-3. **Continue onboarding polish** — the homepage and `/create` are clearer. Keep checking the full signed-in flow on a real phone for any confusing wording.
+1. ✅ Done — **Check the paid download delivery** — Apple Pay took payment successfully. Next, confirm the customer can actually download the no-watermark file from the success page and email link.
+2. ✅ Done — **Fix camera layout on iPhone** — live capture works, but the camera screen can still feel too tall or jumpy on phones. Keep the shutter and controls stable at the bottom.
+3. ✅ Done — **Continue onboarding polish** — the homepage and `/create` are clearer. Keep checking the full signed-in flow on a real phone for any confusing wording.
 
 ### Notifications
 4. **Pick email provider and wire up** — no provider chosen yet. Options: Resend (simple, good Next.js DX), SendGrid, Postmark. Pick one, add API key to env, send a real completion email when generation finishes. Hook into existing notification record insert.
@@ -68,19 +68,19 @@
 11. Retest VS mode on production after the 2K/prompt simplification deploy.
 12. Extend text safety filtering to custom team name, custom kit notes, match notes, and correction prompts if those fields become user-visible in output.
 13. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
-14. Live camera walkthrough on real phone on secure URL.
+14. ✅ Done — Live camera walkthrough on real phone on secure URL.
 15. Add a retention job/window for old private capture objects. Bucket privacy and signed provider URLs are implemented.
-17. Decide: keep CSS hero poster preview or replace with real generated image.
+17. ✅ Done — Decide: keep CSS hero poster preview or replace with real generated image. (Replaced with a real generated image `/kitface-hero-poster-test.jpg`).
 19. Configure Vercel Rolling Releases for production canaries after upgrading the Vercel plan to Pro or Enterprise; current plan returns 403 for Rolling Releases.
 
 ## Blockers
 
 - **Old failed posters will stay failed.** If a poster failed before the latest fixes, it will not repair itself. Make a new poster to test the current system.
 - **The failed VS poster needs a fresh retry.** The VS prompt/settings fix is live now, but the failed job on screen will stay failed. Start a new VS poster to test the fix.
-- **Digital payment works, but delivery still needs one final check.** You paid with Apple Pay and Stripe received it. Now check that the success page or email gives the correct no-watermark download.
+- ✅ Done — **Digital payment works, but delivery still needs one final check.** You paid with Apple Pay and Stripe received it. Now check that the success page or email gives the correct no-watermark download.
 - **Printed cards/posters still need a real test.** The digital download was tested. The printed product path still needs a test order to prove the print partner receives the order correctly.
 - **Team-news notes may not be live.** If the football data API key is missing or wrong, the app still works, but it uses basic team notes instead of live squad/news details.
-- **Camera needs real-phone layout QA.** Capture works on device, but the screen still needs checking for awkward height, browser bars, and button position on iPhone Safari.
+- ✅ Done — **Camera needs real-phone layout QA.** Capture works on device, but the screen still needs checking for awkward height, browser bars, and button position on iPhone Safari.
 - **Old private photo cleanup is not automated yet.** Photos are stored privately, but we still need a scheduled cleanup rule so old captures are deleted after a sensible period.
 - **Production rollout controls need a paid Vercel plan.** Gradual/canary releases cannot be enabled on the current Vercel plan. Vercel says Pro or Enterprise is required.
 - **Health-check monitoring needs a known secret.** The current health-check secret in Vercel is hidden after creation. For an external monitor, create a new known secret and use the same value in Vercel and the monitor.

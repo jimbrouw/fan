@@ -23,6 +23,25 @@ type LocalCapture = {
   validation: ClientValidationResult;
 };
 
+async function signRestoredCaptureUrls(sessionId: string, captures: LocalCapture[]) {
+  const imageUrls = captures.map((capture) => capture.imageUrl).filter((url): url is string => Boolean(url));
+  if (imageUrls.length === 0) return captures;
+
+  const response = await fetch("/api/captures/signed-urls", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId, imageUrls }),
+  });
+
+  if (!response.ok) return captures;
+
+  const data = (await response.json()) as { signedUrls?: Record<string, string> };
+  return captures.map((capture) => ({
+    ...capture,
+    imageUrl: capture.imageUrl ? data.signedUrls?.[capture.imageUrl] ?? capture.imageUrl : undefined,
+  }));
+}
+
 export function CaptureClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -150,10 +169,11 @@ export function CaptureClient() {
           }
         };
       });
+      const signedCaptures = await signRestoredCaptureUrls(pastSession.id, restoredCaptures);
 
       localStorage.setItem("fan-hero-session-id", pastSession.id);
-      localStorage.setItem("fan-hero-captures", JSON.stringify(restoredCaptures));
-      setCaptures(restoredCaptures);
+      localStorage.setItem("fan-hero-captures", JSON.stringify(signedCaptures));
+      setCaptures(signedCaptures);
       setSessionId(pastSession.id);
 
       router.push("/review");

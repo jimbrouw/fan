@@ -34,6 +34,10 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
   return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
 }
 
+function isTransientProviderStatusError(error?: string | null) {
+  return /internal error|please try again later|try again later|temporar|timeout|timed out|rate limit/i.test(error ?? "");
+}
+
 export async function GET(_request: Request, { params }: { params: Promise<{ jobId: string }> }) {
   try {
     const user = await getCurrentUser();
@@ -77,20 +81,47 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
       return NextResponse.json({ error: "Job not found." }, { status: 404 });
     }
 
-    if ((job.status === "completed" && job.output_url) || job.status === "failed" || !job.provider_job_id) {
+    const shouldRetryTransientFailure = job.status === "failed" && isTransientProviderStatusError(job.error) && Boolean(job.provider_job_id);
+
+    if ((job.status === "completed" && job.output_url) || (job.status === "failed" && !shouldRetryTransientFailure) || !job.provider_job_id) {
       return NextResponse.json(await toResponse(job, supabase));
     }
 
-    const providerStatus = await getStaticGenerationStatus(job.provider_job_id);
+    let providerStatus: GenerationResponse;
+    try {
+      providerStatus = await getStaticGenerationStatus(job.provider_job_id);
+    } catch (providerError) {
+      const message = providerError instanceof Error ? providerError.message : "Provider status check failed.";
+      if (!isTransientProviderStatusError(message)) throw providerError;
+
+      console.warn("Transient generation provider status check failed:", message, { jobId: job.id });
+      if (shouldRetryTransientFailure) {
+        const { data: recoveredJob, error: recoverError } = await supabase
+          .from("generation_jobs")
+          .update({ status: "processing", error: null })
+          .eq("id", job.id)
+          .select("*")
+          .single<JobRow>();
+
+        if (recoverError || !recoveredJob) {
+          return NextResponse.json({ error: recoverError?.message ?? "Job recovery failed." }, { status: 500 });
+        }
+
+        return NextResponse.json(await toResponse(recoveredJob, supabase));
+      }
+
+      return NextResponse.json(await toResponse({ ...job, error: null }, supabase));
+    }
 
     // Only update if something changed
     if (providerStatus.status !== job.status || providerStatus.outputUrl || providerStatus.error) {
+      const nextError = providerStatus.error ?? (providerStatus.status === "failed" ? job.error : null);
       const { data: updatedJob, error: updateError } = await supabase
         .from("generation_jobs")
         .update({
           status: providerStatus.status,
           output_url: providerStatus.outputUrl ?? job.output_url,
-          error: providerStatus.error ?? job.error
+          error: nextError
         })
         .eq("id", job.id)
         .select("*")
