@@ -20,7 +20,55 @@ export type FootballDataTeamId =
   | "sunderland"
   | "tottenham"
   | "west-ham"
-  | "wolves";
+  | "wolves"
+  | "canada"
+  | "mexico"
+  | "usa"
+  | "australia"
+  | "iraq"
+  | "iran"
+  | "japan"
+  | "jordan"
+  | "south-korea"
+  | "qatar"
+  | "saudi-arabia"
+  | "uzbekistan"
+  | "algeria"
+  | "cabo-verde"
+  | "congo-dr"
+  | "cote-divoire"
+  | "egypt"
+  | "ghana"
+  | "morocco"
+  | "senegal"
+  | "south-africa"
+  | "tunisia"
+  | "curacao"
+  | "haiti"
+  | "panama"
+  | "argentina"
+  | "brazil"
+  | "colombia"
+  | "ecuador"
+  | "paraguay"
+  | "uruguay"
+  | "new-zealand"
+  | "austria"
+  | "belgium"
+  | "bosnia"
+  | "croatia"
+  | "czechia"
+  | "england-wc"
+  | "france"
+  | "germany"
+  | "netherlands"
+  | "norway"
+  | "portugal"
+  | "scotland"
+  | "spain"
+  | "sweden"
+  | "switzerland"
+  | "turkiye";
 
 export const footballDataTeamIds: Partial<Record<string, number>> = {
   "arsenal": 57,
@@ -43,6 +91,53 @@ export const footballDataTeamIds: Partial<Record<string, number>> = {
   "tottenham": 73,
   "west-ham": 563,
   "wolves": 76,
+  "canada": 828,
+  "mexico": 769,
+  "usa": 771,
+  "australia": 779,
+  "iraq": 8062,
+  "iran": 840,
+  "japan": 766,
+  "jordan": 8049,
+  "south-korea": 772,
+  "qatar": 8030,
+  "saudi-arabia": 801,
+  "uzbekistan": 8070,
+  "algeria": 778,
+  "cabo-verde": 1930,
+  "congo-dr": 1934,
+  "cote-divoire": 1935,
+  "egypt": 825,
+  "ghana": 763,
+  "morocco": 815,
+  "senegal": 804,
+  "south-africa": 774,
+  "tunisia": 802,
+  "curacao": 9460,
+  "haiti": 836,
+  "panama": 1836,
+  "argentina": 762,
+  "brazil": 764,
+  "colombia": 818,
+  "ecuador": 791,
+  "paraguay": 761,
+  "uruguay": 758,
+  "new-zealand": 783,
+  "austria": 816,
+  "belgium": 805,
+  "croatia": 799,
+  "czechia": 798,
+  "england-wc": 770,
+  "france": 773,
+  "germany": 759,
+  "netherlands": 8601,
+  "norway": 8872,
+  "portugal": 765,
+  "scotland": 8873,
+  "spain": 760,
+  "sweden": 792,
+  "switzerland": 788,
+  "turkiye": 803,
 };
 
 type FootballDataSquadMember = {

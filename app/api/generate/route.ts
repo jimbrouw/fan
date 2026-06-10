@@ -253,8 +253,31 @@ async function submitStaticGenerationJob(input: {
   gptImageTestMode?: MuapiGptImageTestMode;
   webhookUrl?: string;
 }) {
-  const muapiProvider = new MuapiGenerationProvider();
+  const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
+  const useFalPrimary = process.env.FAL_KEY && isGptImage;
 
+  if (useFalPrimary) {
+    try {
+      console.log("Testing with FAL GPT Image 2 as primary provider...");
+      const falProvider = new FalGptImage2GenerationProvider();
+      const { providerJobId } = await falProvider.submitJob({
+        prompt: input.prompt,
+        referenceImageUrls: input.referenceImageUrls,
+      });
+      return providerJobId;
+    } catch (error) {
+      console.warn("FAL GPT Image 2 submission failed; falling back to MUAPI.", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Fallback to MUAPI
+      const muapiProvider = new MuapiGenerationProvider();
+      const { providerJobId } = await muapiProvider.submitJob(input);
+      return providerJobId;
+    }
+  }
+
+  // Default MUAPI behavior for other models
+  const muapiProvider = new MuapiGenerationProvider();
   try {
     const { providerJobId } = await muapiProvider.submitJob(input);
     return providerJobId;
