@@ -120,6 +120,16 @@ function buildOrderedTeamGroups<T extends (typeof teamProfiles)[number]>(teams: 
     .map((group) => [group, [...grouped[group]].sort((a, b) => compareTeamsWithinGroup(group, a, b))] as const);
 }
 
+function getVisibleKitVariantsForTeam(teamId: string) {
+  if (!teamId || teamId === customTeamId) return visibleKitVariants;
+  const team = getTeamProfile(teamId);
+  const isInternational = team.group === "World Cup 2026" || team.group === "International";
+  return visibleKitVariants.filter((v) => {
+    if (isInternational && (v.id === "away" || v.id === "retro")) return false;
+    return true;
+  });
+}
+
 function getOpponentUploadErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "";
 
@@ -241,6 +251,22 @@ export default function CreatePage() {
     }
   }
   const [isRetryingUploads, setIsRetryingUploads] = useState(false);
+
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    const validVariants = getVisibleKitVariantsForTeam(selectedTeamId);
+    if (!validVariants.some((v) => v.id === kitVariant)) setKitVariant("home");
+  }, [selectedTeamId, kitVariant]);
+
+  useEffect(() => {
+    const validHomeVariants = getVisibleKitVariantsForTeam(homeTeamId);
+    if (!validHomeVariants.some((v) => v.id === homeKitVariant)) setHomeKitVariant("home");
+  }, [homeTeamId, homeKitVariant]);
+
+  useEffect(() => {
+    const validAwayVariants = getVisibleKitVariantsForTeam(awayTeamId);
+    if (!validAwayVariants.some((v) => v.id === awayKitVariant)) setAwayKitVariant("home");
+  }, [awayTeamId, awayKitVariant]);
 
 
   const selectedTeam = getTeamProfile(selectedTeamId);
@@ -672,7 +698,7 @@ export default function CreatePage() {
                     </select>
                   </label>
                   <div className="grid grid-cols-3 gap-1">
-                    {visibleKitVariants.map((v) => (
+                    {getVisibleKitVariantsForTeam(homeTeamId).map((v) => (
                       <button key={v.id} type="button" onClick={() => setHomeKitVariant(v.id)}
                         className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
                           homeKitVariant === v.id
@@ -708,7 +734,7 @@ export default function CreatePage() {
                     </select>
                   </label>
                   <div className="grid grid-cols-3 gap-1">
-                    {visibleKitVariants.map((v) => (
+                    {getVisibleKitVariantsForTeam(awayTeamId).map((v) => (
                       <button key={v.id} type="button" onClick={() => setAwayKitVariant(v.id)}
                         className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
                           awayKitVariant === v.id
@@ -844,7 +870,7 @@ export default function CreatePage() {
             <fieldset className="space-y-2">
               <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Kit variant</legend>
               <div className="grid grid-cols-3 gap-1.5">
-                {visibleKitVariants.map((v) => (
+                {getVisibleKitVariantsForTeam(selectedTeamId).map((v) => (
                   <button
                     key={v.id}
                     type="button"
