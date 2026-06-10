@@ -315,6 +315,66 @@ const premierLeague2026KitSpecs: KitSpec[] = [
     baseColor: "away-kit alternate base",
     accentColors: ["navy", "white"],
     pattern: "2026/27 Tottenham Hotspur away shirt listed by Football Kit Archive; alternate Nike shirt with Spurs colour cues"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "coventry",
+    team: "Coventry City",
+    variant: "home",
+    manufacturer: "Hummel",
+    mainSponsor: "Monzo",
+    baseColor: "sky blue",
+    accentColors: ["white"],
+    pattern: "2026/27 Coventry City home shirt; sky blue return to the Premier League"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "coventry",
+    team: "Coventry City",
+    variant: "away",
+    manufacturer: "Hummel",
+    mainSponsor: "Monzo",
+    baseColor: "away-kit alternate base",
+    accentColors: ["sky blue", "white"],
+    pattern: "2026/27 Coventry City away shirt"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "hull",
+    team: "Hull City",
+    variant: "home",
+    manufacturer: "Kappa",
+    mainSponsor: "Corendon Airlines",
+    baseColor: "amber and black",
+    accentColors: ["amber", "black"],
+    pattern: "2026/27 Hull City home shirt; amber and black tiger stripes"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "hull",
+    team: "Hull City",
+    variant: "away",
+    manufacturer: "Kappa",
+    mainSponsor: "Corendon Airlines",
+    baseColor: "away-kit alternate base",
+    accentColors: ["amber", "black"],
+    pattern: "2026/27 Hull City away shirt"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "ipswich",
+    team: "Ipswich Town",
+    variant: "home",
+    manufacturer: "Umbro",
+    mainSponsor: "Ed Sheeran Tour",
+    baseColor: "royal blue",
+    accentColors: ["white"],
+    pattern: "2026/27 Ipswich Town home shirt; royal blue return to the Premier League"
+  }),
+  makePremierLeague2026KitSpec({
+    teamId: "ipswich",
+    team: "Ipswich Town",
+    variant: "away",
+    manufacturer: "Umbro",
+    mainSponsor: "Ed Sheeran Tour",
+    baseColor: "away-kit alternate base",
+    accentColors: ["royal blue", "white"],
+    pattern: "2026/27 Ipswich Town away shirt"
   })
 ];
 
@@ -793,6 +853,48 @@ const kitSpecs: KitSpec[] = [
     sourceUrls: [
       "https://www.footballkitarchive.com/wolverhampton-wanderers-2025-26-home-kit-365548/"
     ],
+    confidence: "low"
+  },
+  {
+    teamId: "notts-county",
+    team: "Notts County",
+    season: "2026/27",
+    variant: "home",
+    manufacturer: "Puma",
+    mainSponsor: "John Pye Auctions",
+    sleeveSponsor: undefined,
+    baseColor: "black and white stripes",
+    accentColors: ["black", "white"],
+    pattern: "classic black and white vertical stripes",
+    collar: "unknown",
+    cuffs: "unknown",
+    crestPlacement: "unknown",
+    sponsorPlacement: "unknown",
+    shorts: "black",
+    socks: "white",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/notts-county/home.jpg",
+    sourceUrls: [],
+    confidence: "low"
+  },
+  {
+    teamId: "notts-county",
+    team: "Notts County",
+    season: "2026/27",
+    variant: "away",
+    manufacturer: "Puma",
+    mainSponsor: "John Pye Auctions",
+    sleeveSponsor: undefined,
+    baseColor: "away-kit alternate base",
+    accentColors: ["black"],
+    pattern: "alternate away kit",
+    collar: "unknown",
+    cuffs: "unknown",
+    crestPlacement: "unknown",
+    sponsorPlacement: "unknown",
+    shorts: "unknown",
+    socks: "unknown",
+    referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/notts-county/away.jpg",
+    sourceUrls: [],
     confidence: "low"
   }
 ];

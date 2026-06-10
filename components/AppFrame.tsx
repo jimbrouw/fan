@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { NotificationBell } from "@/components/NotificationBell";
+
 import { AccountButton } from "@/components/AccountButton";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
   return (

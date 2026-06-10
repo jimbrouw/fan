@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { BadgeCheck, ImagePlus, WandSparkles, Zap } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -39,6 +40,7 @@ const teamGroupOrder: TeamGroup[] = [
   "International Giants",
   "International",
   "EFL League One",
+  "EFL League Two",
   "Custom"
 ];
 const teamOrderByGroup: Partial<Record<TeamGroup, string[]>> = {
@@ -76,21 +78,22 @@ const teamOrderByGroup: Partial<Record<TeamGroup, string[]>> = {
     "newcastle",
     "aston-villa",
     "nottingham-forest",
-    "west-ham",
     "everton",
     "leeds",
     "brighton",
     "crystal-palace",
     "fulham",
     "brentford",
-    "wolves",
     "sunderland",
-    "burnley",
-    "bournemouth"
+    "bournemouth",
+    "coventry",
+    "ipswich",
+    "hull"
   ],
   "International Giants": ["real-madrid", "barcelona", "bayern-munich"],
   International: ["england"],
   "EFL League One": ["mansfield"],
+  "EFL League Two": ["notts-county"],
   Custom: [customTeamId]
 };
 
@@ -117,6 +120,16 @@ function buildOrderedTeamGroups<T extends (typeof teamProfiles)[number]>(teams: 
     .map((group) => [group, [...grouped[group]].sort((a, b) => compareTeamsWithinGroup(group, a, b))] as const);
 }
 
+function getVisibleKitVariantsForTeam(teamId: string) {
+  if (!teamId || teamId === customTeamId) return visibleKitVariants;
+  const team = getTeamProfile(teamId);
+  const isInternational = team.group === "World Cup 2026" || team.group === "International";
+  return visibleKitVariants.filter((v) => {
+    if (isInternational && (v.id === "away" || v.id === "retro")) return false;
+    return true;
+  });
+}
+
 function getOpponentUploadErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "";
 
@@ -133,61 +146,27 @@ function getOpponentUploadErrorMessage(error: unknown) {
 
 function PosterStylePreview({
   styleId,
-  primary,
-  accent,
 }: {
   styleId: string;
   primary: string;
   accent: string;
 }) {
-  const baseStyle = {
-    "--preview-primary": primary,
-    "--preview-accent": accent,
-  } as CSSProperties;
-
-  if (styleId === "matchday") {
-    return (
-      <div
-        className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-white/60 bg-[linear-gradient(115deg,var(--preview-primary)_0_48%,var(--preview-accent)_52%_100%)]"
-        style={baseStyle}
-        aria-hidden="true"
-      >
-        <div className="absolute inset-y-0 left-1/2 w-px bg-white/70" />
-        <div className="absolute left-2 top-2 h-10 w-7 rounded-full bg-white/75 shadow-sm" />
-        <div className="absolute bottom-2 right-2 h-10 w-7 rounded-full bg-white/75 shadow-sm" />
-        <div className="absolute inset-0 grid place-items-center">
-          <span className="rounded-full bg-white/90 px-2 py-1 text-[10px] font-black leading-none text-[var(--foreground)] shadow-sm">
-            VS
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  if (styleId === "player-reveal") {
-    return (
-      <div
-        className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-white/60 bg-[radial-gradient(circle_at_50%_20%,white_0_14%,transparent_38%),linear-gradient(135deg,var(--preview-primary),var(--preview-accent))]"
-        style={baseStyle}
-        aria-hidden="true"
-      >
-        <div className="absolute inset-x-0 bottom-0 h-7 bg-white/25" />
-        <div className="absolute left-1/2 top-4 h-14 w-10 -translate-x-1/2 rounded-t-full bg-white/85 shadow-sm" />
-        <div className="absolute bottom-2 left-2 h-7 w-5 rounded-t-full bg-white/70" />
-        <div className="absolute bottom-2 right-2 h-7 w-5 rounded-t-full bg-white/70" />
-      </div>
-    );
-  }
+  const imageUrl =
+    styleId === "matchday"
+      ? "/style-matchday.png"
+      : styleId === "player-reveal"
+      ? "/style-player-reveal.png"
+      : "/style-hero-card.png";
 
   return (
-    <div
-      className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-white/60 bg-[linear-gradient(145deg,white_0_18%,var(--preview-primary)_19%_66%,var(--preview-accent)_67%_100%)]"
-      style={baseStyle}
-      aria-hidden="true"
-    >
-      <div className="absolute inset-2 rounded-[8px] border border-white/75" />
-      <div className="absolute left-1/2 top-3 h-12 w-9 -translate-x-1/2 rounded-t-full bg-white/85 shadow-sm" />
-      <div className="absolute bottom-3 left-3 right-3 h-3 rounded-full bg-white/80" />
+    <div className="relative aspect-[3/4] overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-soft)]">
+      <Image
+        src={imageUrl}
+        alt="Poster style preview"
+        fill
+        sizes="(max-width: 640px) 50vw, 33vw"
+        className="object-cover"
+      />
     </div>
   );
 }
@@ -272,6 +251,22 @@ export default function CreatePage() {
     }
   }
   const [isRetryingUploads, setIsRetryingUploads] = useState(false);
+
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    const validVariants = getVisibleKitVariantsForTeam(selectedTeamId);
+    if (!validVariants.some((v) => v.id === kitVariant)) setKitVariant("home");
+  }, [selectedTeamId, kitVariant]);
+
+  useEffect(() => {
+    const validHomeVariants = getVisibleKitVariantsForTeam(homeTeamId);
+    if (!validHomeVariants.some((v) => v.id === homeKitVariant)) setHomeKitVariant("home");
+  }, [homeTeamId, homeKitVariant]);
+
+  useEffect(() => {
+    const validAwayVariants = getVisibleKitVariantsForTeam(awayTeamId);
+    if (!validAwayVariants.some((v) => v.id === awayKitVariant)) setAwayKitVariant("home");
+  }, [awayTeamId, awayKitVariant]);
 
 
   const selectedTeam = getTeamProfile(selectedTeamId);
@@ -703,7 +698,7 @@ export default function CreatePage() {
                     </select>
                   </label>
                   <div className="grid grid-cols-3 gap-1">
-                    {visibleKitVariants.map((v) => (
+                    {getVisibleKitVariantsForTeam(homeTeamId).map((v) => (
                       <button key={v.id} type="button" onClick={() => setHomeKitVariant(v.id)}
                         className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
                           homeKitVariant === v.id
@@ -739,7 +734,7 @@ export default function CreatePage() {
                     </select>
                   </label>
                   <div className="grid grid-cols-3 gap-1">
-                    {visibleKitVariants.map((v) => (
+                    {getVisibleKitVariantsForTeam(awayTeamId).map((v) => (
                       <button key={v.id} type="button" onClick={() => setAwayKitVariant(v.id)}
                         className={`h-9 rounded-[10px] border text-xs font-semibold transition ${
                           awayKitVariant === v.id
@@ -875,7 +870,7 @@ export default function CreatePage() {
             <fieldset className="space-y-2">
               <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Kit variant</legend>
               <div className="grid grid-cols-3 gap-1.5">
-                {visibleKitVariants.map((v) => (
+                {getVisibleKitVariantsForTeam(selectedTeamId).map((v) => (
                   <button
                     key={v.id}
                     type="button"

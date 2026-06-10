@@ -81,7 +81,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
       let orderId = "download";
 
       if (details?.optionId !== "download") {
-        const response = await fetch("/api/fulfillment/printful", {
+        const response = await fetch("/api/fulfillment/prodigi", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ jobId: details?.jobId, optionId: details?.optionId }),

@@ -110,17 +110,6 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
             Make another poster
           </Link>
 
-          {isPhysicalOrder && (
-            <a
-              href="https://printful.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface-soft)] px-5 text-sm font-bold text-[var(--foreground)] transition duration-300 hover:bg-white active:scale-[0.98]"
-            >
-              View order details
-              <ArrowRight size={15} />
-            </a>
-          )}
         </div>
       </div>
     </section>

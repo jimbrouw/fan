@@ -1,7 +1,7 @@
-import { isPrintfulCardOption, type PrintfulProductOptionId } from "@/lib/fulfillment/printful";
+import { isProdigiCardOption, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
 
 export type CheckoutProduct = {
-  id: PrintfulProductOptionId;
+  id: ProdigiProductOptionId;
   name: string;
   description: string;
   unitAmount: number;
@@ -9,11 +9,11 @@ export type CheckoutProduct = {
   requiresShipping: boolean;
 };
 
-export const checkoutProducts: Record<PrintfulProductOptionId, CheckoutProduct> = {
+export const checkoutProducts: Record<ProdigiProductOptionId, CheckoutProduct> = {
   "fathers-day-card": {
     id: "fathers-day-card",
     name: "Father's Day card",
-    description: "Printed 4x6 greeting card with your Kitface poster on the front.",
+    description: "Printed 7x5 greeting card with your Kitface poster on the front.",
     unitAmount: 799,
     currency: "gbp",
     requiresShipping: true
@@ -21,7 +21,7 @@ export const checkoutProducts: Record<PrintfulProductOptionId, CheckoutProduct> 
   "birthday-card": {
     id: "birthday-card",
     name: "Birthday card",
-    description: "Printed 4x6 greeting card with your Kitface poster on the front.",
+    description: "Printed 7x5 greeting card with your Kitface poster on the front.",
     unitAmount: 799,
     currency: "gbp",
     requiresShipping: true
@@ -44,10 +44,10 @@ export const checkoutProducts: Record<PrintfulProductOptionId, CheckoutProduct> 
   }
 };
 
-export function getCheckoutProduct(optionId: PrintfulProductOptionId) {
+export function getCheckoutProduct(optionId: ProdigiProductOptionId) {
   return checkoutProducts[optionId];
 }
 
-export function isPhysicalCheckoutOption(optionId: PrintfulProductOptionId) {
-  return optionId === "poster" || isPrintfulCardOption(optionId);
+export function isPhysicalCheckoutOption(optionId: ProdigiProductOptionId) {
+  return optionId === "poster" || isProdigiCardOption(optionId);
 }

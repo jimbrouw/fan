@@ -1,4 +1,4 @@
-import type { PrintfulProductOptionId } from "@/lib/fulfillment/printful";
+import type { ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
 import { NextResponse } from "next/server";
 import { getCheckoutProduct } from "@/lib/checkout/products";
 import { getStripe } from "@/lib/stripe/server";
@@ -8,7 +8,7 @@ import { decideOwnedResourceAccess } from "@/lib/authz";
 
 type CheckoutRequest = {
   jobId?: string;
-  optionId?: PrintfulProductOptionId;
+  optionId?: ProdigiProductOptionId;
   cardMessage?: string;
 };
 
