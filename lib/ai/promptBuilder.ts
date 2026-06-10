@@ -132,7 +132,7 @@ LEFT SIDE: ${matchContext.homeTeam.name}, the HOME side, wearing the ${matchCont
 RIGHT SIDE: ${matchContext.awayTeam.name}, the AWAY side, wearing the ${matchContext.awayTeam.kitVariant} kit.
 Primary reference person [img1] plays for ${userMatchTeam.name}; never apply [img1] to ${opponentMatchTeam.name}.
 ${matchContext.opponentMode === "another-person"
-  ? `Secondary reference person [img2] plays for ${opponentMatchTeam.name}; use [img2] for exactly one opposing feature player only.`
+  ? `Secondary reference person [img2] plays for ${opponentMatchTeam.name}; use [img2] for all opposing players.`
   : "Opposing club players have varied non-reference faces."}
 ${matchdaySection}
 Home kit: ${input.homeKitSpec ? compactMatchKitSpec(input.homeKitSpec, brandPlacementMode) : matchContext.homeTeam.kitNotes}
@@ -155,7 +155,7 @@ Render as a modern football kit with realistic fabric, stitching, and emblems.`;
     ? matchContext.opponentMode === "another-person"
       ? `IDENTITY MANDATE:
 The first person reference [img1] is the selected side person for ${userMatchTeam?.name ?? input.teamProfile.name}.
-The second person reference [img2] is the opposing feature player for ${opponentMatchTeam?.name ?? "the opposition"}.
+The second person reference [img2] is the identity source for all opposing players for ${opponentMatchTeam?.name ?? "the opposition"}.
 Never blend identities, never swap sides, and never apply [img1] to the opposition or [img2] to the selected side.`
       : `IDENTITY MANDATE:
 Every featured ${userMatchTeam?.name ?? input.teamProfile.name} player must match [img1]. Use [img1] only for that side, never the opposition.`
@@ -180,7 +180,7 @@ Preserve the person's recognisable build, age, and identity, but present them ki
 ${matchSection}
 
 COMPOSITION & POSES:
-${isGptImage ? `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one accurate selected-side hero portrait dominate the poster, with one or two smaller selected-side action shots only if identity stays accurate. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} as secondary match context only. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player only, never for the selected-side hero figures." : ""} Do not swap sides.` : `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player." : ""} Do not swap sides.`}`
+${isGptImage ? `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one accurate selected-side hero portrait dominate the poster, with one or two smaller selected-side action shots only if identity stays accurate. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} as secondary match context only. ${matchContext.opponentMode === "another-person" ? "Use [img2] for all opposing players, never for the selected-side hero figures." : ""} Do not swap sides.` : `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for all opposing players." : ""} Do not swap sides.`}`
     : isFootballCardStyle
       ? `Premium photorealistic football player card for ${input.teamProfile.name}, starring [img] as the collectible-card hero.
 
@@ -227,13 +227,13 @@ SELECTED-SIDE HERO:
 Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one clear chest-up hero portrait of [img1] dominate the selected side. Add only one or two smaller selected-side action versions if identity stays accurate. Every selected-side figure must clearly be [img1]. If identity or rendering becomes uncertain, use fewer figures and keep one accurate hero portrait.
 
 OPPOSITION HANDLING:
-Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side as secondary match context. ${matchContext.opponentMode === "another-person" ? "Use [img2] for exactly one opposing feature player only, wearing the opposition kit, positioned clearly on the opposition side. [img2] may have one portrait or action pose, but [img1] remains the main hero. Never use [img2] for selected-side hero figures." : "Use one to three varied anonymous current-squad-style opposition players or named matchday players only when matchday notes allow them. Do not copy [img1] onto opposition players."} Keep opposition figures smaller, less prominent, and visually separated.
+Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side as secondary match context. ${matchContext.opponentMode === "another-person" ? "Use [img2] for all opposing players, wearing the opposition kit, positioned clearly on the opposition side. [img2] may have multiple action poses, but [img1] remains the main hero. Never use [img2] for selected-side hero figures." : "Use one to three varied anonymous current-squad-style opposition players or named matchday players only when matchday notes allow them. Do not copy [img1] onto opposition players."} Keep opposition figures smaller, less prominent, and visually separated.
 
 IDENTITY LOCK:
-Preserve exact recognisable likeness for [img1]: head shape, hairline, eyes, nose, mouth, cheeks, jaw, skin texture, facial hair, age, body type, and natural proportions. Keep [img1] consistent across every selected-side appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but [img1] must still clearly look like the uploaded photo. ${matchContext.opponentMode === "another-person" ? "For [img2], preserve the second person's exact identity on the opposition side only. Never blend [img1] and [img2], never average their faces, and never swap kits or sides." : "Opposition faces must not resemble [img1]."} Do not beautify, de-age, slim, bulk up, average faces with footballers, or replace either uploaded person.
+Preserve exact recognisable likeness for [img1]: head shape, hairline, eyes, nose, mouth, cheeks, jaw, skin texture, facial hair, age, body type, and natural proportions. Keep [img1] consistent across every selected-side appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but [img1] must still clearly look like the uploaded photo. ${matchContext.opponentMode === "another-person" ? "For [img2], preserve the second person's exact identity for all players on the opposition side. Never blend [img1] and [img2], never average their faces, and never swap kits or sides." : "Opposition faces must not resemble [img1]."} Do not beautify, de-age, slim, bulk up, average faces with footballers, or replace either uploaded person.
 
 REFERENCE PRIORITY:
-The first attached person image is [img1], the selected-side identity source. ${matchContext.opponentMode === "another-person" ? "The second attached person image is [img2], the opposing feature-player identity source. " : ""}Kit reference images are clothing only. Never borrow faces, bodies, poses, or lighting from kit images. Identity accuracy wins over poster style.
+The first attached person image is [img1], the selected-side identity source. ${matchContext.opponentMode === "another-person" ? "The second attached person image is [img2], the identity source for all opposing players. " : ""}Kit reference images are clothing only. Never borrow faces, bodies, poses, or lighting from kit images. Identity accuracy wins over poster style.
 
 PHOTO ENHANCEMENT:
 If uploaded photos have heavy shadows, dull expression, uneven exposure, tired eyes, harsh phone-camera lighting, or flat indoor light, improve naturally: lift shadows, even skin lighting, brighten eyes, correct exposure, and keep natural skin texture. Do not change age, face shape, nose, eyes, jaw, facial hair, or body type.
