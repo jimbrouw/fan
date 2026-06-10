@@ -108,3 +108,15 @@ VS generation fix, 2026-06-10:
   - Latest production deployment: https://kitface-btheeedqp-jims-projects-b7cb6c2e.vercel.app
   - Inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/5NKyeeeFjGEqnyxz4EGSQgE23ZHt
 - `curl -I https://app.kitface.app` returned `HTTP/2 200` after deployment.
+
+Personalisation safety filter, 2026-06-10:
+
+- Added `lib/safety/profanity.ts` to block unsafe shirt names and slogans before they reach poster prompts. The NSFW terms are base64-encoded in code and documented in `docs/content-safety.md` without printing the explicit words.
+- The filter normalizes casing, punctuation, spacing, simple leetspeak, and symbol obfuscation.
+- `/api/generate` enforces the filter server-side and returns a neutral `unsafe_personalisation` error. `/create` also checks locally and shows: "That wording can't be used on a Kitface poster."
+- Verification passed: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `git diff --check`.
+- Deployed to production:
+  - Live app: https://app.kitface.app
+  - Latest production deployment: https://kitface-qfh15vgj3-jims-projects-b7cb6c2e.vercel.app
+  - Inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/8kfURkxY136JVhVeVUfxADKeUy4j
+- `curl -I https://app.kitface.app` returned `HTTP/2 200` after deployment.

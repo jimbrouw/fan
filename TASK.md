@@ -41,6 +41,10 @@
   - Live app: https://app.kitface.app
   - Latest production deployment: https://kitface-btheeedqp-jims-projects-b7cb6c2e.vercel.app
   - Deployment inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/5NKyeeeFjGEqnyxz4EGSQgE23ZHt
+- Added and deployed personalisation safety filtering for shirt names and slogans. The filter blocks encoded NSFW abusive/sexual/extremist/violent/tragedy-abuse terms server-side and shows a neutral user-facing message.
+  - Live app: https://app.kitface.app
+  - Latest production deployment: https://kitface-qfh15vgj3-jims-projects-b7cb6c2e.vercel.app
+  - Deployment inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/8kfURkxY136JVhVeVUfxADKeUy4j
 
 ## Next
 
@@ -62,9 +66,10 @@
 9. ✅ Partly done — Stripe Apple Pay payment works for digital download and payment reached Stripe. Still confirm download delivery/email link and any credits flow separately if credits are still sold.
 10. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
 11. Retest VS mode on production after the 2K/prompt simplification deploy.
-12. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
-13. Live camera walkthrough on real phone on secure URL.
-14. Add a retention job/window for old private capture objects. Bucket privacy and signed provider URLs are implemented.
+12. Extend text safety filtering to custom team name, custom kit notes, match notes, and correction prompts if those fields become user-visible in output.
+13. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
+14. Live camera walkthrough on real phone on secure URL.
+15. Add a retention job/window for old private capture objects. Bucket privacy and signed provider URLs are implemented.
 17. Decide: keep CSS hero poster preview or replace with real generated image.
 19. Configure Vercel Rolling Releases for production canaries after upgrading the Vercel plan to Pro or Enterprise; current plan returns 403 for Rolling Releases.
 
