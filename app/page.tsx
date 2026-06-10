@@ -34,8 +34,8 @@ export default function Home() {
           <div className="relative mx-auto w-[82%] rotate-[-3deg] min-[390px]:w-[88%]">
             <div className="overflow-hidden rounded-[18px] border border-white/80 bg-[var(--surface)] shadow-[0_32px_64px_rgba(42,0,79,0.22)]">
               <Image
-                src="/kitface-hero-poster-test.jpg"
-                alt="Example Kitface poster showing a middle-aged dad as the football poster hero"
+                src="/hero-image.png"
+                alt="Kitface poster hero"
                 width={853}
                 height={1280}
                 className="max-h-[43vh] w-full object-cover object-top min-[390px]:max-h-none"
