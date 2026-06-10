@@ -2,11 +2,11 @@ import type Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { getCheckoutProduct, isPhysicalCheckoutOption } from "@/lib/checkout/products";
 import {
-  PrintfulFulfillmentProvider,
-  readPrintfulProductConfig,
-  type PrintfulProductOptionId,
-  type PrintfulRecipient
-} from "@/lib/fulfillment/printful";
+  ProdigiFulfillmentProvider,
+  readProdigiProductConfig,
+  type ProdigiProductOptionId,
+  type ProdigiRecipient
+} from "@/lib/fulfillment/prodigi";
 import { sendTransactionalEmail } from "@/lib/notifications";
 import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -71,7 +71,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   const jobId = session.metadata?.jobId;
-  const optionId = session.metadata?.optionId as PrintfulProductOptionId | undefined;
+  const optionId = session.metadata?.optionId as ProdigiProductOptionId | undefined;
   const cardMessage = session.metadata?.cardMessage?.trim() || null;
 
   if (!jobId || !optionId) {
@@ -131,19 +131,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     throw new Error("Only completed jobs with an output image can be fulfilled.");
   }
 
-  const recipient = buildPrintfulRecipient(session);
-  const config = readPrintfulProductConfig(optionId);
-  const provider = new PrintfulFulfillmentProvider();
-  const order = await provider.createDraftOrder({
+  const recipient = buildProdigiRecipient(session);
+  const config = readProdigiProductConfig(optionId);
+  const provider = new ProdigiFulfillmentProvider();
+  const order = await provider.createOrder({
     externalId: `kitface-${optionId}-${job.id}-${session.id}`,
     recipient,
-    catalogVariantId: config.catalogVariantId,
-    printFileUrl: job.output_url,
-    placement: config.placement,
-    technique: config.technique
+    sku: config.sku,
+    printReadyImageURL: job.output_url
   });
 
   await markOrderFulfilled(supabase, session.id, String(order.id));
+  await sendPrintFulfillmentEmail(supabase, session, job.id, optionId);
 }
 
 async function handleCreditsPurchase(session: Stripe.Checkout.Session) {
@@ -277,8 +276,47 @@ async function sendDownloadFulfillmentEmail(
   }
 }
 
-function buildPrintfulRecipient(session: Stripe.Checkout.Session): PrintfulRecipient {
-  const shipping = session.collected_information?.shipping_details;
+async function sendPrintFulfillmentEmail(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  session: Stripe.Checkout.Session,
+  jobId: string,
+  optionId: string
+) {
+  const to = await resolveCheckoutEmail(supabase, session);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kitface-app.vercel.app";
+  const resultUrl = `${appUrl}/result/${jobId}`;
+  const productName = optionId === "poster" ? "A3 Poster" : "Greeting Card";
+
+  if (!to) return;
+
+  try {
+    await sendTransactionalEmail({
+      to,
+      subject: "We're printing your Kitface order!",
+      text: `We've received your order for a printed ${productName}. It is currently being processed by our print partner. You will receive another email with tracking information once it has shipped.\n\nView your poster: ${resultUrl}`,
+      html: `
+        <div style="margin:0;padding:24px;background:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1C1936;">
+          <div style="max-width:480px;margin:0 auto;background:#fff;border:1px solid #E4E4E7;border-radius:20px;overflow:hidden;">
+            <div style="padding:28px 24px;background:#1C1936;color:#fff;text-align:center;">
+              <h1 style="margin:0;font-size:26px;line-height:1.2;">Kitface</h1>
+              <p style="margin:6px 0 0;color:#31F0D5;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">Order Received</p>
+            </div>
+            <div style="padding:28px 24px;text-align:center;">
+              <h2 style="margin:0 0 10px;font-size:22px;line-height:1.25;">Your ${productName} is being printed.</h2>
+              <p style="margin:0 0 22px;color:#69697A;font-size:14px;line-height:1.6;">We've sent your order to our print partner. You'll receive another email with tracking information as soon as it ships.</p>
+              <a href="${resultUrl}" style="display:inline-block;background:#00CDAC;color:#1C1936;text-decoration:none;font-weight:800;font-size:15px;padding:14px 28px;border-radius:14px;">View Poster</a>
+            </div>
+          </div>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Print fulfillment email failed:", error instanceof Error ? error.message : error);
+  }
+}
+
+function buildProdigiRecipient(session: Stripe.Checkout.Session): ProdigiRecipient {
+  const shipping = session.collected_information?.shipping_details || (session as any).shipping_details;
   const address = shipping?.address;
 
   if (!shipping?.name || !address?.line1 || !address.city || !address.country || !address.postal_code) {
@@ -287,13 +325,13 @@ function buildPrintfulRecipient(session: Stripe.Checkout.Session): PrintfulRecip
 
   return {
     name: shipping.name,
-    address1: address.line1,
-    address2: address.line2 ?? undefined,
+    addressLine1: address.line1,
+    addressLine2: address.line2 ?? undefined,
     city: address.city,
-    state_code: address.state ?? undefined,
-    country_code: address.country,
-    zip: address.postal_code,
-    phone: session.customer_details?.phone ?? undefined,
+    stateOrCounty: address.state ?? undefined,
+    countryCode: address.country,
+    postalOrZipCode: address.postal_code,
+    phoneNumber: session.customer_details?.phone ?? undefined,
     email: session.customer_details?.email ?? undefined
   };
 }

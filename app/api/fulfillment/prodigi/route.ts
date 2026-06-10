@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { PrintfulFulfillmentProvider, readPrintfulDraftOrderConfig, type PrintfulProductOptionId } from "@/lib/fulfillment/printful";
+import { ProdigiFulfillmentProvider, readProdigiDraftOrderConfig, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
 import { decideOwnedResourceAccess } from "@/lib/authz";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type FulfillmentRequest = {
   jobId?: string;
-  optionId?: PrintfulProductOptionId;
+  optionId?: ProdigiProductOptionId;
 };
 
 type JobRow = {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     if (body.optionId === "download") {
-      return NextResponse.json({ error: "Download orders do not use Printful fulfillment." }, { status: 400 });
+      return NextResponse.json({ error: "Download orders do not use Prodigi fulfillment." }, { status: 400 });
     }
 
     const supabase = createServerSupabaseClient();
@@ -79,31 +79,29 @@ export async function POST(request: Request) {
     }
 
     if (job.status !== "completed" || !job.output_url) {
-      return NextResponse.json({ error: "Only completed jobs with an output image can be sent to Printful." }, { status: 409 });
+      return NextResponse.json({ error: "Only completed jobs with an output image can be sent to Prodigi." }, { status: 409 });
     }
 
-    const config = readPrintfulDraftOrderConfig(body.optionId ?? "fathers-day-card");
-    const provider = new PrintfulFulfillmentProvider();
-    const order = await provider.createDraftOrder({
+    const config = readProdigiDraftOrderConfig(body.optionId ?? "fathers-day-card");
+    const provider = new ProdigiFulfillmentProvider();
+    const order = await provider.createOrder({
       externalId: `kitface-${body.optionId ?? "fathers-day-card"}-${job.id}`,
       recipient: config.recipient,
-      catalogVariantId: config.catalogVariantId,
-      printFileUrl: job.output_url,
-      placement: config.placement,
-      technique: config.technique
+      sku: config.sku,
+      printReadyImageURL: job.output_url
     });
 
     return NextResponse.json({
-      provider: "printful",
+      provider: "prodigi",
       productType: config.productType,
       orderId: String(order.id),
-      status: order.status ?? "draft"
+      status: order.status ?? "Created"
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Printful fulfillment failed.";
+    const message = error instanceof Error ? error.message : "Prodigi fulfillment failed.";
     const isSetupError =
-      message.includes("PRINTFUL_") ||
-      message.includes("Printful test recipient") ||
+      message.includes("PRODIGI_") ||
+      message.includes("Prodigi test recipient") ||
       message.includes("must be configured");
 
     return NextResponse.json(
