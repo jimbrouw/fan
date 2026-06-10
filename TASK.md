@@ -22,13 +22,25 @@
 - Reduced the active capture flow to two photos and verified live that the app no longer asks for six captures.
 - Verified live free-tier enforcement with a non-exempt user: after 3 generations, the app reached the out-of-credits/paywall state.
 - Verified this commit with `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
+- Added 50k-user rollout safety assets: PR readiness CI, required AI architecture review gate, `/api/health` liveness/deep health endpoint, and `docs/production-readiness-50k.md` canary runbook.
+- Tightened capture privacy plumbing: the Supabase capture bucket is now configured private, uploaded captures are stored as `supabase://bucket/path` references, provider/UI access uses short-lived signed URLs, and restored capture sessions re-sign URLs through an owner-checked API route.
+- Result downloads now request the watermarked image route as an attachment, and WhatsApp sharing builds the image URL from `NEXT_PUBLIC_APP_URL` instead of localhost.
+- Enabled GitHub branch protection for `main` on `jimbrouw/fan` requiring `quality gate` and `AI architecture review`, one approving review, stale-review dismissal, conversation resolution, and admin enforcement.
+- Added `KITFACE_HEALTH_CHECK_SECRET` to Vercel Production and the `feat/football-waiting-messages` Preview branch.
+- Tuned poster prompts so repeated same-person figures ask for more silly, memeable emotional variety while preserving identity: grin, roaring joy, badge-kiss pride/love, wild happiness, and comic mock-anger.
+- Fixed MuAPI provider failure handling for image jobs: transient status-check failures no longer become terminal failed jobs, failed internal-provider states now show a clearer retry path, and normal `/create` jobs now submit GPT Image 2 at `final-2k-high` instead of unstable `final-4k-high`.
+- Deployed the current verified build to Vercel Production with CLI `54.11.0`.
+  - Live app: https://app.kitface.app
+  - Latest production deployment: https://kitface-5e5qeu6wp-jims-projects-b7cb6c2e.vercel.app
+  - Deployment inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/BF9nkMJjkcWNjaqPWHMGsmJANvVL
+- Completed the must-fix Kitface design review pass from `designer.md`: clearer homepage flow, small-phone hero poster proof, simpler `/create` required path, recoverable failed-generation/result copy, safer upgrade/download wording, customer-facing order success copy, CTA label cleanup, and visible focus/disabled-state guidance.
 
 ## Next
 
 ### UI fixes (high priority — broken or confusing)
-1. **Fix kit preview on homepage** — kit preview graphic is broken; replace abstract icon with a working visual that matches the electric football broadcast look.
+1. **Retest completed result and checkout with real jobs** — the design pass improved copy and layout, but completed-result, paid-download, and physical-order success states still need authenticated live-job verification.
 2. **Fix camera layout on iPhone** — `/capture` is too tall for phone screens and layout jumps as state changes. Pin shutter button to bottom, lock viewport height, prevent scroll, keep controls stable throughout capture → retake → use-photo flow.
-3. **Simplify onboarding** — flow must be understandable to a first-timer with no context. Audit every screen for jargon, reduce steps, add plain-language labels and hints. Target: a 6-year-old could follow it.
+3. **Continue onboarding polish** — the homepage and `/create` are clearer, but the full signed-in flow still needs real-device review for first-time users.
 
 ### Notifications
 4. **Pick email provider and wire up** — no provider chosen yet. Options: Resend (simple, good Next.js DX), SendGrid, Postmark. Pick one, add API key to env, send a real completion email when generation finishes. Hook into existing notification record insert.
@@ -36,7 +48,7 @@
 
 ### Analytics
 6. **Add generation analytics** — log each poster generation to an analytics table or service: user id, team, model, kit variant, timestamp, success/fail. Goal: know which teams and modes get used. Options: Supabase table (already available) or Vercel Analytics + custom events. Use Supabase table first — no extra service needed.
-7. **User history page** — Google login exists; add a `/history` page showing the logged-in user's past generations with thumbnail, team, and date. Data already in `generation_jobs` table filtered by `user_id`.
+7. **Keep an eye on MuAPI reliability** — new production jobs should now use `final-2k-high`; confirm the next Mexico/Star Player retry submits `resolution: "2K"` and not `"4K"`.
 
 ### Existing backlog
 8. Test end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
@@ -45,15 +57,17 @@
 11. Smoke test VS mode with uploaded opponent photo.
 12. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
 13. Live camera walkthrough on real phone on secure URL.
-14. Tighten photo privacy: private Supabase bucket, signed URLs to providers, retention window.
-15. Fix result downloads to include Kitface watermark overlay.
-16. Fix WhatsApp sharing to use public URL, not localhost.
+14. Add a retention job/window for old private capture objects. Bucket privacy and signed provider URLs are implemented.
 17. Decide: keep CSS hero poster preview or replace with real generated image.
+19. Configure Vercel Rolling Releases for production canaries after upgrading the Vercel plan to Pro or Enterprise; current plan returns 403 for Rolling Releases.
 
 ## Blockers
 
 - Live generation verification depends on valid `.env.local` credentials and provider access.
+- Existing failed MUAPI jobs remain failed; the user must start a new generation to pick up the deployed `final-2k-high` setting.
 - The live Supabase schema/credits migration has been applied successfully. Remaining DB-dependent work should now be verified against live behavior rather than blocked on schema drift.
 - Live team-news verification depends on `FOOTBALL_DATA_API_KEY`; without it, the API intentionally falls back to team-only notes.
 - Real camera verification needs a secure device/browser path when testing outside localhost.
 - Printful verification requires valid Printful credentials and a confirmed catalog variant mapping.
+- Vercel Rolling Releases are blocked by the current plan; Vercel CLI reports Pro or Enterprise is required.
+- `KITFACE_HEALTH_CHECK_SECRET` values generated by CLI are write-only in Vercel. For external monitoring, rotate Production/Preview to a user-owned known value and configure the monitor with that same token.

@@ -29,7 +29,7 @@ const upgradeOptions: UpgradeOption[] = [
     price: "£7.99",
     icon: Gift,
     description: "A printed birthday card with their Kitface poster on the front.",
-    includes: ["Printful Greeting Card 4x6", "Printed front design", "Add a custom message"],
+    includes: ["Printed greeting card", "Poster on the front", "Add a custom message"],
   },
   {
     id: "fathers-day-card",
@@ -37,7 +37,7 @@ const upgradeOptions: UpgradeOption[] = [
     price: "£7.99",
     icon: Gift,
     description: "A printed Father's Day card with their Kitface poster on the front.",
-    includes: ["Printful Greeting Card 4x6", "Printed front design", "Add a custom message"],
+    includes: ["Printed greeting card", "Poster on the front", "Add a custom message"],
     badge: "Best gift",
   },
   {
@@ -45,8 +45,8 @@ const upgradeOptions: UpgradeOption[] = [
     name: "Download — no watermark",
     price: "£3.99",
     icon: Download,
-    description: "Full-resolution private file, yours to keep and share forever.",
-    includes: ["High-res file", "No Kitface watermark", "Private download link"],
+    description: "Full-resolution file with no Kitface watermark.",
+    includes: ["High-res file", "No Kitface watermark", "Download link for your order"],
   },
   {
     id: "poster",
@@ -165,7 +165,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
               key={option.id}
               type="button"
               onClick={() => setSelectedOptionId(option.id)}
-              className={`w-full rounded-[18px] border p-4 text-left transition ${
+              className={`w-full rounded-[18px] border p-4 text-left transition focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${
                 selected
                   ? "border-[var(--accent)] bg-[var(--surface-soft)] shadow-[0_14px_34px_rgba(42,0,79,0.08)]"
                   : "border-[var(--line)] bg-[var(--surface)] hover:bg-white"
@@ -222,7 +222,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           {isRedirecting ? "Processing..." : `Checkout — ${selectedOption.price}`}
         </Button>
         <p className="text-xs leading-5 text-[var(--muted)]">
-          Secure checkout. Cards and posters are registered as Printful draft orders; downloads are sent as private links.
+          Secure checkout. Printed items are prepared after payment. Downloads are sent to your email.
         </p>
         {status && <p className="text-xs font-semibold leading-5 text-[var(--foreground)]">{status}</p>}
       </div>

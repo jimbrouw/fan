@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, RotateCcw, Bell, Mail, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, LoaderCircle, RotateCcw, Bell, Mail, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/Button";
@@ -151,28 +151,39 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
   return (
     <section className="flex flex-1 flex-col justify-center gap-7 pb-4 text-center">
       <div className="mx-auto grid size-24 place-items-center rounded-full bg-[var(--surface-soft)]/70">
-        <LoaderCircle size={42} className="animate-spin text-[var(--accent)]" />
+        {job.status === "failed" ? (
+          <AlertTriangle size={42} className="text-[var(--accent)]" />
+        ) : (
+          <LoaderCircle size={42} className="animate-spin text-[var(--accent)]" />
+        )}
       </div>
       
       <div className="space-y-3">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Creating now</p>
-        <h1 className="font-display text-[44px] leading-none text-[var(--foreground)]">Making your poster.</h1>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">
+          {job.status === "failed" ? "Needs another try" : "Creating now"}
+        </p>
+        <h1 className="font-display text-[44px] leading-none text-[var(--foreground)]">
+          {job.status === "failed" ? "Your poster needs another try." : "Making your poster."}
+        </h1>
         <p className="mx-auto max-w-[19rem] text-base leading-6 text-[var(--muted)]">
-          Keep this page open, or choose a notification for when it is ready.
+          {job.status === "failed"
+            ? "The image service hit an internal error. Try again with the same photos."
+            : "Keep this page open, or choose a notification for when it is ready."}
         </p>
         <p className="text-xs leading-5 text-[var(--muted)]">
           Your poster is {job.status ?? "processing"}.
         </p>
       </div>
 
-      {/* Waiting panel */}
-      <div className="rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/65 px-5 py-5 text-center">
-        <p className="text-3xl" aria-hidden="true">{waitingMessage.emoji}</p>
-        <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">{waitingMessage.text}</p>
-        <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-          Sit tight — you&apos;ll be redirected automatically.
-        </p>
-      </div>
+      {job.status !== "failed" && (
+        <div className="rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/65 px-5 py-5 text-center">
+          <p className="text-3xl" aria-hidden="true">{waitingMessage.emoji}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">{waitingMessage.text}</p>
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+            Sit tight — you&apos;ll be redirected automatically.
+          </p>
+        </div>
+      )}
 
       {/* Notification Toggle Panel */}
       <div className="rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/65 p-4 text-left">
@@ -230,7 +241,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         <div className="space-y-4">
           <p className="text-sm leading-6 text-[var(--muted)]">{job.error ?? "The poster could not be made."}</p>
           <Button type="button" variant="secondary" onClick={() => router.push("/create")}>
-            Try Again
+            Try again with same photos
           </Button>
         </div>
       )}

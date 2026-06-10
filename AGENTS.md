@@ -9,13 +9,15 @@
 - VS posters rely on home/away team ids, kit variants, optional second-person `opponent_front` capture, and strict prompt separation between `[img1]` and `[img2]`.
 - Kitface sponsor experiment is branch-scoped and toggleable. `KITFACE_BRAND_PLACEMENT_MODE=kitface` asks prompts to replace main chest sponsors with exact `kitface.app` text and add subtle pitch-side LED boards; unset/anything else keeps original sponsors.
 - Auth/session code uses Supabase SSR cookie-aware clients. Some runtime fallbacks support older local Supabase schemas, but the real fix is applying `supabase/schema.sql`.
-- Strong “private photos” claims are not allowed until capture storage moves to private buckets and short-lived provider URLs. Use softer wording like “Used for posters.”
+- Capture storage privacy plumbing is implemented in code: private Supabase capture bucket, `supabase://bucket/path` DB references, signed provider/UI URLs, and owner-checked re-signing for restored sessions. Keep privacy copy precise and do not overclaim beyond the implemented storage behavior.
 - Localhost-only test controls such as `Regenerate test` are acceptable for iteration but should not appear on deployed production hosts.
 - Generated reference extraction output belongs in `design-extract-output/` and must stay ignored.
 - Generated demo prompt output belongs in `Prompts-vs/` and `test-images/` and must stay ignored.
+- `designer.md` is the current paid-traffic design review source of truth; the must-fix copy/UX pass was implemented on June 10, 2026, but completed-result/checkout states still need authenticated live-job QA.
 - Standard verification commands: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
 - Vercel Deployment Link constraint: ALWAYS provide the Vercel link when summarizing deployments, pushing commits, or completing sessions.
-  - Production URL: https://kitface-app.vercel.app
+  - Production URL: https://app.kitface.app
+  - Latest production deployment: https://kitface-5e5qeu6wp-jims-projects-b7cb6c2e.vercel.app
   - Active Branch Preview URL: https://kitface-app-git-feat-football-waiting-messages-jimbrouws-projects.vercel.app
 
 

@@ -377,6 +377,19 @@ export default function CreatePage() {
   const hasOpponentImage = !needsOpponentImage || Boolean(opponentImageUrl);
   const hasAnyCapture = captures.some((c) => c.objectUrl || c.imageUrl);
   const canSubmit = !isRetryingUploads && hasTeamSelected && teamName && kitNotes && posterStyleId && hasUsableSourceImage && sessionId && hasValidMatch && hasOpponentImage;
+  const missingSubmitReason = isRetryingUploads
+    ? "Uploading your photos..."
+    : !hasUsableSourceImage || !sessionId
+      ? "Take photos first."
+      : !hasTeamSelected || !teamName || !kitNotes
+        ? "Choose a kit first."
+        : !posterStyleId
+          ? "Choose a poster style."
+          : !hasValidMatch
+            ? "Choose two different teams."
+            : !hasOpponentImage
+              ? "Add the opponent photo."
+              : null;
 
   useEffect(() => {
     const sid = localStorage.getItem("fan-hero-session-id");
@@ -495,7 +508,7 @@ export default function CreatePage() {
             teamId: userTeamId,
             posterStyleId,
             model: "gpt-image-2",
-            gptImageTestMode: "final-4k-high",
+            gptImageTestMode: "final-2k-high",
             kitVariant: userKitVariant,
             matchContext,
             teamProfile: {
@@ -645,7 +658,7 @@ export default function CreatePage() {
               <select
                 value={selectedTeamId}
                 onChange={(event) => setSelectedTeamId(event.target.value)}
-                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
               >
                 <option value="" disabled className="bg-[var(--surface)] text-[var(--muted)]">World Cup teams</option>
                 {groupedTeams
@@ -827,7 +840,7 @@ export default function CreatePage() {
                   onChange={(event) => setMatchdayNotes(event.target.value)}
                   maxLength={420}
                   placeholder="First home game of the season. Unforgettable."
-                  className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
+                  className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
                 />
                 <p className="text-xs leading-5 text-[var(--muted)]">
                   {matchdayNotes.length}/420
@@ -841,7 +854,7 @@ export default function CreatePage() {
                 disabled={isFetchingTeamNews}
                 className="w-full"
               >
-                {isFetchingTeamNews ? "Checking team news..." : "Use latest squad data"}
+                {isFetchingTeamNews ? "Checking team news..." : "Add squad context"}
               </Button>
 
               {teamNewsError && (
@@ -946,54 +959,6 @@ export default function CreatePage() {
             })}
           </div>}
 
-          <label className="block space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Shirt name</span>
-            <input
-              value={shirtName}
-              onChange={(event) => setShirtName(event.target.value)}
-              maxLength={20}
-              placeholder="Your name on the back (e.g. JONES)"
-              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
-            />
-            <p className="text-xs leading-5 text-[var(--muted)]">Optional. Appears on the back of the shirt in the poster.</p>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Team slogan</span>
-            <input
-              value={teamSlogan}
-              onChange={(event) => setTeamSlogan(event.target.value)}
-              maxLength={40}
-              placeholder={`e.g. Toon Army, You Reds, Come On You Spurs`}
-              className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
-            />
-            <p className="text-xs leading-5 text-[var(--muted)]">Optional. A chant or slogan woven subtly into the poster scene.</p>
-          </label>
-
-          <div className="space-y-3">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={usesMobilityAid}
-                onChange={(e) => setUsesMobilityAid(e.target.checked)}
-                className="mt-0.5 h-4 w-4 flex-shrink-0 rounded accent-[var(--accent)]"
-              />
-              <span className="text-sm leading-5 text-[var(--foreground)]">
-                I use a wheelchair or mobility aid
-                <span className="block text-xs text-[var(--muted)]">Represent me naturally with my mobility aid — no forced standing or running poses.</span>
-              </span>
-            </label>
-            {usesMobilityAid && (
-              <input
-                value={accessibilityNote}
-                onChange={(e) => setAccessibilityNote(e.target.value)}
-                maxLength={80}
-                placeholder="Any extra detail (optional, e.g. electric wheelchair)"
-                className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)]"
-              />
-            )}
-          </div>
-
           <fieldset className="space-y-2">
             <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster style</legend>
             <div className="grid grid-cols-3 gap-2">
@@ -1004,7 +969,7 @@ export default function CreatePage() {
                     key={style.id}
                     type="button"
                     onClick={() => setPosterStyleId(style.id)}
-                    className={`min-w-0 rounded-[14px] border p-1.5 text-left transition active:scale-[0.98] ${
+                    className={`min-w-0 rounded-[14px] border p-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] ${
                       isSelected
                         ? "border-[var(--accent)] bg-[var(--accent)]/12 shadow-[0_10px_24px_rgba(49,240,213,0.18)]"
                         : "border-[var(--line)] bg-[var(--surface)] hover:border-[var(--accent)]/60"
@@ -1025,6 +990,61 @@ export default function CreatePage() {
               {posterStyles.find((style) => style.id === posterStyleId)?.description}
             </p>
           </fieldset>
+
+          <details className="rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)]/45 p-4">
+            <summary className="cursor-pointer text-sm font-bold text-[var(--foreground)]">
+              Add details
+            </summary>
+            <div className="mt-4 space-y-4">
+              <label className="block space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Shirt name</span>
+                <input
+                  value={shirtName}
+                  onChange={(event) => setShirtName(event.target.value)}
+                  maxLength={20}
+                  placeholder="Your name on the back (e.g. JONES)"
+                  className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                />
+                <p className="text-xs leading-5 text-[var(--muted)]">Optional. Appears on the back of the shirt in the poster.</p>
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Team slogan</span>
+                <input
+                  value={teamSlogan}
+                  onChange={(event) => setTeamSlogan(event.target.value)}
+                  maxLength={40}
+                  placeholder="e.g. Toon Army, You Reds, Come On You Spurs"
+                  className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                />
+                <p className="text-xs leading-5 text-[var(--muted)]">Optional. A chant or slogan woven subtly into the poster scene.</p>
+              </label>
+
+              <div className="space-y-3">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={usesMobilityAid}
+                    onChange={(e) => setUsesMobilityAid(e.target.checked)}
+                    className="mt-0.5 h-5 w-5 flex-shrink-0 rounded accent-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  />
+                  <span className="text-sm leading-5 text-[var(--foreground)]">
+                    Include my wheelchair or mobility aid
+                    <span className="block text-xs text-[var(--muted)]">Show me naturally with it. No forced standing or running poses.</span>
+                  </span>
+                </label>
+                {usesMobilityAid && (
+                  <input
+                    value={accessibilityNote}
+                    onChange={(e) => setAccessibilityNote(e.target.value)}
+                    maxLength={80}
+                    placeholder="Any extra detail (optional, e.g. electric wheelchair)"
+                    className="h-13 w-full rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.55)] focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  />
+                )}
+              </div>
+            </div>
+          </details>
 
 
         </form>
@@ -1050,10 +1070,15 @@ export default function CreatePage() {
           </div>
         )}
 
-        <Button type="button" disabled={!canSubmit || isSubmitting} onClick={submitJob} className="mt-auto w-full">
-          <WandSparkles size={17} />
-          {isSubmitting ? "Creating..." : isRetryingUploads ? "Uploading photos…" : "Create poster"}
-        </Button>
+        <div className="mt-auto space-y-2">
+          {(!canSubmit || isSubmitting) && missingSubmitReason && (
+            <p className="text-center text-xs font-semibold leading-5 text-[var(--muted)]">{missingSubmitReason}</p>
+          )}
+          <Button type="button" disabled={!canSubmit || isSubmitting} onClick={submitJob} className="w-full">
+            <WandSparkles size={17} />
+            {isSubmitting ? "Creating..." : isRetryingUploads ? "Uploading photos..." : "Make poster"}
+          </Button>
+        </div>
       </section>
     </AppFrame>
   );

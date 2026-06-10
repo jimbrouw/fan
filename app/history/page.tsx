@@ -101,15 +101,15 @@ export default function HistoryPage() {
           </button>
         </div>
 
-        {/* Generate New CTA */}
+        {/* Use same photos CTA */}
         <div className="flex items-center justify-between rounded-[18px] bg-[var(--surface-soft)]/50 p-4 border border-[var(--line)]">
           <div>
-            <h3 className="text-sm font-bold text-[var(--foreground)]">Generate a new image</h3>
-            <p className="text-xs text-[var(--muted)]">Make another poster with the same photos.</p>
+            <h3 className="text-sm font-bold text-[var(--foreground)]">Make another poster</h3>
+            <p className="text-xs text-[var(--muted)]">Use your saved photos for another poster.</p>
           </div>
           <Link href="/create">
             <Button className="h-10 text-xs px-4 flex items-center gap-1.5">
-              Generate New
+              Use same photos
               <Sparkles size={13} />
             </Button>
           </Link>
@@ -208,7 +208,7 @@ export default function HistoryPage() {
                             className="flex-1 flex h-8 items-center justify-center gap-1 rounded-[8px] bg-[var(--surface-soft)] border border-[var(--line)] text-[11px] font-bold text-[var(--foreground)] transition hover:border-[var(--accent)] active:scale-[0.98]"
                           >
                             <RefreshCw size={12} />
-                            Retry Create
+                            Try again
                           </button>
                         )}
                       </div>
