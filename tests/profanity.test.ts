@@ -32,3 +32,10 @@ test("personalisation filter reports slogan errors", () => {
   assert.equal(result?.message, "That wording can't be used on a Kitface poster.");
 });
 
+test("personalisation filter reports errors for extended fields", () => {
+  assert.equal(validatePosterPersonalisation({ teamName: "badword fc" })?.field, "teamName");
+  assert.equal(validatePosterPersonalisation({ kitNotes: "add a badword logo" })?.field, "kitNotes");
+  assert.equal(validatePosterPersonalisation({ matchdayNotes: "vs badword" })?.field, "matchdayNotes");
+  assert.equal(validatePosterPersonalisation({ correctionPrompt: "make it badword" })?.field, "correctionPrompt");
+});
+

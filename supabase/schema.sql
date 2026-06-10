@@ -21,6 +21,7 @@ create table if not exists public.user_notification_preferences (
   user_id uuid primary key references auth.users(id) on delete cascade,
   email_enabled boolean not null default true,
   push_enabled boolean not null default false,
+  web_push_subscription jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -105,6 +106,20 @@ create table if not exists public.notifications (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.generation_analytics (
+  id uuid primary key default gen_random_uuid(),
+  generation_job_id uuid not null references public.generation_jobs(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete set null,
+  team_name text,
+  kit_variant text,
+  poster_style text,
+  model text,
+  status text not null check (status in ('processing', 'completed', 'failed')),
+  duration_seconds integer,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists captures_session_id_idx on public.captures(session_id);
 create index if not exists capture_sessions_user_id_idx on public.capture_sessions(user_id);
 create index if not exists generation_jobs_session_id_idx on public.generation_jobs(session_id);
@@ -116,6 +131,8 @@ create index if not exists video_jobs_provider_job_id_idx on public.video_jobs(p
 create index if not exists purchase_orders_generation_job_id_idx on public.purchase_orders(generation_job_id);
 create index if not exists credit_purchases_user_id_idx on public.credit_purchases(user_id);
 create index if not exists notifications_user_id_created_at_idx on public.notifications(user_id, created_at desc);
+create index if not exists generation_analytics_created_at_idx on public.generation_analytics(created_at desc);
+create index if not exists generation_analytics_team_name_idx on public.generation_analytics(team_name);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -194,6 +211,7 @@ alter table public.video_jobs enable row level security;
 alter table public.purchase_orders enable row level security;
 alter table public.credit_purchases enable row level security;
 alter table public.notifications enable row level security;
+alter table public.generation_analytics enable row level security;
 
 grant usage on schema public to anon, authenticated;
 grant select, insert, update on public.users to authenticated;
@@ -205,6 +223,7 @@ grant select, insert, update on public.video_jobs to authenticated;
 grant select on public.purchase_orders to authenticated;
 grant select on public.credit_purchases to authenticated;
 grant select, update on public.notifications to authenticated;
+grant select on public.generation_analytics to authenticated;
 
 drop policy if exists "Users can read own profile" on public.users;
 create policy "Users can read own profile"

@@ -182,32 +182,15 @@ export function ResultClient({ jobId }: { jobId: string }) {
               <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
                 <Button type="button" onClick={shareNative} className="w-full min-[380px]:col-span-2">
                   <Share2 size={17} />
-                  Share image
+                  Share poster
                 </Button>
                 <a
                   href={imageDownloadUrl}
                   download={`kitface-${jobId}.png`}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98]"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98] min-[380px]:col-span-2"
                 >
                   <Download size={17} />
                   Download
-                </a>
-                <Button type="button" variant="secondary" onClick={() => copyShareLink(absoluteImageShareUrl, "Image link copied.")}>
-                  <Copy size={17} />
-                  Copy image link
-                </Button>
-                <Button type="button" variant="secondary" className="min-[380px]:col-span-2" onClick={() => copyShareLink(pageShareUrl, "Page link copied.")}>
-                  <Copy size={17} />
-                  Copy page link
-                </Button>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(whatsappImageUrl)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98] min-[380px]:col-span-2"
-                >
-                  <MessageCircle size={17} />
-                  WhatsApp
                 </a>
               </div>
               {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}

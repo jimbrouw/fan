@@ -45,6 +45,10 @@
   - Live app: https://app.kitface.app
   - Latest production deployment: https://kitface-qfh15vgj3-jims-projects-b7cb6c2e.vercel.app
   - Deployment inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/8kfURkxY136JVhVeVUfxADKeUy4j
+- Completed a Security Review and successfully mitigated 1 Critical, 1 High, and 1 Medium vulnerability before the live deployment:
+  - Fixed an Unauthenticated IDOR in `/api/jobs/[jobId]/image/route.ts` where users could fetch any generated image. It is now securely locked to the generation job owner, except when a valid Stripe session permits a paid unwatermarked download.
+  - Fixed a Credit Race Condition in `/api/generate/route.ts` where failed/slow requests allowed infinite free poster generation. Credit deduction is now handled atomically before generation and refunded securely on failure.
+  - Fixed a Blind SSRF vulnerability in `lib/remoteImages.ts` where malicious URLs could trick the server into fetching internal/private IP blocks.
 
 ## Next
 
@@ -54,11 +58,11 @@
 3. ✅ Done — **Continue onboarding polish** — the homepage and `/create` are clearer. Keep checking the full signed-in flow on a real phone for any confusing wording.
 
 ### Notifications
-4. **Pick email provider and wire up** — no provider chosen yet. Options: Resend (simple, good Next.js DX), SendGrid, Postmark. Pick one, add API key to env, send a real completion email when generation finishes. Hook into existing notification record insert.
-5. **Pick push provider and wire up** — no push service chosen. Options: web-native Push API + VAPID keys (free, no third party), or OneSignal/Notix (managed). VAPID approach: generate keys, store subscription in `user_notification_preferences`, send push from server on job completion.
+4. ✅ Done — **Pick email provider and wire up** — wired up with Resend.
+5. ✅ Done — **Pick push provider and wire up** — wired up with web-native Push API and VAPID keys.
 
 ### Analytics
-6. **Add generation analytics** — log each poster generation to an analytics table or service: user id, team, model, kit variant, timestamp, success/fail. Goal: know which teams and modes get used. Options: Supabase table (already available) or Vercel Analytics + custom events. Use Supabase table first — no extra service needed.
+6. ✅ Done — **Add generation analytics** — logged to `public.generation_analytics` table in Supabase.
 7. **Keep an eye on MuAPI reliability** — new production jobs should now use `final-2k-high`; confirm the next Mexico/Star Player retry submits `resolution: "2K"` and not `"4K"`.
 
 ### Existing backlog
@@ -66,10 +70,10 @@
 9. ✅ Partly done — Stripe Apple Pay payment works for digital download and payment reached Stripe. Still confirm download delivery/email link and any credits flow separately if credits are still sold.
 10. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
 11. Retest VS mode on production after the 2K/prompt simplification deploy.
-12. Extend text safety filtering to custom team name, custom kit notes, match notes, and correction prompts if those fields become user-visible in output.
+12. ✅ Done — **Extend text safety filtering to custom team name, custom kit notes, match notes, and correction prompts.** Extended `validatePosterPersonalisation` and integrated into `/api/generate` and `/api/jobs/[jobId]/correct` routes.
 13. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
 14. ✅ Done — Live camera walkthrough on real phone on secure URL.
-15. Add a retention job/window for old private capture objects. Bucket privacy and signed provider URLs are implemented.
+15. ✅ Done — **Add a retention job/window for old private capture objects.** Bucket privacy and signed provider URLs are implemented. Cleanup is automated to 48 hours.
 17. ✅ Done — Decide: keep CSS hero poster preview or replace with real generated image. (Replaced with a real generated image `/kitface-hero-poster-test.jpg`).
 19. Configure Vercel Rolling Releases for production canaries after upgrading the Vercel plan to Pro or Enterprise; current plan returns 403 for Rolling Releases.
 
@@ -79,7 +83,7 @@
 - **The failed VS poster needs a fresh retry.** The VS prompt/settings fix is live now, but the failed job on screen will stay failed. Start a new VS poster to test the fix.
 - ✅ Done — **Digital payment works, but delivery still needs one final check.** You paid with Apple Pay and Stripe received it. Now check that the success page or email gives the correct no-watermark download.
 - **Printed cards/posters still need a real test.** The digital download was tested. The printed product path still needs a test order to prove the print partner receives the order correctly.
-- **Team-news notes may not be live.** If the football data API key is missing or wrong, the app still works, but it uses basic team notes instead of live squad/news details.
+- ✅ Done — **Team-news notes are now live.** The `FOOTBALL_DATA_API_KEY` has been successfully pushed to Vercel, so generated posters will now use live squad/news context.
 - ✅ Done — **Camera needs real-phone layout QA.** Capture works on device, but the screen still needs checking for awkward height, browser bars, and button position on iPhone Safari.
 - **Old private photo cleanup is not automated yet.** Photos are stored privately, but we still need a scheduled cleanup rule so old captures are deleted after a sensible period.
 - **Production rollout controls need a paid Vercel plan.** Gradual/canary releases cannot be enabled on the current Vercel plan. Vercel says Pro or Enterprise is required.

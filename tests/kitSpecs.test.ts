@@ -337,9 +337,9 @@ test("poster prompt can frame an away VS match with the reference person on the 
   assert.match(prompt, /This must feel more detailed and composed than a simple split-screen graphic/i);
   assert.match(prompt, /strong two-sided composition/i);
   assert.match(prompt, /one clear chest-up hero portrait of \[img1\]/i);
-  assert.match(prompt, /use fewer figures and keep one accurate hero portrait/i);
+  assert.match(prompt, /add one or two smaller selected-side action versions of \[img1\]/i);
   assert.match(prompt, /OPPOSITION HANDLING/i);
-  assert.match(prompt, /Opponents stay on the LEFT side as secondary match context/i);
+  assert.match(prompt, /Opponents stay on the LEFT side/i);
   assert.match(prompt, /PHYSICAL INTEGRATION/i);
   assert.match(prompt, /KIT AND SIDE ACCURACY/i);
   assert.match(prompt, /The Manchester United kit belongs only on the LEFT home side/i);
@@ -417,12 +417,12 @@ test("poster prompt can assign a second person reference to the opposition featu
   });
 
   assert.match(prompt, /first person reference \[img1\] is the selected side person/i);
-  assert.match(prompt, /second person reference \[img2\] is the opposing feature player/i);
+  assert.match(prompt, /second person reference \[img2\] is the identity source for all opposing players/i);
   assert.match(prompt, /Secondary reference person \[img2\] plays for Manchester United/i);
-  assert.match(prompt, /Use \[img2\] for one opposing feature player/i);
+  assert.match(prompt, /Use \[img2\] for all opposing players/i);
   assert.match(prompt, /NO applying \[img2\]'s face to the selected side/i);
-  assert.match(prompt, /Use \[img2\] for exactly one opposing feature player only/i);
-  assert.match(prompt, /For \[img2\], preserve the second person's exact identity on the opposition side only/i);
+  assert.match(prompt, /Use \[img2\] for all opposing players/i);
+  assert.match(prompt, /For \[img2\], preserve the second person's exact identity for all players on the opposition side/i);
   assert.match(prompt, /Never blend \[img1\] and \[img2\]/i);
   assert.match(prompt, /\[img2\] face on selected-side players/i);
   assert.ok(prompt.length <= 10000, `prompt length ${prompt.length} exceeds GPT Image 2 budget`);

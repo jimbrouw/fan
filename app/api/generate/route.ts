@@ -55,15 +55,18 @@ function uniqueUrls(urls: string[]) {
 }
 
 export async function POST(request: Request) {
+  let consumeCreditAfterSuccess = false;
+  let userId: string | null = null;
+
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Sign in with Google before generating your poster." }, { status: 401 });
     }
+    userId = user.id;
     await upsertUserProfile(user);
 
     const isExempt = isExemptEmail(user.email);
-    let consumeCreditAfterSuccess = false;
     if (!isExempt) {
       const usageClient = createServerSupabaseClient();
       const { count, error: usageError } = await usageClient
@@ -89,7 +92,7 @@ export async function POST(request: Request) {
             { status: 402 }
           );
         }
-        consumeCreditAfterSuccess = true;
+        consumeCreditAfterSuccess = true; // We will consume the credit before submission
       }
     }
 
@@ -103,7 +106,10 @@ export async function POST(request: Request) {
 
     const personalisationSafetyError = validatePosterPersonalisation({
       shirtName: body.shirtName,
-      teamSlogan: body.teamSlogan
+      teamSlogan: body.teamSlogan,
+      teamName: body.teamName,
+      kitNotes: body.kitNotes,
+      matchdayNotes: body.matchContext?.matchdayNotes,
     });
 
     if (personalisationSafetyError) {
@@ -128,6 +134,21 @@ export async function POST(request: Request) {
         { error: "Add the other person's photo before generating this VS poster." },
         { status: 400 }
       );
+    }
+
+    // Spend the credit securely before submission
+    if (consumeCreditAfterSuccess) {
+      const usageClient = createServerSupabaseClient();
+      const { data: newCredits, error: creditError } = await usageClient.rpc("consume_user_credit", { p_user_id: user.id });
+      if (creditError || newCredits === null) {
+        return NextResponse.json(
+          {
+            error: `You've used all ${FREE_TIER_GENERATIONS} of your free posters. Add credits to keep creating.`,
+            code: "free_tier_exhausted",
+          },
+          { status: 402 }
+        );
+      }
     }
 
     const requestedGptImageMode = normalizeGptImageMode(body.gptImageTestMode);
@@ -168,7 +189,7 @@ export async function POST(request: Request) {
     });
 
     if (!providerJobId) {
-      return NextResponse.json({ error: "Provider did not return a job id." }, { status: 502 });
+      throw new Error("Provider did not return a job id.");
     }
 
     const supabase = createServerSupabaseClient();
@@ -208,16 +229,28 @@ export async function POST(request: Request) {
     }
 
     if (insert.error) {
-      return NextResponse.json({ error: insert.error.message }, { status: 500 });
+      throw new Error(insert.error.message);
     }
 
-    // Spend a credit only once the paid job is safely recorded.
-    if (consumeCreditAfterSuccess) {
-      const { error: creditError } = await supabase.rpc("consume_user_credit", { p_user_id: user.id });
-      if (creditError) {
-        console.error("Credit consume failed:", creditError.message, { userId: user.id, jobId });
-      }
+    // Analytics logging
+    const analyticsInsert = {
+      generation_job_id: jobId,
+      user_id: user.id,
+      team_name: body.teamName,
+      kit_variant: kitVariant,
+      poster_style: posterStyle.name,
+      model: body.model || "wan2.7-image-edit",
+      status: "processing",
+    };
+    
+    const analyticsRes = await supabase.from("generation_analytics").insert(analyticsInsert);
+    if (analyticsRes.error && isMissingSchemaColumn(analyticsRes.error, "user_id")) {
+      const legacyAnalyticsInsert: Omit<typeof analyticsInsert, "user_id"> = { ...analyticsInsert };
+      delete (legacyAnalyticsInsert as Partial<typeof analyticsInsert>).user_id;
+      await supabase.from("generation_analytics").insert(legacyAnalyticsInsert);
     }
+
+
 
     const sessionUpdate = await supabase
       .from("capture_sessions")
@@ -233,6 +266,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ jobId, requestId: providerJobId, status: "processing" });
   } catch (error) {
+    if (consumeCreditAfterSuccess && userId) {
+      // Refund the credit if generation failed synchronously
+      const supabase = createServerSupabaseClient();
+      await supabase.rpc("add_user_credits", { p_user_id: userId, p_amount: 1 });
+    }
+
     const message = error instanceof Error ? error.message : "Generation request failed.";
     if (message.includes("selected face reference image")) {
       return NextResponse.json({ error: message }, { status: 400 });

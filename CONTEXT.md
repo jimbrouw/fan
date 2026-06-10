@@ -120,3 +120,11 @@ Personalisation safety filter, 2026-06-10:
   - Latest production deployment: https://kitface-qfh15vgj3-jims-projects-b7cb6c2e.vercel.app
   - Inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/8kfURkxY136JVhVeVUfxADKeUy4j
 - `curl -I https://app.kitface.app` returned `HTTP/2 200` after deployment.
+
+Security Fixes & Remediation, 2026-06-10:
+
+- Completed a comprehensive Security Review of the Kitface API routes and database schema. Identified and successfully mitigated 3 vulnerabilities:
+  1. Critical: Unauthenticated IDOR in `/api/jobs/[jobId]/image/route.ts`. The route was improperly serving images to any request with a valid job ID without checking ownership. The fix enforces `getCurrentUser()` and `decideOwnedResourceAccess()`, keeping only an exception for valid paid Stripe session downloads.
+  2. High: Credit Race Condition in `/api/generate/route.ts`. The credit deduction was happening at the very end of the route, meaning if the request hung or failed at insertion, a user could generate infinite free posters. The fix moves the atomic `consume_user_credit` RPC call before the job submission and provides a secure refund mechanism in the `catch` block on failure.
+  3. Medium: Blind SSRF in `lib/remoteImages.ts`. The `isUsableRemoteImageUrl` helper didn't validate hostnames. The fix introduces an `isSafeRemoteUrl` blocklist that prevents fetching `localhost`, private IPv4 blocks (e.g., 10.x.x.x), and IPv6 equivalents.
+- Verification passed: `npm run typecheck` and `npm run lint` with 0 local/security errors. All related `.ts/.tsx` "any" types were also cleaned up to `Record<string, unknown>`.

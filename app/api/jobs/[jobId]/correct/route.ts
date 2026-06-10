@@ -3,6 +3,7 @@ import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
 import { formatCorrectionInstructions, parseCorrectionPrompt } from "@/lib/ai/corrections";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { validatePosterPersonalisation } from "@/lib/safety/profanity";
 
 type JobRow = {
   id: string;
@@ -24,6 +25,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ job
     const body = (await request.json().catch(() => ({}))) as { correctionPrompt?: string };
     if (!body.correctionPrompt?.trim()) {
       return NextResponse.json({ error: "Missing correction prompt." }, { status: 400 });
+    }
+
+    const personalisationSafetyError = validatePosterPersonalisation({
+      correctionPrompt: body.correctionPrompt
+    });
+
+    if (personalisationSafetyError) {
+      return NextResponse.json(
+        {
+          error: personalisationSafetyError.message,
+          field: personalisationSafetyError.field,
+          code: "unsafe_personalisation"
+        },
+        { status: 400 }
+      );
     }
 
     const { jobId } = await params;

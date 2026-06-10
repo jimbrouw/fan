@@ -14,6 +14,7 @@ type GenerationJobRow = {
   id: string;
   user_id: string | null;
   status: "queued" | "processing" | "completed" | "failed";
+  created_at: string;
 };
 
 function isMissingSchemaColumn(error: { message?: string }, column: string) {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     let providerJobId = requestId;
     let existingJobQuery = await supabase
       .from("generation_jobs")
-      .select("id,user_id,status")
+      .select("id,user_id,status,created_at")
       .eq("provider_job_id", providerJobId)
       .maybeSingle<GenerationJobRow>();
 
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
       const falProviderJobId = encodeFalGptImageProviderJobId(requestId);
       const falJobQuery = await supabase
         .from("generation_jobs")
-        .select("id,user_id,status")
+        .select("id,user_id,status,created_at")
         .eq("provider_job_id", falProviderJobId)
         .maybeSingle<GenerationJobRow>();
 
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     if (existingJobQuery.error && isMissingSchemaColumn(existingJobQuery.error, "user_id")) {
       const fallback = await supabase
         .from("generation_jobs")
-        .select("id,status")
+        .select("id,status,created_at")
         .eq("provider_job_id", providerJobId)
         .maybeSingle<Omit<GenerationJobRow, "user_id">>();
       existingJobQuery = {
@@ -77,6 +78,17 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (existingJob && ["completed", "failed"].includes(statusResult.status)) {
+      const durationSeconds = Math.floor((Date.now() - new Date(existingJob.created_at).getTime()) / 1000);
+      await supabase
+        .from("generation_analytics")
+        .update({
+          status: statusResult.status,
+          duration_seconds: durationSeconds
+        })
+        .eq("generation_job_id", existingJob.id);
     }
 
     if (existingJob && statusResult.status !== existingJob.status && ["completed", "failed"].includes(statusResult.status)) {

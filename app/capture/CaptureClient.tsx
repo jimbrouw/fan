@@ -239,7 +239,7 @@ export function CaptureClient() {
   }
 
   return (
-    <div className="fixed inset-0 flex h-[100dvh] max-h-[100dvh] touch-none justify-center overflow-hidden bg-[var(--background)]">
+    <div className="fixed inset-0 flex h-[100svh] max-h-[100svh] touch-none justify-center overflow-hidden bg-[var(--background)]">
     <div className="flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-[var(--surface)]">
 
       <header className="flex shrink-0 items-center justify-between px-5 pb-3 pt-[max(16px,env(safe-area-inset-top))]">

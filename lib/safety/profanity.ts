@@ -154,13 +154,24 @@ export function getPersonalisationSafetyError(value: string) {
 export function validatePosterPersonalisation(input: {
   shirtName?: string;
   teamSlogan?: string;
+  teamName?: string;
+  kitNotes?: string;
+  matchdayNotes?: string;
+  correctionPrompt?: string;
 }) {
-  if (input.shirtName && getPersonalisationSafetyError(input.shirtName)) {
-    return { field: "shirtName" as const, message: BLOCKED_PERSONALISATION_MESSAGE };
-  }
+  const fieldsToCheck = [
+    "shirtName",
+    "teamSlogan",
+    "teamName",
+    "kitNotes",
+    "matchdayNotes",
+    "correctionPrompt",
+  ] as const;
 
-  if (input.teamSlogan && getPersonalisationSafetyError(input.teamSlogan)) {
-    return { field: "teamSlogan" as const, message: BLOCKED_PERSONALISATION_MESSAGE };
+  for (const field of fieldsToCheck) {
+    if (input[field] && getPersonalisationSafetyError(input[field]!)) {
+      return { field, message: BLOCKED_PERSONALISATION_MESSAGE };
+    }
   }
 
   return null;
