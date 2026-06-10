@@ -93,3 +93,18 @@ Designer review follow-up, 2026-06-10:
 - Added global visible `focus-visible` treatment for links, buttons, inputs, selects, textareas, and summaries, plus stronger focus rings on touched custom controls.
 - Required verification passed: `npm run typecheck`, `npm run lint`, `git diff --check`.
 - Mobile layout smoke check used Playwright at 360x740 against `http://localhost:3000` for `/` and `/create`; Browser plugin direct controls were unavailable in this session.
+- User then confirmed the new design/copy is working on production.
+- User confirmed end-to-end poster generation works on production.
+- User paid for a digital download with Apple Pay and confirmed the payment reached Stripe. Remaining checkout QA is to confirm the no-watermark file delivery from success page/email and to test physical print fulfillment separately.
+- `TASK.md` blockers were rewritten in plain English so the remaining work is clear without platform jargon.
+
+VS generation fix, 2026-06-10:
+
+- User reported VS mode failed in production with the improved recoverable error UI.
+- Fixed likely stability risks: all GPT Image 2 generation requests are normalized server-side to `final-2k-high` unless explicitly using low/draft modes, `final-4k-high` is removed from app/provider types, VS kit reference URLs are de-duplicated and no longer include the selected-kit duplicate, and the VS prompt is simplified from a heavy multi-figure layout to one accurate hero plus one or two supporting actions.
+- Verification passed: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `git diff --check`.
+- Deployed to production:
+  - Live app: https://app.kitface.app
+  - Latest production deployment: https://kitface-btheeedqp-jims-projects-b7cb6c2e.vercel.app
+  - Inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/5NKyeeeFjGEqnyxz4EGSQgE23ZHt
+- `curl -I https://app.kitface.app` returned `HTTP/2 200` after deployment.

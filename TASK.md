@@ -34,13 +34,20 @@
   - Latest production deployment: https://kitface-5e5qeu6wp-jims-projects-b7cb6c2e.vercel.app
   - Deployment inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/BF9nkMJjkcWNjaqPWHMGsmJANvVL
 - Completed the must-fix Kitface design review pass from `designer.md`: clearer homepage flow, small-phone hero poster proof, simpler `/create` required path, recoverable failed-generation/result copy, safer upgrade/download wording, customer-facing order success copy, CTA label cleanup, and visible focus/disabled-state guidance.
+- User confirmed on production that the new design/copy works.
+- User confirmed end-to-end poster generation works on production with real services.
+- User confirmed Stripe Apple Pay checkout works for the digital download product and payment reached Stripe.
+- Fixed and deployed a VS poster stability pass after a production VS failure: GPT Image 2 generation is clamped to 2K, server-side `4K` request modes are no longer accepted, duplicate VS kit references are removed, and the VS prompt now uses a simpler one-hero-plus-limited-actions structure.
+  - Live app: https://app.kitface.app
+  - Latest production deployment: https://kitface-btheeedqp-jims-projects-b7cb6c2e.vercel.app
+  - Deployment inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/5NKyeeeFjGEqnyxz4EGSQgE23ZHt
 
 ## Next
 
 ### UI fixes (high priority — broken or confusing)
-1. **Retest completed result and checkout with real jobs** — the design pass improved copy and layout, but completed-result, paid-download, and physical-order success states still need authenticated live-job verification.
-2. **Fix camera layout on iPhone** — `/capture` is too tall for phone screens and layout jumps as state changes. Pin shutter button to bottom, lock viewport height, prevent scroll, keep controls stable throughout capture → retake → use-photo flow.
-3. **Continue onboarding polish** — the homepage and `/create` are clearer, but the full signed-in flow still needs real-device review for first-time users.
+1. **Check the paid download delivery** — Apple Pay took payment successfully. Next, confirm the customer can actually download the no-watermark file from the success page and email link.
+2. **Fix camera layout on iPhone** — live capture works, but the camera screen can still feel too tall or jumpy on phones. Keep the shutter and controls stable at the bottom.
+3. **Continue onboarding polish** — the homepage and `/create` are clearer. Keep checking the full signed-in flow on a real phone for any confusing wording.
 
 ### Notifications
 4. **Pick email provider and wire up** — no provider chosen yet. Options: Resend (simple, good Next.js DX), SendGrid, Postmark. Pick one, add API key to env, send a real completion email when generation finishes. Hook into existing notification record insert.
@@ -51,10 +58,10 @@
 7. **Keep an eye on MuAPI reliability** — new production jobs should now use `final-2k-high`; confirm the next Mexico/Star Player retry submits `resolution: "2K"` and not `"4K"`.
 
 ### Existing backlog
-8. Test end-to-end poster generation with real MUAPI, Supabase, and Football Data credentials.
-9. Verify Stripe credits purchase grants credits exactly once and allows generation to resume after the paywall.
+8. ✅ Done — end-to-end poster generation works in production with real services.
+9. ✅ Partly done — Stripe Apple Pay payment works for digital download and payment reached Stripe. Still confirm download delivery/email link and any credits flow separately if credits are still sold.
 10. Verify webhook completion, `/result/[jobId]`, native sharing, notification records, and Printful draft-order path on deployed URL.
-11. Smoke test VS mode with uploaded opponent photo.
+11. Retest VS mode on production after the 2K/prompt simplification deploy.
 12. Test `KITFACE_BRAND_PLACEMENT_MODE=kitface` vs `original` on real generations using `gpt-image-2-fast`.
 13. Live camera walkthrough on real phone on secure URL.
 14. Add a retention job/window for old private capture objects. Bucket privacy and signed provider URLs are implemented.
@@ -63,11 +70,12 @@
 
 ## Blockers
 
-- Live generation verification depends on valid `.env.local` credentials and provider access.
-- Existing failed MUAPI jobs remain failed; the user must start a new generation to pick up the deployed `final-2k-high` setting.
-- The live Supabase schema/credits migration has been applied successfully. Remaining DB-dependent work should now be verified against live behavior rather than blocked on schema drift.
-- Live team-news verification depends on `FOOTBALL_DATA_API_KEY`; without it, the API intentionally falls back to team-only notes.
-- Real camera verification needs a secure device/browser path when testing outside localhost.
-- Printful verification requires valid Printful credentials and a confirmed catalog variant mapping.
-- Vercel Rolling Releases are blocked by the current plan; Vercel CLI reports Pro or Enterprise is required.
-- `KITFACE_HEALTH_CHECK_SECRET` values generated by CLI are write-only in Vercel. For external monitoring, rotate Production/Preview to a user-owned known value and configure the monitor with that same token.
+- **Old failed posters will stay failed.** If a poster failed before the latest fixes, it will not repair itself. Make a new poster to test the current system.
+- **The failed VS poster needs a fresh retry.** The VS prompt/settings fix is live now, but the failed job on screen will stay failed. Start a new VS poster to test the fix.
+- **Digital payment works, but delivery still needs one final check.** You paid with Apple Pay and Stripe received it. Now check that the success page or email gives the correct no-watermark download.
+- **Printed cards/posters still need a real test.** The digital download was tested. The printed product path still needs a test order to prove the print partner receives the order correctly.
+- **Team-news notes may not be live.** If the football data API key is missing or wrong, the app still works, but it uses basic team notes instead of live squad/news details.
+- **Camera needs real-phone layout QA.** Capture works on device, but the screen still needs checking for awkward height, browser bars, and button position on iPhone Safari.
+- **Old private photo cleanup is not automated yet.** Photos are stored privately, but we still need a scheduled cleanup rule so old captures are deleted after a sensible period.
+- **Production rollout controls need a paid Vercel plan.** Gradual/canary releases cannot be enabled on the current Vercel plan. Vercel says Pro or Enterprise is required.
+- **Health-check monitoring needs a known secret.** The current health-check secret in Vercel is hidden after creation. For an external monitor, create a new known secret and use the same value in Vercel and the monitor.
