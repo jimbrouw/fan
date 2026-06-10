@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AccountButton } from "@/components/AccountButton";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
             Kitface
           </Link>
           <div className="flex items-center gap-2 text-[var(--foreground)]">
+            <NotificationBell />
             <AccountButton />
           </div>
         </header>

@@ -159,7 +159,7 @@ function PosterStylePreview({
       : "/style-hero-card.png";
 
   return (
-    <div className="relative aspect-[4/3] overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-soft)]">
+    <div className="relative aspect-[3/4] overflow-hidden rounded-[10px] border border-[var(--line)] bg-[var(--surface-soft)]">
       <Image
         src={imageUrl}
         alt="Poster style preview"
