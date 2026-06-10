@@ -15,7 +15,7 @@ export interface GenerationProvider {
     prompt: string;
     referenceImageUrls: string[];
     model?: string;
-    gptImageTestMode?: "fast-1k-low" | "draft-1k-medium" | "final-2k-high" | "final-4k-high";
+    gptImageTestMode?: "fast-1k-low" | "draft-1k-medium" | "final-2k-high";
     webhookUrl?: string;
   }): Promise<{ providerJobId: string }>;
 

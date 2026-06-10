@@ -8,6 +8,7 @@ type MuapiPredictionResponse = {
   status: string;
   outputs?: string[];
   error?: string;
+  message?: string;
 };
 
 type MuapiSubmitBody = {
@@ -19,9 +20,9 @@ type MuapiSubmitBody = {
   quality?: MuapiImageQuality;
 };
 
-export type MuapiImageResolution = "1K" | "2K" | "4K";
+export type MuapiImageResolution = "1K" | "2K";
 export type MuapiImageQuality = "low" | "medium" | "high";
-export type MuapiGptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high" | "final-4k-high";
+export type MuapiGptImageTestMode = "fast-1k-low" | "draft-1k-medium" | "final-2k-high";
 
 export function getMuapiGptImageSettings(testMode?: MuapiGptImageTestMode): {
   resolution: MuapiImageResolution;
@@ -35,11 +36,20 @@ export function getMuapiGptImageSettings(testMode?: MuapiGptImageTestMode): {
     return { resolution: "2K", quality: "high" };
   }
 
-  if (testMode === "final-4k-high") {
-    return { resolution: "4K", quality: "high" };
-  }
-
   return { resolution: "1K", quality: "low" };
+}
+
+function getMuapiErrorMessage(payload: Partial<MuapiPredictionResponse>) {
+  return payload.error || payload.message;
+}
+
+export function isTransientMuapiStatusError(status: number, payload: Partial<MuapiPredictionResponse>) {
+  const message = getMuapiErrorMessage(payload) ?? "";
+  return (
+    status === 429 ||
+    status >= 500 ||
+    /internal error|try again later|temporar|timeout|timed out|rate limit/i.test(message)
+  );
 }
 
 export function buildMuapiSubmitRequest(input: {
@@ -156,10 +166,17 @@ export class MuapiGenerationProvider implements GenerationProvider {
     const payload = (body.detail || body) as MuapiPredictionResponse;
 
     if (!response.ok) {
+      if (isTransientMuapiStatusError(response.status, payload)) {
+        return {
+          jobId: providerJobId,
+          status: "processing",
+        };
+      }
+
       return {
         jobId: providerJobId,
         status: "failed",
-        error: payload.error || `MuAPI status check failed: ${response.status}`,
+        error: getMuapiErrorMessage(payload) || `MuAPI status check failed: ${response.status}`,
       };
     }
 
@@ -180,7 +197,7 @@ export class MuapiGenerationProvider implements GenerationProvider {
       jobId: providerJobId,
       status: mappedStatus,
       outputUrl: payload.outputs && payload.outputs.length > 0 ? payload.outputs[0] : undefined,
-      error: payload.error || (mappedStatus === "failed" ? "MuAPI processing failed without a specific error message." : undefined),
+      error: getMuapiErrorMessage(payload) || (mappedStatus === "failed" ? "MuAPI processing failed without a specific error message." : undefined),
     };
   }
 }

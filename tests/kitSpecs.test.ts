@@ -241,7 +241,8 @@ test("GPT Image 2 star player prompt uses the older campaign collage structure w
   assert.match(prompt, /head, neck, shoulders, and shirt must look photographed together/i);
   assert.match(prompt, /contact shadows where the chin, neck, and collar meet/i);
   assert.match(prompt, /EXPRESSION/i);
-  assert.match(prompt, /proud, warm, joyful, and celebratory/i);
+  assert.match(prompt, /proud, joyful, silly, and memeable/i);
+  assert.match(prompt, /comic mock-anger/i);
   assert.match(prompt, /not a passport photo/i);
   assert.match(prompt, /Use the selected kit variables and kit reference images exactly/i);
   assert.match(prompt, /KIND ATHLETIC PRESENTATION/i);
@@ -250,7 +251,7 @@ test("GPT Image 2 star player prompt uses the older campaign collage structure w
   assert.match(prompt, /soft pink\/warm haze/i);
   assert.match(prompt, /Avoid dark moody fog/i);
   assert.match(prompt, /Official league launch poster meets high-end sportswear advertising campaign/i);
-  assert.match(prompt, /4K ultra-detailed finish/i);
+  assert.match(prompt, /High-detail finish/i);
   assert.match(prompt, /Only include readable text explicitly allowed by the dynamic prompt/i);
   assert.match(prompt, /NEGATIVE PROMPT/i);
   assert.match(prompt, /No trophy\. No cup\. No medals\. No central silverware/i);
@@ -335,8 +336,8 @@ test("poster prompt can frame an away VS match with the reference person on the 
   assert.match(prompt, /pre-match programme cover/i);
   assert.match(prompt, /This must feel more detailed and composed than a simple split-screen graphic/i);
   assert.match(prompt, /strong two-sided composition/i);
-  assert.match(prompt, /huge chest-up hero portrait of \[img1\] occupy about 55-70%/i);
-  assert.match(prompt, /kneeslide or fist-pump celebration/i);
+  assert.match(prompt, /one clear chest-up hero portrait of \[img1\]/i);
+  assert.match(prompt, /use fewer figures and keep one accurate hero portrait/i);
   assert.match(prompt, /OPPOSITION HANDLING/i);
   assert.match(prompt, /Opponents stay on the LEFT side as secondary match context/i);
   assert.match(prompt, /PHYSICAL INTEGRATION/i);
@@ -344,7 +345,9 @@ test("poster prompt can frame an away VS match with the reference person on the 
   assert.match(prompt, /The Manchester United kit belongs only on the LEFT home side/i);
   assert.match(prompt, /The Nottingham Forest kit belongs only on the RIGHT away side/i);
   assert.match(prompt, /Avoid a flat two-person cutout layout/i);
-  assert.match(prompt, /football banter and broadcast excitement/i);
+  assert.match(prompt, /silly, memeable emotional variety/i);
+  assert.match(prompt, /huge grin, roaring joy, badge-kiss love\/pride/i);
+  assert.match(prompt, /Football banter, not a fight poster/i);
   assert.match(prompt, /No trophy/i);
   assert.match(prompt, /flat two-person cutout poster/i);
   assert.ok(prompt.length <= 10000, `prompt length ${prompt.length} exceeds GPT Image 2 budget`);

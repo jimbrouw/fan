@@ -180,7 +180,7 @@ Preserve the person's recognisable build, age, and identity, but present them ki
 ${matchSection}
 
 COMPOSITION & POSES:
-${isGptImage ? `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one huge chest-up selected-side hero portrait dominate the poster, with four to five smaller selected-side full-body action shots along the bottom third. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} as secondary match context only. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player only, never for the selected-side hero figures." : ""} Do not swap sides.` : `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player." : ""} Do not swap sides.`}`
+${isGptImage ? `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one accurate selected-side hero portrait dominate the poster, with one or two smaller selected-side action shots only if identity stays accurate. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} as secondary match context only. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player only, never for the selected-side hero figures." : ""} Do not swap sides.` : `Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side: centre portrait plus action poses. Opponents stay ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"}. ${matchContext.opponentMode === "another-person" ? "Use [img2] for one opposing feature player." : ""} Do not swap sides.`}`
     : isFootballCardStyle
       ? `Premium photorealistic football player card for ${input.teamProfile.name}, starring [img] as the collectible-card hero.
 
@@ -224,10 +224,10 @@ SIDE STRUCTURE:
 Build a strong two-sided composition with clear visual separation. The ${matchContext.homeTeam.name} side uses home-team colour energy, kit details, crowd cues, and lighting on the LEFT. The ${matchContext.awayTeam.name} side uses away-team colour energy, kit details, crowd cues, and lighting on the RIGHT. Use a subtle central rivalry zone, tunnel glow, pitch line, diagonal broadcast graphics, or controlled "VS" energy without random readable text.
 
 SELECTED-SIDE HERO:
-Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one huge chest-up hero portrait of [img1] occupy about 55-70% of the selected side and dominate the poster. Add four to five smaller selected-side full-body action versions: running, celebrating, badge-kiss pride, arms raised, kneeslide or fist-pump celebration, and match-action movement. Every selected-side figure must clearly be [img1].
+Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one clear chest-up hero portrait of [img1] dominate the selected side. Add only one or two smaller selected-side action versions if identity stays accurate. Every selected-side figure must clearly be [img1]. If identity or rendering becomes uncertain, use fewer figures and keep one accurate hero portrait.
 
 OPPOSITION HANDLING:
-Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side as secondary match context. ${matchContext.opponentMode === "another-person" ? "Use [img2] for exactly one opposing feature player only, wearing the opposition kit, positioned clearly on the opposition side. [img2] may have one strong portrait or action pose, but [img1] remains the main hero. Never use [img2] for selected-side hero figures." : "Use varied anonymous current-squad-style opposition players or named matchday players only when matchday notes allow them. Do not copy [img1] onto opposition players."} Keep opposition figures smaller, less prominent, and visually separated.
+Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side as secondary match context. ${matchContext.opponentMode === "another-person" ? "Use [img2] for exactly one opposing feature player only, wearing the opposition kit, positioned clearly on the opposition side. [img2] may have one portrait or action pose, but [img1] remains the main hero. Never use [img2] for selected-side hero figures." : "Use one to three varied anonymous current-squad-style opposition players or named matchday players only when matchday notes allow them. Do not copy [img1] onto opposition players."} Keep opposition figures smaller, less prominent, and visually separated.
 
 IDENTITY LOCK:
 Preserve exact recognisable likeness for [img1]: head shape, hairline, eyes, nose, mouth, cheeks, jaw, skin texture, facial hair, age, body type, and natural proportions. Keep [img1] consistent across every selected-side appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but [img1] must still clearly look like the uploaded photo. ${matchContext.opponentMode === "another-person" ? "For [img2], preserve the second person's exact identity on the opposition side only. Never blend [img1] and [img2], never average their faces, and never swap kits or sides." : "Opposition faces must not resemble [img1]."} Do not beautify, de-age, slim, bulk up, average faces with footballers, or replace either uploaded person.
@@ -245,10 +245,10 @@ KIT AND SIDE ACCURACY:
 Use selected home and away kit variables and kit reference images exactly: fabric texture, stitching, folds, crest, manufacturer mark, collar, trim, shorts, socks, sleeve details, and sponsor placement. The ${matchContext.homeTeam.name} kit belongs only on the LEFT home side. The ${matchContext.awayTeam.name} kit belongs only on the RIGHT away side. If Kitface sponsor mode is active, both chest sponsors must read exactly "kitface.app"; otherwise keep original sponsors.
 
 COMPOSITION DETAIL:
-Vertical 3:4 poster. Use layered sports-campaign depth: huge selected-side hero portrait, smaller action versions in the foreground, opposition figures opposite, pitch texture under feet, stadium crowd, floodlight beams, soft confetti or rain-like particles, subtle broadcast overlays, and controlled colour energy from both clubs. Keep natural overlap and realistic scale. Avoid a flat two-person cutout layout.
+Vertical 3:4 poster. Use layered sports-campaign depth: selected-side hero portrait, one or two smaller action versions when safe, opposition figures opposite, pitch texture under feet, stadium crowd, floodlight beams, subtle broadcast overlays, and controlled colour energy from both clubs. Keep natural overlap and realistic scale. Avoid a flat two-person cutout layout and avoid overcrowding.
 
 EXPRESSION AND MOOD:
-The selected hero should feel proud, warm, joyful, and celebratory, like a normal supporter experiencing the biggest matchday of their life. Opposition energy should feel competitive but friendly: focused, proud, amused, or impressed. This is football banter and broadcast excitement, not a fight poster.
+Give repeated [img1] figures silly, memeable emotional variety: huge grin, roaring joy, badge-kiss love/pride, wild happiness, and comic mock-anger. Keep each face recognisably [img1]; no repeated blank face or same smile. Opposition stays friendly-competitive. Football banter, not a fight poster.
 
 ENVIRONMENT:
 Modern football stadium at night with bright floodlights, crowd texture, visible pitch, tunnel or matchday entrance depth, light haze, crisp commercial lighting, and premium broadcast atmosphere. Keep it light, electric, playful, official, and polished.
@@ -335,7 +335,7 @@ PHYSICAL INTEGRATION:
 The head, neck, shoulders, and shirt must look photographed together in one real stadium shoot, not composited. Match face lighting to stadium key/rim light. Add contact shadows where the chin, neck, and collar meet. Keep correct neck thickness, shoulder connection, skin tone, perspective, and collar shadow.
 
 EXPRESSION:
-The hero portrait must feel proud, warm, joyful, and celebratory. This is a football celebration, not a passport photo. Avoid sad, stern, tired, angry, blank, police-lineup, or dead-eyed expressions.
+Faces should be proud, joyful, silly, and memeable: passion, love/pride, wild happiness, roaring celebration, comic mock-anger. Not a passport photo. Avoid sad/stern/tired/blank/dead-eyed expressions.
 
 KIT:
 Use the selected kit variables and kit reference images exactly. Render authentic fabric, stitching, folds, crest, manufacturer mark, collar, trim, shorts, and socks. The shirt must look physically worn. If Kitface sponsor mode is active, chest sponsor must read exactly "kitface.app"; otherwise keep the original sponsor.
@@ -363,7 +363,7 @@ BRANDING AND TEXT:
 Only include readable text explicitly allowed by the dynamic prompt: "Kitface", "YOUR POSTER", shirt numbers or shirt-name personalisation, crests, maker logos, allowed sleeve sponsors, and selected shirt sponsor. No random titles, slogans, stadium copy, or extra ads.
 
 LIGHTING AND QUALITY:
-4K ultra-detailed finish, stadium-commercial lighting, soft key light on faces, controlled rim light, natural skin tones, skin pores, sharp fabric, realistic stitching, embroidered crests, professional sports retouching, sharp focus, realistic anatomy, hands, eyes, and facial proportions.
+High-detail finish, stadium-commercial lighting, soft key light on faces, controlled rim light, natural skin tones, skin pores, sharp fabric, realistic stitching, embroidered crests, professional sports retouching, sharp focus, realistic anatomy, hands, eyes, and facial proportions.
 
 MOOD:
 Proud, joyful, relatable, celebratory, and emotionally warm. The person should feel like a typical supporter having a dream football media-day moment, not like a celebrity or elite athlete.

@@ -24,7 +24,7 @@ type GenerateBody = {
   correctionPrompt?: string;
   kitVariant?: KitVariant;
   posterStyleId?: string;
-  gptImageTestMode?: MuapiGptImageTestMode;
+  gptImageTestMode?: string;
   matchContext?: MatchContext;
   shirtName?: string;
   teamSlogan?: string;
@@ -43,6 +43,14 @@ type GenerateBody = {
 
 function isMissingSchemaColumn(error: { message?: string }, column: string) {
   return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
+}
+
+function normalizeGptImageMode(mode?: string): MuapiGptImageTestMode {
+  return mode === "draft-1k-medium" || mode === "fast-1k-low" ? mode : "final-2k-high";
+}
+
+function uniqueUrls(urls: string[]) {
+  return [...new Set(urls)];
 }
 
 export async function POST(request: Request) {
@@ -105,15 +113,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const requestedGptImageMode = normalizeGptImageMode(body.gptImageTestMode);
     const referenceImageUrls = await buildUsableReferenceImageUrls({
       requiredSourceImageUrl: body.sourceImageUrl,
-      optionalReferenceImageUrls: [
+      optionalReferenceImageUrls: uniqueUrls([
         ...(body.matchContext ? [] : body.personReferenceImageUrls ?? []),
         body.matchContext?.opponentSourceImageUrl,
-        kitSpec?.referenceImageUrl,
+        body.matchContext ? undefined : kitSpec?.referenceImageUrl,
         homeKitSpec?.referenceImageUrl,
         awayKitSpec?.referenceImageUrl
-      ].filter((url): url is string => Boolean(url)),
+      ].filter((url): url is string => Boolean(url))),
     });
     const prompt = buildPosterPrompt({
       teamProfile: body.teamProfile,
@@ -137,7 +146,7 @@ export async function POST(request: Request) {
       prompt,
       referenceImageUrls,
       model: body.model,
-      gptImageTestMode: body.gptImageTestMode,
+      gptImageTestMode: requestedGptImageMode,
       webhookUrl,
     });
 
@@ -163,7 +172,7 @@ export async function POST(request: Request) {
         body.matchContext?.matchdayNotes ? `Matchday notes: ${body.matchContext.matchdayNotes}` : undefined,
         `Brand placement mode: ${brandPlacementMode}`,
         `Model: ${body.model || "wan2.7-image-edit"}`,
-        body.model === "gpt-image-2" || body.model === "gpt-image-2-fast" ? `GPT Image test mode: ${body.gptImageTestMode || "final-4k-high"}` : undefined,
+        body.model === "gpt-image-2" || body.model === "gpt-image-2-fast" ? `GPT Image test mode: ${requestedGptImageMode}` : undefined,
         `Poster style: ${posterStyle.name}`
       ].filter(Boolean).join("\n"),
       target_poster_url: "", // Not used in this generation mode, but required by schema
@@ -235,14 +244,14 @@ async function submitStaticGenerationJob(input: {
   } catch (error) {
     const shouldFallbackToFal =
       input.model === "gpt-image-2" &&
-      input.gptImageTestMode === "final-4k-high" &&
+      input.gptImageTestMode === "final-2k-high" &&
       Boolean(process.env.FAL_KEY);
 
     if (!shouldFallbackToFal) {
       throw error;
     }
 
-    console.warn("MUAPI 4K GPT Image 2 submission failed; falling back to fal GPT Image 2.", {
+    console.warn("MUAPI 2K GPT Image 2 submission failed; falling back to fal GPT Image 2.", {
       error: error instanceof Error ? error.message : String(error),
     });
 
