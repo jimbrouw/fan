@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Download, Gift, Magnet, Package, RefreshCw, Sticker } from "lucide-react";
+import { Check, Download, Gift, Package, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -13,7 +13,7 @@ type JobResponse = {
 };
 
 type UpgradeOption = {
-  id: "fathers-day-card" | "birthday-card" | "download" | "mug" | "sticker" | "magnet" | "poster";
+  id: "birthday-card" | "download" | "poster";
   name: string;
   price: string;
   icon: typeof Download;
@@ -29,18 +29,9 @@ const upgradeOptions: UpgradeOption[] = [
     name: "Greeting card",
     price: "£7.99",
     icon: Gift,
-    description: "A printed 7x5 card for birthdays, thank-yous, matchdays, or any excuse.",
+    description: "Send their football poster as a proper printed card.",
     includes: ["7x5 printed greeting card", "Poster artwork on the front", "Add a custom message inside"],
-    details: "Best for a smaller, cheaper keepsake that still feels personal.",
-  },
-  {
-    id: "fathers-day-card",
-    name: "Father's Day card",
-    price: "£7.99",
-    icon: Gift,
-    description: "A Father's Day version while the occasion is still close.",
-    includes: ["7x5 printed greeting card", "Poster artwork on the front", "Add a custom message inside"],
-    details: "We can remove this seasonal option after Father's Day and keep the general greeting card live.",
+    details: "Best first choice for birthdays, matchdays, thank-yous, and football-mad mates.",
     badge: "Best gift",
   },
   {
@@ -50,44 +41,23 @@ const upgradeOptions: UpgradeOption[] = [
     icon: Download,
     description: "Full-resolution file with no Kitface watermark.",
     includes: ["High-res file", "No Kitface watermark", "Download link for your order"],
-    details: "Fastest option if you want to share it, print it yourself, or keep it digital.",
-  },
-  {
-    id: "sticker",
-    name: "Sticker",
-    price: "£4.99",
-    icon: Sticker,
-    description: "A small kiss-cut vinyl sticker for laptops, bottles, notebooks, or lockers.",
-    includes: ["Small vinyl sticker", "Poster artwork print", "Delivered to your door"],
-    details: "The cheapest physical option, and easy to add as a quick football gift.",
-  },
-  {
-    id: "magnet",
-    name: "Fridge magnet",
-    price: "£6.99",
-    icon: Magnet,
-    description: "A square photo magnet with your poster artwork on the front.",
-    includes: ["Square photo magnet", "Poster artwork print", "Delivered to your door"],
-    details: "Good for kitchens, lockers, office boards, or anyone who wants a small keepsake.",
-  },
-  {
-    id: "mug",
-    name: "11oz mug",
-    price: "£12.99",
-    icon: Gift,
-    description: "A white ceramic mug printed with your Kitface poster artwork.",
-    includes: ["11oz ceramic mug", "Full-colour print", "Delivered to your door"],
-    details: "A simple gift people understand instantly, without asking them to buy a full poster.",
+    details: "Fastest option for the group chat, socials, or printing yourself.",
   },
   {
     id: "poster",
     name: "A3 poster — delivered",
     price: "£29.99",
     icon: Package,
-    description: "Still available if you want the bigger wall print.",
-    includes: ["High-res upscale", "Professional A3 print", "Delivered to your door"],
-    details: "The premium option for bedrooms, offices, clubhouses, or a proper gift.",
+    description: "The big wall print if you want the full showpiece.",
+    includes: ["Portrait poster print", "Professional A3 finish", "Delivered to your door"],
+    details: "Premium anchor option for bedrooms, offices, clubhouses, or a proper framed gift.",
   },
+];
+
+const comingSoonProducts = [
+  "Sticker with a proper 3x4 crop",
+  "Square fridge magnet layout",
+  "Mug wrap artwork",
 ];
 
 export function UpgradeClient({ jobId }: { jobId: string }) {
@@ -120,7 +90,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
 
   const selectedOption = upgradeOptions.find((option) => option.id === selectedOptionId) ?? upgradeOptions[0];
   const canContinue = job?.status === "completed" && Boolean(job.outputUrl);
-  const isCardOption = selectedOptionId === "birthday-card" || selectedOptionId === "fathers-day-card";
+  const isCardOption = selectedOptionId === "birthday-card";
 
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -157,11 +127,10 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Make it theirs</p>
-        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Send it as a gift.</h1>
+        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Send the football card they&apos;ll actually show off.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          Start with a sticker, magnet, mug, or printed greeting card. The A3 poster stays here as the big-ticket option,
-          so the smaller gifts feel like an easy yes.
-          Father&apos;s Day stays here for now because it is coming up soon.
+          Start simple: printed greeting card, no-watermark download, or the big A3 wall print.
+          Mugs, magnets, and stickers need their own artwork formats, so we&apos;re keeping them back until they look right.
         </p>
       </div>
 
@@ -201,7 +170,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           {isRedirecting ? "Processing..." : `Checkout — ${selectedOption.price}`}
         </Button>
         <p className="text-xs leading-5 text-[var(--muted)]">
-          Choose a different gift below, or checkout now with the selected option.
+          Checkout now with the selected option, or switch below.
         </p>
       </div>
 
@@ -260,13 +229,28 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           <textarea
             value={cardMessage}
             onChange={(event) => setCardMessage(event.target.value.slice(0, 240))}
-            placeholder={selectedOptionId === "birthday-card" ? "Hope this makes the group chat jealous." : "Happy Father's Day! Thanks for being our captain."}
+            placeholder="Hope this makes the group chat jealous."
             rows={4}
             className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/60 px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.65)] focus:border-[var(--accent)]"
           />
           <span className="text-right text-[11px] font-semibold text-[var(--muted)]">{cardMessage.length}/240</span>
         </label>
       )}
+
+      <div className="space-y-3 rounded-[18px] border border-dashed border-[var(--line)] bg-[var(--surface)] p-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Coming soon</p>
+          <p className="mt-1 text-sm font-bold text-[var(--foreground)]">More gifts, with artwork made for the product.</p>
+        </div>
+        <div className="grid gap-2">
+          {comingSoonProducts.map((item) => (
+            <span key={item} className="inline-flex items-center gap-2 text-xs leading-5 text-[var(--muted)]">
+              <Check size={14} className="text-[var(--accent)]" />
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-3 rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
         <Button type="button" className="w-full" disabled={!canContinue || isRedirecting} onClick={handleContinue}>
