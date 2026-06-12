@@ -178,7 +178,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
         <div className="flex flex-col justify-center gap-2">
           <p className="text-sm font-semibold text-[var(--foreground)]">Your poster preview</p>
           <p className="text-xs leading-5 text-[var(--muted)]">
-            Status: {job?.status ?? "loading"}. The finished image is used for your download, card front, or poster print.
+            Status: {job?.status ?? "loading"}. Paid downloads and printed gifts use the finished image without the preview watermark.
           </p>
           {!canContinue && (
             <Button type="button" variant="secondary" onClick={loadJob} disabled={isLoading} className="mt-1 w-full">
@@ -187,6 +187,22 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
             </Button>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2 rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/60 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Selected gift</p>
+            <p className="mt-1 text-sm font-bold text-[var(--foreground)]">{selectedOption.name}</p>
+          </div>
+          <p className="shrink-0 text-sm font-bold text-[var(--accent)]">{selectedOption.price}</p>
+        </div>
+        <Button type="button" className="w-full" disabled={!canContinue || isRedirecting} onClick={handleContinue}>
+          {isRedirecting ? "Processing..." : `Checkout — ${selectedOption.price}`}
+        </Button>
+        <p className="text-xs leading-5 text-[var(--muted)]">
+          Choose a different gift below, or checkout now with the selected option.
+        </p>
       </div>
 
       <div className="space-y-3">
@@ -257,7 +273,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           {isRedirecting ? "Processing..." : `Checkout — ${selectedOption.price}`}
         </Button>
         <p className="text-xs leading-5 text-[var(--muted)]">
-          Secure checkout. Printed items are prepared after payment. Downloads are sent to your email.
+          Secure checkout. Printed items are prepared after payment. Downloads are sent to your email. Paid products do not include the preview watermark.
         </p>
         {status && <p className="text-xs font-semibold leading-5 text-[var(--foreground)]">{status}</p>}
       </div>
