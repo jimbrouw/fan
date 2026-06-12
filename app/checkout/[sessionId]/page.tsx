@@ -7,7 +7,7 @@ import { Button } from "@/components/Button";
 
 type MockSessionDetails = {
   jobId: string;
-  optionId: "fathers-day-card" | "birthday-card" | "download" | "poster";
+  optionId: "fathers-day-card" | "birthday-card" | "download" | "mug" | "sticker" | "magnet" | "poster";
   price: string;
   name: string;
 };
@@ -40,6 +40,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
         "fathers-day-card": { name: "Father's Day card", price: "£7.99" },
         "birthday-card": { name: "Greeting card", price: "£7.99" },
         download: { name: "Download — no watermark", price: "£3.99" },
+        mug: { name: "11oz mug", price: "£12.99" },
+        sticker: { name: "Sticker", price: "£4.99" },
+        magnet: { name: "Fridge magnet", price: "£6.99" },
         poster: { name: "A3 poster — delivered", price: "£29.99" },
       };
       

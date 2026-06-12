@@ -1,7 +1,17 @@
 const DEFAULT_GREETING_CARD_SKU = "CLASSIC-GRE-FEDR-7X5-BLA";
 const DEFAULT_POSTER_SKU = "ART-FAP-BAP-A3";
+const DEFAULT_MUG_SKU = "H-MUG-W";
+const DEFAULT_STICKER_SKU = "M-STI-3X4";
+const DEFAULT_MAGNET_SKU = "MAG-1-10X10";
 
-export type ProdigiProductOptionId = "fathers-day-card" | "birthday-card" | "download" | "poster";
+export type ProdigiProductOptionId =
+  | "fathers-day-card"
+  | "birthday-card"
+  | "download"
+  | "mug"
+  | "sticker"
+  | "magnet"
+  | "poster";
 
 export type ProdigiRecipient = {
   name: string;
@@ -152,6 +162,10 @@ export function isProdigiCardOption(optionId?: string) {
   return optionId === "fathers-day-card" || optionId === "birthday-card";
 }
 
+export function isProdigiPhysicalOption(optionId?: string) {
+  return optionId === "poster" || optionId === "mug" || optionId === "sticker" || optionId === "magnet" || isProdigiCardOption(optionId);
+}
+
 export function readProdigiDraftOrderConfig(optionId: ProdigiProductOptionId = "fathers-day-card") {
   return {
     ...readProdigiProductConfig(optionId),
@@ -160,14 +174,37 @@ export function readProdigiDraftOrderConfig(optionId: ProdigiProductOptionId = "
 }
 
 export function readProdigiProductConfig(optionId: ProdigiProductOptionId = "fathers-day-card") {
-  const isCard = isProdigiCardOption(optionId);
-  const sku = isCard
-    ? (process.env.PRODIGI_CARD_SKU || DEFAULT_GREETING_CARD_SKU)
-    : (process.env.PRODIGI_POSTER_SKU || DEFAULT_POSTER_SKU);
+  if (isProdigiCardOption(optionId)) {
+    return {
+      sku: process.env.PRODIGI_CARD_SKU || DEFAULT_GREETING_CARD_SKU,
+      productType: "card"
+    };
+  }
+
+  if (optionId === "mug") {
+    return {
+      sku: process.env.PRODIGI_MUG_SKU || DEFAULT_MUG_SKU,
+      productType: "mug"
+    };
+  }
+
+  if (optionId === "sticker") {
+    return {
+      sku: process.env.PRODIGI_STICKER_SKU || DEFAULT_STICKER_SKU,
+      productType: "sticker"
+    };
+  }
+
+  if (optionId === "magnet") {
+    return {
+      sku: process.env.PRODIGI_MAGNET_SKU || DEFAULT_MAGNET_SKU,
+      productType: "magnet"
+    };
+  }
 
   return {
-    sku,
-    productType: isCard ? "card" : "poster"
+    sku: process.env.PRODIGI_POSTER_SKU || DEFAULT_POSTER_SKU,
+    productType: "poster"
   };
 }
 

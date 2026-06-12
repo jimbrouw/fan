@@ -58,6 +58,45 @@ test("readProdigiDraftOrderConfig defaults poster orders to A3 budget paper SKU"
   }
 });
 
+test("readProdigiDraftOrderConfig maps small gift products to Prodigi SKUs", () => {
+  const previous = snapshotProdigiEnv();
+  try {
+    setRecipientEnv();
+    delete process.env.PRODIGI_MUG_SKU;
+    delete process.env.PRODIGI_STICKER_SKU;
+    delete process.env.PRODIGI_MAGNET_SKU;
+
+    assert.deepEqual(
+      ["mug", "sticker", "magnet"].map((optionId) => readProdigiDraftOrderConfig(optionId as "mug" | "sticker" | "magnet")),
+      [
+        expectProdigiConfig("H-MUG-W", "mug"),
+        expectProdigiConfig("M-STI-3X4", "sticker"),
+        expectProdigiConfig("MAG-1-10X10", "magnet")
+      ]
+    );
+  } finally {
+    restoreProdigiEnv(previous);
+  }
+});
+
+function expectProdigiConfig(sku: string, productType: string) {
+  return {
+    sku,
+    productType,
+    recipient: {
+      name: "John Doe",
+      addressLine1: "1 Test Street",
+      addressLine2: undefined,
+      city: "London",
+      stateOrCounty: undefined,
+      countryCode: "GB",
+      postalOrZipCode: "SW1A 1AA",
+      phoneNumber: undefined,
+      email: "test@example.com"
+    }
+  };
+}
+
 function setRecipientEnv() {
   process.env.PRINTFUL_TEST_RECIPIENT_ADDRESS1 = "1 Test Street";
   process.env.PRINTFUL_TEST_RECIPIENT_CITY = "London";

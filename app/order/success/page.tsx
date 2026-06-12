@@ -15,6 +15,9 @@ const optionNameMap = {
   "fathers-day-card": "Father's Day card",
   "birthday-card": "Greeting card",
   download: "Download - no watermark",
+  mug: "11oz mug",
+  sticker: "Sticker",
+  magnet: "Fridge magnet",
   poster: "A3 poster - delivered",
 } as const;
 
@@ -25,7 +28,8 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
   const jobId = session?.metadata?.jobId;
   const isPaid = session?.payment_status === "paid";
   const isDownload = optionId === "download";
-  const isPhysicalOrder = optionId === "fathers-day-card" || optionId === "birthday-card" || optionId === "poster";
+  const isPhysicalOrder =
+    optionId === "fathers-day-card" || optionId === "birthday-card" || optionId === "mug" || optionId === "sticker" || optionId === "magnet" || optionId === "poster";
   const selectedName = optionNameMap[optionId as keyof typeof optionNameMap] || "Father's Day card";
   const orderId = params.orderId || params.session_id || "N/A";
   const receiptReference = params.session_id ? params.session_id.slice(-10).toUpperCase() : orderId;

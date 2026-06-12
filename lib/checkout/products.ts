@@ -1,4 +1,4 @@
-import { isProdigiCardOption, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
+import { isProdigiPhysicalOption, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
 
 export type CheckoutProduct = {
   id: ProdigiProductOptionId;
@@ -34,6 +34,30 @@ export const checkoutProducts: Record<ProdigiProductOptionId, CheckoutProduct> =
     currency: "gbp",
     requiresShipping: false
   },
+  mug: {
+    id: "mug",
+    name: "11oz mug",
+    description: "White ceramic mug printed with your Kitface poster artwork.",
+    unitAmount: 1299,
+    currency: "gbp",
+    requiresShipping: true
+  },
+  sticker: {
+    id: "sticker",
+    name: "Sticker",
+    description: "Small kiss-cut vinyl sticker printed with your Kitface poster artwork.",
+    unitAmount: 499,
+    currency: "gbp",
+    requiresShipping: true
+  },
+  magnet: {
+    id: "magnet",
+    name: "Fridge magnet",
+    description: "Square photo magnet printed with your Kitface poster artwork.",
+    unitAmount: 699,
+    currency: "gbp",
+    requiresShipping: true
+  },
   poster: {
     id: "poster",
     name: "A3 poster - delivered",
@@ -49,5 +73,5 @@ export function getCheckoutProduct(optionId: ProdigiProductOptionId) {
 }
 
 export function isPhysicalCheckoutOption(optionId: ProdigiProductOptionId) {
-  return optionId === "poster" || isProdigiCardOption(optionId);
+  return isProdigiPhysicalOption(optionId);
 }

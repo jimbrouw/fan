@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Download, Gift, Package, RefreshCw } from "lucide-react";
+import { Check, Download, Gift, Magnet, Package, RefreshCw, Sticker } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -13,7 +13,7 @@ type JobResponse = {
 };
 
 type UpgradeOption = {
-  id: "fathers-day-card" | "birthday-card" | "download" | "poster";
+  id: "fathers-day-card" | "birthday-card" | "download" | "mug" | "sticker" | "magnet" | "poster";
   name: string;
   price: string;
   icon: typeof Download;
@@ -51,6 +51,33 @@ const upgradeOptions: UpgradeOption[] = [
     description: "Full-resolution file with no Kitface watermark.",
     includes: ["High-res file", "No Kitface watermark", "Download link for your order"],
     details: "Fastest option if you want to share it, print it yourself, or keep it digital.",
+  },
+  {
+    id: "sticker",
+    name: "Sticker",
+    price: "£4.99",
+    icon: Sticker,
+    description: "A small kiss-cut vinyl sticker for laptops, bottles, notebooks, or lockers.",
+    includes: ["Small vinyl sticker", "Poster artwork print", "Delivered to your door"],
+    details: "The cheapest physical option, and easy to add as a quick football gift.",
+  },
+  {
+    id: "magnet",
+    name: "Fridge magnet",
+    price: "£6.99",
+    icon: Magnet,
+    description: "A square photo magnet with your poster artwork on the front.",
+    includes: ["Square photo magnet", "Poster artwork print", "Delivered to your door"],
+    details: "Good for kitchens, lockers, office boards, or anyone who wants a small keepsake.",
+  },
+  {
+    id: "mug",
+    name: "11oz mug",
+    price: "£12.99",
+    icon: Gift,
+    description: "A white ceramic mug printed with your Kitface poster artwork.",
+    includes: ["11oz ceramic mug", "Full-colour print", "Delivered to your door"],
+    details: "A simple gift people understand instantly, without asking them to buy a full poster.",
   },
   {
     id: "poster",
@@ -132,7 +159,8 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Make it theirs</p>
         <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Send it as a gift.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          Start with a cheaper printed greeting card, grab the clean download, or go bigger with an A3 wall print.
+          Start with a sticker, magnet, mug, or printed greeting card. The A3 poster stays here as the big-ticket option,
+          so the smaller gifts feel like an easy yes.
           Father&apos;s Day stays here for now because it is coming up soon.
         </p>
       </div>
