@@ -23,7 +23,6 @@ const REQUIRED_SERVER_ENV = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
-  "MUAPI_API_KEY",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET"
 ] as const;
@@ -33,11 +32,27 @@ export function isHealthTokenAuthorized(secret: string | undefined, token: strin
 }
 
 export function getRequiredEnvironmentChecks(env: Partial<NodeJS.ProcessEnv> = process.env): HealthCheck[] {
-  return REQUIRED_SERVER_ENV.map((name) => ({
+  const staticImageProvider = env.IMAGE_GENERATION_PROVIDER?.toLowerCase() === "fal" ? "fal" : "muapi";
+  const providerCheck: HealthCheck =
+    staticImageProvider === "fal"
+      ? {
+          name: "env:FAL_KEY",
+          status: env.FAL_KEY || env.FAL_API_KEY ? "ok" : "degraded",
+          message: env.FAL_KEY || env.FAL_API_KEY ? undefined : "Missing required production environment variable for FAL image generation."
+        }
+      : {
+          name: "env:MUAPI_API_KEY",
+          status: env.MUAPI_API_KEY ? "ok" : "degraded",
+          message: env.MUAPI_API_KEY ? undefined : "Missing required production environment variable for MUAPI image generation."
+        };
+
+  const baseChecks: HealthCheck[] = REQUIRED_SERVER_ENV.map((name) => ({
     name: `env:${name}`,
     status: env[name] ? "ok" : "degraded",
     message: env[name] ? undefined : "Missing required production environment variable."
   }));
+
+  return [...baseChecks, providerCheck];
 }
 
 export function buildHealthResponse(input: {

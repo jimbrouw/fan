@@ -293,11 +293,20 @@ async function submitStaticGenerationJob(input: {
   webhookUrl?: string;
 }) {
   const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
-  const useFalPrimary = process.env.FAL_KEY && isGptImage;
+  const requestedProvider = process.env.IMAGE_GENERATION_PROVIDER?.toLowerCase();
+  const hasFalKey = Boolean(process.env.FAL_KEY || process.env.FAL_API_KEY);
+  const useFalPrimary = isGptImage && hasFalKey && (requestedProvider === "fal" || !requestedProvider);
+
+  if (process.env.FAL_API_KEY && !process.env.FAL_KEY) {
+    process.env.FAL_KEY = process.env.FAL_API_KEY;
+  }
+
+  if (requestedProvider === "fal" && !hasFalKey) {
+    throw new Error("IMAGE_GENERATION_PROVIDER=fal requires FAL_KEY or FAL_API_KEY.");
+  }
 
   if (useFalPrimary) {
     try {
-      // Testing with FAL GPT Image 2 as primary provider...
       const falProvider = new FalGptImage2GenerationProvider();
       const { providerJobId } = await falProvider.submitJob({
         prompt: input.prompt,
@@ -305,10 +314,14 @@ async function submitStaticGenerationJob(input: {
       });
       return providerJobId;
     } catch (error) {
+      if (requestedProvider === "fal") {
+        throw error;
+      }
+
       console.warn("FAL GPT Image 2 submission failed; falling back to MUAPI.", {
         error: error instanceof Error ? error.message : String(error),
       });
-      // Fallback to MUAPI
+
       const muapiProvider = new MuapiGenerationProvider();
       const { providerJobId } = await muapiProvider.submitJob(input);
       return providerJobId;
@@ -324,7 +337,8 @@ async function submitStaticGenerationJob(input: {
     const shouldFallbackToFal =
       input.model === "gpt-image-2" &&
       input.gptImageTestMode === "final-2k-high" &&
-      Boolean(process.env.FAL_KEY);
+      hasFalKey &&
+      requestedProvider !== "muapi";
 
     if (!shouldFallbackToFal) {
       throw error;
