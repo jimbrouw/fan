@@ -924,7 +924,7 @@ export default function CreatePage() {
           )}
 
           {(createMode === "vs" || selectedTeamId !== "") && <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {kitPreviewTiles.map(({ label, team, imageUrl }) => {
+            {kitPreviewTiles.map(({ label, team, base, trim, imageUrl }) => {
               const visibleImageUrl = imageUrl && !failedKitImages[imageUrl] ? imageUrl : undefined;
 
               return (
@@ -942,15 +942,25 @@ export default function CreatePage() {
                         onError={() => setFailedKitImages((current) => ({ ...current, [visibleImageUrl]: true }))}
                       />
                     ) : (
-                      <span className="px-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                        No kit image yet
-                      </span>
+                      <div
+                        className="relative flex h-full w-full items-center justify-center overflow-hidden"
+                        style={{
+                          background: `linear-gradient(135deg, ${base} 0 58%, ${trim} 58% 100%)`
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.24)_0_1px,transparent_1px_18px)] opacity-60" />
+                        <div className="relative flex h-[68%] w-[62%] items-start justify-center rounded-t-[28px] border border-white/55 bg-white/25 pt-8 shadow-[0_18px_36px_rgba(42,0,79,0.18)] backdrop-blur-sm">
+                          <div className="absolute left-[-24%] top-[18%] h-[38%] w-[34%] -rotate-12 rounded-[18px] border border-white/45 bg-white/20" />
+                          <div className="absolute right-[-24%] top-[18%] h-[38%] w-[34%] rotate-12 rounded-[18px] border border-white/45 bg-white/20" />
+                          <div className="h-12 w-16 rounded-b-full border-x border-b border-white/55 bg-[rgba(245,245,247,0.72)]" />
+                        </div>
+                      </div>
                     )}
                   </div>
                   <div className="mt-3 min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{label}</p>
                     <p className="mt-1 text-sm font-semibold leading-5 text-[var(--foreground)]">{team}</p>
-                    <p className="mt-1 text-xs leading-4 text-[var(--muted)]">{visibleImageUrl ? "Reference image" : "Kit image needed"}</p>
+                    <p className="mt-1 text-xs leading-4 text-[var(--muted)]">{visibleImageUrl ? "Reference image" : "Colour preview"}</p>
                   </div>
                 </div>
               );

@@ -55,7 +55,7 @@ test("2026/27 Premier League home overlays keep working preview image fallbacks 
   }
 });
 
-test("2026/27 promoted Premier League teams remain metadata-only until preview images are curated", () => {
+test("2026/27 promoted Premier League teams remain image-reference-free until exact images are curated", () => {
   for (const teamId of ["coventry", "hull", "ipswich"]) {
     const spec = getKitSpec(teamId, "home");
 
