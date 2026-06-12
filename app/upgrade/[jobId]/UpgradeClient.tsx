@@ -13,7 +13,7 @@ type JobResponse = {
 };
 
 type UpgradeOption = {
-  id: "birthday-card" | "download" | "poster";
+  id: "fathers-day-card" | "birthday-card" | "download" | "poster";
   name: string;
   price: string;
   icon: typeof Download;
@@ -24,6 +24,16 @@ type UpgradeOption = {
 };
 
 const upgradeOptions: UpgradeOption[] = [
+  {
+    id: "fathers-day-card",
+    name: "Father's Day card",
+    price: "£7.99",
+    icon: Gift,
+    description: "A football card for Dad while Father's Day is close.",
+    includes: ["7x5 printed greeting card", "Poster artwork on the front", "Add a custom message inside"],
+    details: "Seasonal option for Father's Day next Sunday. We can remove it mid-next week.",
+    badge: "This week",
+  },
   {
     id: "birthday-card",
     name: "Greeting card",
@@ -90,7 +100,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
 
   const selectedOption = upgradeOptions.find((option) => option.id === selectedOptionId) ?? upgradeOptions[0];
   const canContinue = job?.status === "completed" && Boolean(job.outputUrl);
-  const isCardOption = selectedOptionId === "birthday-card";
+  const isCardOption = selectedOptionId === "birthday-card" || selectedOptionId === "fathers-day-card";
 
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -129,7 +139,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Make it theirs</p>
         <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Send the football card they&apos;ll actually show off.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          Start simple: printed greeting card, no-watermark download, or the big A3 wall print.
+          Start simple: Father&apos;s Day card, printed greeting card, no-watermark download, or the big A3 wall print.
           Mugs, magnets, and stickers need their own artwork formats, so we&apos;re keeping them back until they look right.
         </p>
       </div>
@@ -229,7 +239,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           <textarea
             value={cardMessage}
             onChange={(event) => setCardMessage(event.target.value.slice(0, 240))}
-            placeholder="Hope this makes the group chat jealous."
+            placeholder={selectedOptionId === "fathers-day-card" ? "Happy Father's Day. Still the captain." : "Hope this makes the group chat jealous."}
             rows={4}
             className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/60 px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.65)] focus:border-[var(--accent)]"
           />
