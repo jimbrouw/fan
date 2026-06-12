@@ -7,6 +7,7 @@ import {
   type ProdigiProductOptionId,
   type ProdigiRecipient
 } from "@/lib/fulfillment/prodigi";
+import { buildAuthenticatedAppUrl, buildAppUrl, getAppUrl } from "@/lib/appLinks";
 import { sendTransactionalEmail } from "@/lib/notifications";
 import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -243,9 +244,9 @@ async function sendDownloadFulfillmentEmail(
   jobId: string
 ) {
   const to = await resolveCheckoutEmail(supabase, session);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kitface-app.vercel.app";
-  const downloadUrl = `${appUrl}/api/jobs/${jobId}/image?download=1&noWatermark=1&session_id=${encodeURIComponent(session.id)}`;
-  const resultUrl = `${appUrl}/result/${jobId}`;
+  const appUrl = getAppUrl();
+  const downloadUrl = `${buildAppUrl(`/api/jobs/${jobId}/image`, appUrl)}?download=1&noWatermark=1&session_id=${encodeURIComponent(session.id)}`;
+  const resultUrl = buildAuthenticatedAppUrl(`/result/${jobId}`, appUrl);
 
   if (!to) return;
 
@@ -283,8 +284,8 @@ async function sendPrintFulfillmentEmail(
   optionId: string
 ) {
   const to = await resolveCheckoutEmail(supabase, session);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kitface-app.vercel.app";
-  const resultUrl = `${appUrl}/result/${jobId}`;
+  const appUrl = getAppUrl();
+  const resultUrl = buildAuthenticatedAppUrl(`/result/${jobId}`, appUrl);
   const productName = optionId === "poster" ? "A3 Poster" : "Greeting Card";
 
   if (!to) return;

@@ -28,6 +28,10 @@ export function ResultClient({ jobId }: { jobId: string }) {
     try {
       const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" });
       const data = (await response.json()) as JobResponse & { error?: string };
+      if (response.status === 401) {
+        window.location.href = `/login?next=${encodeURIComponent(`/result/${jobId}`)}`;
+        return;
+      }
       if (!response.ok) throw new Error(data.error ?? "Job lookup failed.");
       setJob(data);
     } catch (loadError) {
