@@ -33,14 +33,32 @@ export const kitVariants: Array<{ id: KitVariant; label: string }> = [
 
 const premierLeague2026SourceUrl = "https://www.footballkitarchive.com/premier-league-kits-2026-27-l224/";
 
+const premierLeagueHomePreviewFallbacks: Record<string, string> = {
+  "arsenal": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/arsenal/home.jpg",
+  "aston-villa": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/aston-villa/home.jpg",
+  "chelsea": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/chelsea/home.jpg",
+  "leeds": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/leeds/home.jpg",
+  "liverpool": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/liverpool/home.jpg",
+  "man-city": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/man-city/home.jpg",
+  "man-united": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/man-united/home.jpg",
+  "newcastle": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/newcastle/home.jpg",
+  "nottingham-forest": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/nottingham-forest/home.jpg",
+  "tottenham": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/tottenham/home.jpg"
+};
+
 function makePremierLeague2026KitSpec(
   spec: Omit<KitSpec, "season" | "collar" | "cuffs" | "crestPlacement" | "sponsorPlacement" | "shorts" | "socks" | "sourceUrls" | "confidence"> & {
     sourceUrls?: string[];
     confidence?: KitSpec["confidence"];
   },
 ): KitSpec {
+  const referenceImageUrl = spec.referenceImageUrl ?? (
+    spec.variant === "home" ? premierLeagueHomePreviewFallbacks[spec.teamId] : undefined
+  );
+
   return {
     ...spec,
+    referenceImageUrl,
     season: "2026/27",
     collar: "not fully confirmed from launch imagery",
     cuffs: "not fully confirmed from launch imagery",

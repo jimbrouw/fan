@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Copy, Download, MessageCircle, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
+import { Camera, Download, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -49,10 +49,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const imageShareUrl = job?.outputUrl ? `/api/jobs/${jobId}/image` : "";
   const imageDownloadUrl = job?.outputUrl ? `/api/jobs/${jobId}/image?download=1` : "";
   const absoluteImageShareUrl = imageShareUrl && pageUrl ? new URL(imageShareUrl, pageUrl).href : imageShareUrl;
-  const pageShareUrl = pageUrl;
   const shareText = "I made a Kitface matchday poster.";
-  const publicBase = process.env.NEXT_PUBLIC_APP_URL || "https://kitface-app.vercel.app";
-  const whatsappImageUrl = imageShareUrl ? new URL(imageShareUrl, publicBase).href : absoluteImageShareUrl;
   const statusText = job?.status === "completed"
     ? "Your Kitface poster is ready."
     : job?.status === "failed"

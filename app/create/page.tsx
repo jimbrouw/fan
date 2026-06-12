@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { BadgeCheck, ImagePlus, WandSparkles, Zap } from "lucide-react";
-import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";

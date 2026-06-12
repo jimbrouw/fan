@@ -26,6 +26,42 @@ test("Nottingham Forest home kit uses the current 2026/27 Premier League overlay
   assert.equal(spec?.sleeveSponsor, "Ideagen");
   assert.match(spec?.pattern ?? "", /2026\/27 Nottingham Forest home shirt/i);
   assert.match(spec?.sourceUrls.join(" ") ?? "", /premier-league-kits-2026-27/i);
+  assert.equal(
+    spec?.referenceImageUrl,
+    "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/nottingham-forest/home.jpg"
+  );
+});
+
+test("2026/27 Premier League home overlays keep working preview image fallbacks where curated images exist", () => {
+  const expectedFallbackTeams = [
+    "arsenal",
+    "aston-villa",
+    "chelsea",
+    "leeds",
+    "liverpool",
+    "man-city",
+    "man-united",
+    "newcastle",
+    "nottingham-forest",
+    "tottenham"
+  ];
+
+  for (const teamId of expectedFallbackTeams) {
+    const spec = getKitSpec(teamId, "home");
+
+    assert.equal(spec?.season, "2026/27", teamId);
+    assert.equal(spec?.variant, "home", teamId);
+    assert.match(spec?.referenceImageUrl ?? "", new RegExp(`/kit-images/${teamId}/home\\.jpg$`), teamId);
+  }
+});
+
+test("2026/27 promoted Premier League teams remain metadata-only until preview images are curated", () => {
+  for (const teamId of ["coventry", "hull", "ipswich"]) {
+    const spec = getKitSpec(teamId, "home");
+
+    assert.equal(spec?.season, "2026/27", teamId);
+    assert.equal(spec?.referenceImageUrl, undefined, teamId);
+  }
 });
 
 test("poster prompt includes current 2026/27 kit mandate", () => {
@@ -49,8 +85,7 @@ test("poster prompt includes current 2026/27 kit mandate", () => {
   assert.match(prompt, /Bally's/i);
   assert.match(prompt, /Ideagen/i);
   assert.match(prompt, /2026\/27 Nottingham Forest home shirt/i);
-  assert.doesNotMatch(prompt, /attached kit reference image/i);
-  assert.match(prompt, /No kit reference image is attached/i);
+  assert.match(prompt, /Use the attached kit reference image/i);
 });
 
 test("World Cup teams can fall back to away kit metadata", () => {
