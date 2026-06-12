@@ -5,10 +5,10 @@ import {
   ProdigiFulfillmentProvider,
   readProdigiProductConfig,
   type ProdigiProductOptionId,
-  type ProdigiRecipient
 } from "@/lib/fulfillment/prodigi";
 import { buildAuthenticatedAppUrl, buildAppUrl, getAppUrl } from "@/lib/appLinks";
 import { sendTransactionalEmail } from "@/lib/notifications";
+import { buildProdigiRecipient } from "@/lib/stripe/checkoutRecipient";
 import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -314,51 +314,4 @@ async function sendPrintFulfillmentEmail(
   } catch (error) {
     console.error("Print fulfillment email failed:", error instanceof Error ? error.message : error);
   }
-}
-
-function buildProdigiRecipient(session: Stripe.Checkout.Session): ProdigiRecipient {
-  const sessionObj = session as unknown as {
-    collected_information?: {
-      shipping_details?: {
-        name?: string;
-        address?: {
-          line1?: string;
-          line2?: string;
-          city?: string;
-          state?: string;
-          country?: string;
-          postal_code?: string;
-        };
-      };
-    };
-    shipping_details?: {
-      name?: string;
-      address?: {
-        line1?: string;
-        line2?: string;
-        city?: string;
-        state?: string;
-        country?: string;
-        postal_code?: string;
-      };
-    };
-  };
-  const shipping = sessionObj.collected_information?.shipping_details || sessionObj.shipping_details;
-  const address = shipping?.address;
-
-  if (!shipping?.name || !address?.line1 || !address.city || !address.country || !address.postal_code) {
-    throw new Error("Stripe checkout session is missing a complete shipping address.");
-  }
-
-  return {
-    name: shipping.name,
-    addressLine1: address.line1,
-    addressLine2: address.line2 ?? undefined,
-    city: address.city,
-    stateOrCounty: address.state ?? undefined,
-    countryCode: address.country,
-    postalOrZipCode: address.postal_code,
-    phoneNumber: session.customer_details?.phone ?? undefined,
-    email: session.customer_details?.email ?? undefined
-  };
 }
