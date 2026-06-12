@@ -20,7 +20,7 @@ export const checkoutProducts: Record<ProdigiProductOptionId, CheckoutProduct> =
   },
   "birthday-card": {
     id: "birthday-card",
-    name: "Birthday card",
+    name: "Greeting card",
     description: "Printed 7x5 greeting card with your Kitface poster on the front.",
     unitAmount: 799,
     currency: "gbp",

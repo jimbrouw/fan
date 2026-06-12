@@ -19,25 +19,28 @@ type UpgradeOption = {
   icon: typeof Download;
   description: string;
   includes: string[];
+  details: string;
   badge?: string;
 };
 
 const upgradeOptions: UpgradeOption[] = [
   {
     id: "birthday-card",
-    name: "Birthday card",
+    name: "Greeting card",
     price: "£7.99",
     icon: Gift,
-    description: "A printed birthday card with their Kitface poster on the front.",
-    includes: ["Printed greeting card", "Poster on the front", "Add a custom message"],
+    description: "A printed 7x5 card for birthdays, thank-yous, matchdays, or any excuse.",
+    includes: ["7x5 printed greeting card", "Poster artwork on the front", "Add a custom message inside"],
+    details: "Best for a smaller, cheaper keepsake that still feels personal.",
   },
   {
     id: "fathers-day-card",
     name: "Father's Day card",
     price: "£7.99",
     icon: Gift,
-    description: "A printed Father's Day card with their Kitface poster on the front.",
-    includes: ["Printed greeting card", "Poster on the front", "Add a custom message"],
+    description: "A Father's Day version while the occasion is still close.",
+    includes: ["7x5 printed greeting card", "Poster artwork on the front", "Add a custom message inside"],
+    details: "We can remove this seasonal option after Father's Day and keep the general greeting card live.",
     badge: "Best gift",
   },
   {
@@ -47,6 +50,7 @@ const upgradeOptions: UpgradeOption[] = [
     icon: Download,
     description: "Full-resolution file with no Kitface watermark.",
     includes: ["High-res file", "No Kitface watermark", "Download link for your order"],
+    details: "Fastest option if you want to share it, print it yourself, or keep it digital.",
   },
   {
     id: "poster",
@@ -55,6 +59,7 @@ const upgradeOptions: UpgradeOption[] = [
     icon: Package,
     description: "Still available if you want the bigger wall print.",
     includes: ["High-res upscale", "Professional A3 print", "Delivered to your door"],
+    details: "The premium option for bedrooms, offices, clubhouses, or a proper gift.",
   },
 ];
 
@@ -125,9 +130,10 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Make it theirs</p>
-        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Turn it into a card.</h1>
+        <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Send it as a gift.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          Start with a cheaper printed card for Father&apos;s Day, birthdays, or matchday gifts. A3 posters are still available below.
+          Start with a cheaper printed greeting card, grab the clean download, or go bigger with an A3 wall print.
+          Father&apos;s Day stays here for now because it is coming up soon.
         </p>
       </div>
 
@@ -144,7 +150,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
         <div className="flex flex-col justify-center gap-2">
           <p className="text-sm font-semibold text-[var(--foreground)]">Your poster preview</p>
           <p className="text-xs leading-5 text-[var(--muted)]">
-            Status: {job?.status ?? "loading"}. The final poster becomes the front print for the selected card.
+            Status: {job?.status ?? "loading"}. The finished image is used for your download, card front, or poster print.
           </p>
           {!canContinue && (
             <Button type="button" variant="secondary" onClick={loadJob} disabled={isLoading} className="mt-1 w-full">
@@ -188,6 +194,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
                     <p className="shrink-0 text-sm font-bold text-[var(--accent)]">{option.price}</p>
                   </div>
                   <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{option.description}</p>
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{option.details}</p>
                   <div className="mt-3 grid gap-1">
                     {option.includes.map((item) => (
                       <span key={item} className="inline-flex items-center gap-2 text-xs leading-5 text-[var(--foreground)]">
@@ -209,7 +216,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           <textarea
             value={cardMessage}
             onChange={(event) => setCardMessage(event.target.value.slice(0, 240))}
-            placeholder={selectedOptionId === "birthday-card" ? "Happy birthday! Hope your day is Premier League level." : "Happy Father's Day! Thanks for being our captain."}
+            placeholder={selectedOptionId === "birthday-card" ? "Hope this makes the group chat jealous." : "Happy Father's Day! Thanks for being our captain."}
             rows={4}
             className="min-h-24 w-full resize-none rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)]/60 px-4 py-3 text-sm leading-6 text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.65)] focus:border-[var(--accent)]"
           />

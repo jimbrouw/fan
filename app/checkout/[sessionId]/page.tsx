@@ -37,9 +37,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ sessionId: 
       const optionId = parts[1] as MockSessionDetails["optionId"];
       
       const optionMap = {
-        "fathers-day-card": { name: "Father's Day card", price: "£4.99" },
-        "birthday-card": { name: "Birthday card", price: "£4.99" },
-        download: { name: "Download — no watermark", price: "£7.99" },
+        "fathers-day-card": { name: "Father's Day card", price: "£7.99" },
+        "birthday-card": { name: "Greeting card", price: "£7.99" },
+        download: { name: "Download — no watermark", price: "£3.99" },
         poster: { name: "A3 poster — delivered", price: "£29.99" },
       };
       

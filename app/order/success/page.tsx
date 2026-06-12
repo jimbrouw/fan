@@ -13,7 +13,7 @@ type OrderSuccessPageProps = {
 
 const optionNameMap = {
   "fathers-day-card": "Father's Day card",
-  "birthday-card": "Birthday card",
+  "birthday-card": "Greeting card",
   download: "Download - no watermark",
   poster: "A3 poster - delivered",
 } as const;
