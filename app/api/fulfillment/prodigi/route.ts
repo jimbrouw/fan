@@ -26,6 +26,10 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
 
 export async function POST(request: Request) {
   try {
+    if (process.env.VERCEL_ENV === "production") {
+      return NextResponse.json({ error: "Direct Prodigi test fulfillment is disabled in production." }, { status: 404 });
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Sign in to fulfill this order." }, { status: 401 });
