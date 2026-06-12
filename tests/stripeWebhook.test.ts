@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type Stripe from "stripe";
-import { buildProdigiRecipient } from "../lib/stripe/checkoutRecipient.ts";
+import { buildProdigiRecipient, isDemoCheckoutSession } from "../lib/stripe/checkoutRecipient.ts";
 
 test("buildProdigiRecipient falls back to completed Checkout customer details", () => {
   const session = {
@@ -29,4 +29,14 @@ test("buildProdigiRecipient falls back to completed Checkout customer details", 
     phoneNumber: "07123456789",
     email: "test@example.com",
   });
+});
+
+test("demo checkout sessions are recognised by metadata", () => {
+  const session = {
+    metadata: {
+      demoMode: "1",
+    },
+  } as unknown as Stripe.Checkout.Session;
+
+  assert.equal(isDemoCheckoutSession(session), true);
 });

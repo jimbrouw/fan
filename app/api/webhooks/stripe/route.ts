@@ -8,7 +8,7 @@ import {
 } from "@/lib/fulfillment/prodigi";
 import { buildAuthenticatedAppUrl, buildAppUrl, getAppUrl } from "@/lib/appLinks";
 import { sendTransactionalEmail } from "@/lib/notifications";
-import { buildProdigiRecipient } from "@/lib/stripe/checkoutRecipient";
+import { buildProdigiRecipient, isDemoCheckoutSession } from "@/lib/stripe/checkoutRecipient";
 import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -74,6 +74,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const jobId = session.metadata?.jobId;
   const optionId = session.metadata?.optionId as ProdigiProductOptionId | undefined;
   const cardMessage = session.metadata?.cardMessage?.trim() || null;
+  const isDemoMode = isDemoCheckoutSession(session);
 
   if (!jobId || !optionId) {
     throw new Error("Stripe session is missing jobId or optionId metadata.");
@@ -115,6 +116,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     if (optionId === "download") {
       await sendDownloadFulfillmentEmail(supabase, session, jobId);
     }
+    return;
+  }
+
+  if (isDemoMode) {
+    await markOrderFulfilled(supabase, session.id, null);
     return;
   }
 

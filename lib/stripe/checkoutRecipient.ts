@@ -62,3 +62,7 @@ export function buildProdigiRecipient(session: Stripe.Checkout.Session): Prodigi
     email: customerDetails?.email ?? undefined
   };
 }
+
+export function isDemoCheckoutSession(session: Stripe.Checkout.Session) {
+  return session.metadata?.demoMode === "1";
+}
