@@ -97,6 +97,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
   const [selectedOptionId, setSelectedOptionId] = useState<UpgradeOption["id"]>("birthday-card");
   const [cardMessage, setCardMessage] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  const [isDemoRedirecting, setIsDemoRedirecting] = useState(false);
 
   const loadJob = useCallback(async () => {
     setIsLoading(true);
@@ -153,6 +154,36 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
     }
   }
 
+  async function handleDemoCheckout() {
+    setIsDemoRedirecting(true);
+    setStatus(null);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+          optionId: "birthday-card",
+          cardMessage: cardMessage.trim() || "Demo greeting card fulfillment test.",
+          demoMode: true,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to initialize demo checkout.");
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "An error occurred starting demo checkout.";
+      setStatus(message);
+    } finally {
+      setIsDemoRedirecting(false);
+    }
+  }
+
   return (
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
@@ -163,6 +194,17 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
           so the smaller gifts feel like an easy yes.
           Father&apos;s Day stays here for now because it is coming up soon.
         </p>
+      </div>
+
+      <div className="space-y-2 rounded-[18px] border border-[var(--accent)]/30 bg-[rgba(49,240,213,0.08)] p-4">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Temporary test</p>
+        <p className="text-sm font-bold text-[var(--foreground)]">Demo greeting card checkout - 50p</p>
+        <p className="text-xs leading-5 text-[var(--muted)]">
+          Uses the real Stripe and Prodigi flow with a lower test price. Remove after fulfillment testing.
+        </p>
+        <Button type="button" className="w-full" disabled={!canContinue || isDemoRedirecting} onClick={handleDemoCheckout}>
+          {isDemoRedirecting ? "Starting demo..." : "Demo checkout - 50p"}
+        </Button>
       </div>
 
       <div className="grid grid-cols-[92px_1fr] gap-4 rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-3">

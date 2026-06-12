@@ -5,11 +5,13 @@ import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { decideOwnedResourceAccess } from "@/lib/authz";
+import { isExemptEmail } from "@/lib/credits";
 
 type CheckoutRequest = {
   jobId?: string;
   optionId?: ProdigiProductOptionId;
   cardMessage?: string;
+  demoMode?: boolean;
 };
 
 type JobRow = {
@@ -45,6 +47,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Unknown checkout option." },
         { status: 400 }
+      );
+    }
+
+    const isDemoCheckout = Boolean(body.demoMode);
+    if (isDemoCheckout && (!isExemptEmail(user.email) || body.optionId !== "birthday-card")) {
+      return NextResponse.json(
+        { error: "Demo checkout is only enabled for the internal greeting-card test account." },
+        { status: 403 }
       );
     }
 
@@ -120,10 +130,10 @@ export async function POST(request: Request) {
           quantity: 1,
           price_data: {
             currency: product.currency,
-            unit_amount: product.unitAmount,
+            unit_amount: isDemoCheckout ? 50 : product.unitAmount,
             product_data: {
-              name: product.name,
-              description: product.description
+              name: isDemoCheckout ? `Demo ${product.name}` : product.name,
+              description: isDemoCheckout ? "Temporary low-price live fulfillment test." : product.description
             }
           }
         }
@@ -132,6 +142,7 @@ export async function POST(request: Request) {
         jobId: job.id,
         optionId: product.id,
         userId: user.id,
+        ...(isDemoCheckout ? { demoMode: "1" } : {}),
         ...(cardMessage ? { cardMessage } : {})
       },
       payment_intent_data: {
@@ -139,6 +150,7 @@ export async function POST(request: Request) {
           jobId: job.id,
           optionId: product.id,
           userId: user.id,
+          ...(isDemoCheckout ? { demoMode: "1" } : {}),
           ...(cardMessage ? { cardMessage } : {})
         }
       },
