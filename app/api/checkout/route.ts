@@ -1,11 +1,12 @@
 import type { ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
 import { NextResponse } from "next/server";
-import { getCheckoutProduct } from "@/lib/checkout/products";
+import { getCheckoutProduct, isPhysicalCheckoutOption } from "@/lib/checkout/products";
 import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { decideOwnedResourceAccess } from "@/lib/authz";
 import { isExemptEmail } from "@/lib/credits";
+import { isPhysicalFulfillmentEnabled } from "@/lib/fulfillment/physicalFulfillment";
 
 type CheckoutRequest = {
   jobId?: string;
@@ -47,6 +48,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Unknown checkout option." },
         { status: 400 }
+      );
+    }
+
+    if (isPhysicalCheckoutOption(product.id) && !isPhysicalFulfillmentEnabled()) {
+      return NextResponse.json(
+        { error: "Printed gifts are paused while we check fulfillment. Downloads are still available." },
+        { status: 503 }
       );
     }
 

@@ -6,6 +6,7 @@ import {
   readProdigiProductConfig,
   type ProdigiProductOptionId,
 } from "@/lib/fulfillment/prodigi";
+import { isPhysicalFulfillmentEnabled } from "@/lib/fulfillment/physicalFulfillment";
 import { buildAuthenticatedAppUrl, buildAppUrl, getAppUrl } from "@/lib/appLinks";
 import { sendTransactionalEmail } from "@/lib/notifications";
 import { buildProdigiRecipient, isDemoCheckoutSession } from "@/lib/stripe/checkoutRecipient";
@@ -124,6 +125,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
+  if (!isPhysicalFulfillmentEnabled()) {
+    await markOrderFailed(supabase, session.id, null);
+    return;
+  }
+
   const { data: job, error } = await supabase
     .from("generation_jobs")
     .select("id,status,output_url")
@@ -215,6 +221,25 @@ async function markOrderFulfilled(
     .from("purchase_orders")
     .update({
       status: "fulfilled",
+      printful_order_id: printfulOrderId,
+      updated_at: new Date().toISOString()
+    })
+    .eq("stripe_session_id", stripeSessionId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function markOrderFailed(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  stripeSessionId: string,
+  printfulOrderId: string | null
+) {
+  const { error } = await supabase
+    .from("purchase_orders")
+    .update({
+      status: "failed",
       printful_order_id: printfulOrderId,
       updated_at: new Date().toISOString()
     })
