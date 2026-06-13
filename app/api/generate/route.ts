@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       const { count, error: usageError } = await usageClient
         .from("generation_jobs")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
+        .eq("user_id", user!.id);
 
       // Fail open if the user_id column isn't migrated yet so we never falsely block.
       if (!usageError && (count ?? 0) >= FREE_TIER_GENERATIONS) {
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         const { data: profile } = await usageClient
           .from("users")
           .select("credits")
-          .eq("id", user.id)
+          .eq("id", user!.id)
           .single<{ credits: number }>();
 
         if ((profile?.credits ?? 0) <= 0) {
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
     // Spend the credit securely before submission
     if (consumeCreditAfterSuccess) {
       const usageClient = createServerSupabaseClient();
-      const { data: newCredits, error: creditError } = await usageClient.rpc("consume_user_credit", { p_user_id: user.id });
+      const { data: newCredits, error: creditError } = await usageClient.rpc("consume_user_credit", { p_user_id: user!.id });
       if (creditError || newCredits === null) {
         return NextResponse.json(
           {
