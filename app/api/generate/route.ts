@@ -11,7 +11,7 @@ import { upsertUserProfile } from "@/lib/users";
 import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
 import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
-import { FREE_TIER_GENERATIONS, isExemptEmail } from "@/lib/credits";
+import { FREE_TIER_GENERATIONS, isExemptEmail, isValidMarketingKey } from "@/lib/credits";
 import { validatePosterPersonalisation } from "@/lib/safety/profanity";
 
 type GenerateBody = {
@@ -59,14 +59,17 @@ export async function POST(request: Request) {
   let userId: string | null = null;
 
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const marketingKey = request.headers.get("x-marketing-key");
+    const isMarketingServiceRequest = isValidMarketingKey(marketingKey);
+
+    const user = isMarketingServiceRequest ? null : await getCurrentUser();
+    if (!isMarketingServiceRequest && !user) {
       return NextResponse.json({ error: "Sign in with Google before generating your poster." }, { status: 401 });
     }
-    userId = user.id;
-    await upsertUserProfile(user);
+    userId = isMarketingServiceRequest ? "marketing-service" : user!.id;
+    if (!isMarketingServiceRequest) await upsertUserProfile(user!);
 
-    const isExempt = isExemptEmail(user.email);
+    const isExempt = isMarketingServiceRequest || isExemptEmail(user?.email);
     if (!isExempt) {
       const usageClient = createServerSupabaseClient();
       const { count, error: usageError } = await usageClient
@@ -198,7 +201,7 @@ export async function POST(request: Request) {
     const jobInsert = {
       id: jobId,
       session_id: body.sessionId,
-      user_id: user.id,
+      user_id: userId as string,
       team_name: body.teamName,
       kit_notes: [
         body.kitNotes,
@@ -235,7 +238,7 @@ export async function POST(request: Request) {
     // Analytics logging
     const analyticsInsert = {
       generation_job_id: jobId,
-      user_id: user.id,
+      user_id: userId as string,
       team_name: body.teamName,
       kit_variant: kitVariant,
       poster_style: posterStyle.name,
@@ -254,7 +257,7 @@ export async function POST(request: Request) {
 
     const sessionUpdate = await supabase
       .from("capture_sessions")
-      .update({ user_id: user.id, status: "generating" })
+      .update({ user_id: userId as string, status: "generating" })
       .eq("id", body.sessionId);
 
     if (sessionUpdate.error && isMissingSchemaColumn(sessionUpdate.error, "user_id")) {
