@@ -183,7 +183,7 @@ export async function POST(request: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/generation` : undefined;
 
-    const providerJobId = await submitStaticGenerationJob({
+    const { providerJobId, provider: jobProvider } = await submitStaticGenerationJob({
       prompt,
       referenceImageUrls,
       model: body.model,
@@ -191,8 +191,9 @@ export async function POST(request: Request) {
       webhookUrl,
     });
 
-    if (!providerJobId) {
-      throw new Error("Provider did not return a job id.");
+    // Marketing service requests skip DB tracking — tracking happens in the marketing repo.
+    if (isMarketingServiceRequest) {
+      return NextResponse.json({ requestId: providerJobId, provider: jobProvider, status: "processing" });
     }
 
     const supabase = createServerSupabaseClient();
@@ -294,27 +295,25 @@ async function submitStaticGenerationJob(input: {
   model?: string;
   gptImageTestMode?: MuapiGptImageTestMode;
   webhookUrl?: string;
-}) {
+}): Promise<{ providerJobId: string; provider: "fal" | "muapi" }> {
   const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
   const useFalPrimary = process.env.FAL_KEY && isGptImage;
 
   if (useFalPrimary) {
     try {
-      // Testing with FAL GPT Image 2 as primary provider...
       const falProvider = new FalGptImage2GenerationProvider();
       const { providerJobId } = await falProvider.submitJob({
         prompt: input.prompt,
         referenceImageUrls: input.referenceImageUrls,
       });
-      return providerJobId;
+      return { providerJobId, provider: "fal" };
     } catch (error) {
       console.warn("FAL GPT Image 2 submission failed; falling back to MUAPI.", {
         error: error instanceof Error ? error.message : String(error),
       });
-      // Fallback to MUAPI
       const muapiProvider = new MuapiGenerationProvider();
       const { providerJobId } = await muapiProvider.submitJob(input);
-      return providerJobId;
+      return { providerJobId, provider: "muapi" };
     }
   }
 
@@ -322,7 +321,7 @@ async function submitStaticGenerationJob(input: {
   const muapiProvider = new MuapiGenerationProvider();
   try {
     const { providerJobId } = await muapiProvider.submitJob(input);
-    return providerJobId;
+    return { providerJobId, provider: "muapi" };
   } catch (error) {
     const shouldFallbackToFal =
       input.model === "gpt-image-2" &&
@@ -342,6 +341,6 @@ async function submitStaticGenerationJob(input: {
       prompt: input.prompt,
       referenceImageUrls: input.referenceImageUrls,
     });
-    return providerJobId;
+    return { providerJobId, provider: "fal" };
   }
 }
