@@ -11,7 +11,7 @@ import { upsertUserProfile } from "@/lib/users";
 import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
 import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
-import { FREE_TIER_GENERATIONS, isExemptEmail } from "@/lib/credits";
+import { FREE_TIER_GENERATIONS, isExemptEmail, isValidMarketingKey } from "@/lib/credits";
 import { validatePosterPersonalisation } from "@/lib/safety/profanity";
 
 type GenerateBody = {
@@ -59,20 +59,23 @@ export async function POST(request: Request) {
   let userId: string | null = null;
 
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const marketingKey = request.headers.get("x-marketing-key");
+    const isMarketingServiceRequest = isValidMarketingKey(marketingKey);
+
+    const user = isMarketingServiceRequest ? null : await getCurrentUser();
+    if (!isMarketingServiceRequest && !user) {
       return NextResponse.json({ error: "Sign in with Google before generating your poster." }, { status: 401 });
     }
-    userId = user.id;
-    await upsertUserProfile(user);
+    userId = isMarketingServiceRequest ? "marketing-service" : user!.id;
+    if (!isMarketingServiceRequest) await upsertUserProfile(user!);
 
-    const isExempt = isExemptEmail(user.email);
+    const isExempt = isMarketingServiceRequest || isExemptEmail(user?.email);
     if (!isExempt) {
       const usageClient = createServerSupabaseClient();
       const { count, error: usageError } = await usageClient
         .from("generation_jobs")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
+        .eq("user_id", user!.id);
 
       // Fail open if the user_id column isn't migrated yet so we never falsely block.
       if (!usageError && (count ?? 0) >= FREE_TIER_GENERATIONS) {
@@ -80,7 +83,7 @@ export async function POST(request: Request) {
         const { data: profile } = await usageClient
           .from("users")
           .select("credits")
-          .eq("id", user.id)
+          .eq("id", user!.id)
           .single<{ credits: number }>();
 
         if ((profile?.credits ?? 0) <= 0) {
@@ -139,7 +142,7 @@ export async function POST(request: Request) {
     // Spend the credit securely before submission
     if (consumeCreditAfterSuccess) {
       const usageClient = createServerSupabaseClient();
-      const { data: newCredits, error: creditError } = await usageClient.rpc("consume_user_credit", { p_user_id: user.id });
+      const { data: newCredits, error: creditError } = await usageClient.rpc("consume_user_credit", { p_user_id: user!.id });
       if (creditError || newCredits === null) {
         return NextResponse.json(
           {
@@ -180,7 +183,7 @@ export async function POST(request: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/generation` : undefined;
 
-    const providerJobId = await submitStaticGenerationJob({
+    const { providerJobId, provider: jobProvider } = await submitStaticGenerationJob({
       prompt,
       referenceImageUrls,
       model: body.model,
@@ -188,8 +191,9 @@ export async function POST(request: Request) {
       webhookUrl,
     });
 
-    if (!providerJobId) {
-      throw new Error("Provider did not return a job id.");
+    // Marketing service requests skip DB tracking — tracking happens in the marketing repo.
+    if (isMarketingServiceRequest) {
+      return NextResponse.json({ requestId: providerJobId, provider: jobProvider, status: "processing" });
     }
 
     const supabase = createServerSupabaseClient();
@@ -198,7 +202,7 @@ export async function POST(request: Request) {
     const jobInsert = {
       id: jobId,
       session_id: body.sessionId,
-      user_id: user.id,
+      user_id: userId as string,
       team_name: body.teamName,
       kit_notes: [
         body.kitNotes,
@@ -235,7 +239,7 @@ export async function POST(request: Request) {
     // Analytics logging
     const analyticsInsert = {
       generation_job_id: jobId,
-      user_id: user.id,
+      user_id: userId as string,
       team_name: body.teamName,
       kit_variant: kitVariant,
       poster_style: posterStyle.name,
@@ -254,7 +258,7 @@ export async function POST(request: Request) {
 
     const sessionUpdate = await supabase
       .from("capture_sessions")
-      .update({ user_id: user.id, status: "generating" })
+      .update({ user_id: userId as string, status: "generating" })
       .eq("id", body.sessionId);
 
     if (sessionUpdate.error && isMissingSchemaColumn(sessionUpdate.error, "user_id")) {
@@ -291,27 +295,25 @@ async function submitStaticGenerationJob(input: {
   model?: string;
   gptImageTestMode?: MuapiGptImageTestMode;
   webhookUrl?: string;
-}) {
+}): Promise<{ providerJobId: string; provider: "fal" | "muapi" }> {
   const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
   const useFalPrimary = process.env.FAL_KEY && isGptImage;
 
   if (useFalPrimary) {
     try {
-      // Testing with FAL GPT Image 2 as primary provider...
       const falProvider = new FalGptImage2GenerationProvider();
       const { providerJobId } = await falProvider.submitJob({
         prompt: input.prompt,
         referenceImageUrls: input.referenceImageUrls,
       });
-      return providerJobId;
+      return { providerJobId, provider: "fal" };
     } catch (error) {
       console.warn("FAL GPT Image 2 submission failed; falling back to MUAPI.", {
         error: error instanceof Error ? error.message : String(error),
       });
-      // Fallback to MUAPI
       const muapiProvider = new MuapiGenerationProvider();
       const { providerJobId } = await muapiProvider.submitJob(input);
-      return providerJobId;
+      return { providerJobId, provider: "muapi" };
     }
   }
 
@@ -319,7 +321,7 @@ async function submitStaticGenerationJob(input: {
   const muapiProvider = new MuapiGenerationProvider();
   try {
     const { providerJobId } = await muapiProvider.submitJob(input);
-    return providerJobId;
+    return { providerJobId, provider: "muapi" };
   } catch (error) {
     const shouldFallbackToFal =
       input.model === "gpt-image-2" &&
@@ -339,6 +341,6 @@ async function submitStaticGenerationJob(input: {
       prompt: input.prompt,
       referenceImageUrls: input.referenceImageUrls,
     });
-    return providerJobId;
+    return { providerJobId, provider: "fal" };
   }
 }

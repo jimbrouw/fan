@@ -9,6 +9,12 @@ export function isExemptEmail(email: string | null | undefined): boolean {
   return EXEMPT_EMAILS.has((email ?? "").toLowerCase());
 }
 
+export function isValidMarketingKey(headerValue: string | null): boolean {
+  const expected = process.env.MARKETING_SERVICE_KEY;
+  if (!expected || !headerValue) return false;
+  return headerValue === expected;
+}
+
 // The single credit pack offered at checkout. Amounts are in pence (GBP).
 export const CREDIT_PACK = {
   credits: 10,
