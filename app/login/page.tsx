@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, CheckCircle2, LogIn } from "lucide-react";
+import { Bell, CheckCircle2, LogIn, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -9,8 +10,11 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isSendingEmailLink, setIsSendingEmailLink] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [next, setNext] = useState("/create");
+  const [email, setEmail] = useState("");
+  const [emailMessage, setEmailMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -85,6 +89,42 @@ export default function LoginPage() {
     }
   }
 
+  async function signInWithEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const supabase = createBrowserSupabaseClient();
+    if (!supabase) {
+      setError("Supabase auth is not configured.");
+      return;
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      setError("Enter your email address.");
+      return;
+    }
+
+    setIsSendingEmailLink(true);
+    setError(null);
+    setEmailMessage(null);
+
+    const origin = window.location.origin;
+    const { error: signInError } = await supabase.auth.signInWithOtp({
+      email: trimmedEmail,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
+    });
+
+    if (signInError) {
+      setError(signInError.message);
+      setIsSendingEmailLink(false);
+      return;
+    }
+
+    setEmailMessage("Check your email for a sign-in link.");
+    setIsSendingEmailLink(false);
+  }
+
   return (
     <AppFrame>
       <section className="flex flex-1 flex-col justify-center gap-6 pb-4">
@@ -110,6 +150,24 @@ export default function LoginPage() {
                 <LogIn size={18} />
                 {isSigningIn ? "Opening Google..." : "Continue with Google"}
               </Button>
+              <form className="space-y-3" onSubmit={signInWithEmail}>
+                <label className="block space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Or use email</span>
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className="h-13 w-full rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-base font-semibold text-[var(--foreground)] outline-none transition placeholder:text-[rgba(140,134,163,0.65)] focus:border-[var(--accent)]"
+                  />
+                </label>
+                <Button type="submit" variant="secondary" disabled={isSendingEmailLink} className="h-13 w-full text-base">
+                  <Mail size={18} />
+                  {isSendingEmailLink ? "Sending link..." : "Email me a sign-in link"}
+                </Button>
+              </form>
               <div className="grid gap-2 text-sm leading-5 text-[var(--muted)]">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={16} className="text-[var(--accent)]" />
@@ -125,6 +183,11 @@ export default function LoginPage() {
             {error && (
               <p className="rounded-[14px] border border-[var(--accent)]/30 bg-[var(--accent)]/10 p-3 text-sm leading-6 text-[var(--foreground)]">
                 {error}
+              </p>
+            )}
+            {emailMessage && (
+              <p className="rounded-[14px] border border-[var(--accent)]/30 bg-[var(--accent)]/10 p-3 text-sm leading-6 text-[var(--foreground)]">
+                {emailMessage}
               </p>
             )}
           </>
