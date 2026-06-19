@@ -7,7 +7,7 @@ export async function submitStaticGenerationJob(input: {
   model?: string;
   gptImageTestMode?: MuapiGptImageTestMode;
   webhookUrl?: string;
-}) {
+}): Promise<{ providerJobId: string; provider: "fal" | "muapi" }> {
   const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
   const requestedProvider = process.env.IMAGE_GENERATION_PROVIDER?.toLowerCase();
   const hasFalKey = Boolean(process.env.FAL_KEY || process.env.FAL_API_KEY);
@@ -32,7 +32,7 @@ export async function submitStaticGenerationJob(input: {
         prompt: input.prompt,
         referenceImageUrls: input.referenceImageUrls,
       });
-      return providerJobId;
+      return { providerJobId, provider: "fal" };
     } catch (error) {
       if (requestedProvider === "fal") {
         throw error;
@@ -45,12 +45,8 @@ export async function submitStaticGenerationJob(input: {
   }
 
   const muapiProvider = new MuapiGenerationProvider();
-  try {
-    const { providerJobId } = await muapiProvider.submitJob(input);
-    return providerJobId;
-  } catch (error) {
-    throw error;
-  }
+  const { providerJobId } = await muapiProvider.submitJob(input);
+  return { providerJobId, provider: "muapi" };
 }
 
 export function shouldUseFalStaticGenerationProvider(input: {

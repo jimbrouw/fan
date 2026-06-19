@@ -95,9 +95,10 @@ export async function POST(request: Request) {
       await upsertUserProfile(user);
     }
 
-    // Rate Limit (authenticated or IP)
-    const limitResponse = checkRateLimit(userId, "generate", { limit: 10, windowMs: 60 * 1000 });
-    if (limitResponse) return limitResponse;
+    if (!isMarketingServiceRequest) {
+      const limitResponse = checkRateLimit(userId, "generate", { limit: 10, windowMs: 60 * 1000 });
+      if (limitResponse) return limitResponse;
+    }
 
     const body = (await request.json()) as GenerateBody;
     if (!body.sessionId || !body.sourceImageUrl || !body.teamName || !body.kitNotes || !body.teamProfile) {
@@ -107,39 +108,39 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate capture session ownership
     const supabase = createServerSupabaseClient();
-    const sessionQuery = await supabase
-      .from("capture_sessions")
-      .select("id,user_id")
-      .eq("id", body.sessionId)
-      .maybeSingle<CaptureSessionRow>();
+    if (!isMarketingServiceRequest) {
+      const sessionQuery = await supabase
+        .from("capture_sessions")
+        .select("id,user_id")
+        .eq("id", body.sessionId)
+        .maybeSingle<CaptureSessionRow>();
 
-    if (sessionQuery.error) {
-      console.error("Session lookup error:", sessionQuery.error.message);
-      return NextResponse.json({ error: "Service temporarily unavailable. Please try again." }, { status: 503 });
-    }
+      if (sessionQuery.error) {
+        console.error("Session lookup error:", sessionQuery.error.message);
+        return NextResponse.json({ error: "Service temporarily unavailable. Please try again." }, { status: 503 });
+      }
 
-    if (!sessionQuery.data) {
-      return NextResponse.json({ error: "Capture session not found." }, { status: 404 });
-    }
+      if (!sessionQuery.data) {
+        return NextResponse.json({ error: "Capture session not found." }, { status: 404 });
+      }
 
-    const resourceUserId = sessionQuery.data.user_id;
-    if (resourceUserId && resourceUserId !== userId) {
-      return NextResponse.json({ error: "Capture session not found." }, { status: 404 });
-    }
+      const resourceUserId = sessionQuery.data.user_id;
+      if (resourceUserId && resourceUserId !== userId) {
+        return NextResponse.json({ error: "Capture session not found." }, { status: 404 });
+      }
 
-    // Validate client-supplied image URLs
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const clientUrls = [
-      body.sourceImageUrl,
-      ...(body.personReferenceImageUrls ?? []),
-      body.matchContext?.opponentSourceImageUrl
-    ].filter((url): url is string => Boolean(url));
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+      const clientUrls = [
+        body.sourceImageUrl,
+        ...(body.personReferenceImageUrls ?? []),
+        body.matchContext?.opponentSourceImageUrl
+      ].filter((url): url is string => Boolean(url));
 
-    for (const url of clientUrls) {
-      if (!validateClientImageUrl(url, body.sessionId, supabaseUrl, captureBucket)) {
-        return NextResponse.json({ error: "Access denied to reference images." }, { status: 403 });
+      for (const url of clientUrls) {
+        if (!validateClientImageUrl(url, body.sessionId, supabaseUrl, captureBucket)) {
+          return NextResponse.json({ error: "Access denied to reference images." }, { status: 403 });
+        }
       }
     }
 
@@ -292,7 +293,7 @@ export async function POST(request: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/generation` : undefined;
 
-    const providerJobId = await submitStaticGenerationJob({
+    const { providerJobId, provider: jobProvider } = await submitStaticGenerationJob({
       prompt,
       referenceImageUrls,
       model: requestedModel,
@@ -300,15 +301,9 @@ export async function POST(request: Request) {
       webhookUrl,
     });
 
-    if (!providerJobId) {
-      throw new Error("Provider did not return a job id.");
-    }
-
+    // Marketing service requests skip DB tracking — tracking happens in the marketing repo.
     if (isMarketingServiceRequest) {
-      const provider = providerJobId.startsWith("muapi:") ? "muapi"
-        : providerJobId.startsWith("fal:") ? "fal"
-          : "muapi";
-      return NextResponse.json({ requestId: providerJobId, provider, status: "processing" });
+      return NextResponse.json({ requestId: providerJobId, provider: jobProvider, status: "processing" });
     }
 
     // Update pre-inserted job with providerJobId

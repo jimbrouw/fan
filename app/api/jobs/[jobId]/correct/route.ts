@@ -96,7 +96,7 @@ ${formatCorrectionInstructions(correction)}`;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/generation` : undefined;
-    const providerJobId = await submitStaticGenerationJob({
+    const { providerJobId } = await submitStaticGenerationJob({
       prompt,
       referenceImageUrls: [job.output_url],
       model: "gpt-image-2",
