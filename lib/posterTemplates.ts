@@ -25,6 +25,12 @@ export const posterStyles: PosterStyle[] = [
     name: "VS Match Poster",
     description: "A bold home-vs-away poster with matchday energy.",
     previewLabel: "VS"
+  },
+  {
+    id: "fan-mode",
+    name: "Fan Mode",
+    description: "An overjoyed supporter poster with kit, face paint, flags, hats, and raised scarf.",
+    previewLabel: "Fan"
   }
 ];
 

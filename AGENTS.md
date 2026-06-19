@@ -17,7 +17,7 @@
 - Standard verification commands: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `git diff --check`.
 - Vercel Deployment Link constraint: ALWAYS provide the Vercel link when summarizing deployments, pushing commits, or completing sessions.
   - Production URL: https://app.kitface.app
-  - Latest production deployment: https://kitface-qfh15vgj3-jims-projects-b7cb6c2e.vercel.app
+  - Latest production deployment: https://kitface-cydb1jgin-jims-projects-b7cb6c2e.vercel.app
   - Active Branch Preview URL: https://kitface-app-git-feat-football-waiting-messages-jimbrouws-projects.vercel.app
 
 

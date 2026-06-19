@@ -22,7 +22,7 @@ export type MatchContext = {
 export type KitBrandPlacementMode = "original" | "kitface";
 
 export function normalizeKitBrandPlacementMode(value?: string | null): KitBrandPlacementMode {
-  return value === "original" ? "original" : "kitface";
+  return value === "kitface" ? "kitface" : "original";
 }
 
 function sponsorSummary(spec: KitSpec, mode: KitBrandPlacementMode) {
@@ -105,6 +105,7 @@ export function buildPosterPrompt(input: {
   const isNanoBanana = input.model === "nano-banana-2";
   const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
   const isFootballCardStyle = input.posterStyle.id === "hero-card";
+  const isFanModeStyle = input.posterStyle.id === "fan-mode";
   const isNationalTeam = input.teamProfile.group === "International" || input.teamProfile.group === "World Cup 2026";
   const matchContext = input.matchContext;
   const isPremierLeagueMatch = matchContext?.homeTeam.group === "Premier League" && matchContext.awayTeam.group === "Premier League";
@@ -115,6 +116,7 @@ export function buildPosterPrompt(input: {
       : matchContext.awayTeam
     : undefined;
   const matchdayNotes = compactMatchdayNotes(matchContext?.matchdayNotes);
+  const primaryIdentityToken = matchContext ? "[img1]" : "[img]";
   const moodTeam = userMatchTeam ?? input.teamProfile;
   const motifNotes = [
     moodTeam.nickname ? `Nickname: ${moodTeam.nickname}.` : undefined,
@@ -174,7 +176,12 @@ The first attached image is the identity source for [img]. ${kitReferencePhrase}
   const flatteringAthleticDirection = `KIND ATHLETIC PRESENTATION:
 Preserve the person's recognisable build, age, and identity, but present them kindly in a football-poster way: confident upright posture, slightly athletic stance, flattering kit fit, clean neckline, strong shoulders, natural chin angle, and dynamic action poses. Avoid unflattering compression, slouching, awkward double-chin emphasis, squeezed shirt fabric, or harsh low-angle body distortion. Do not make them unrealistically ripped, skinny, young, or transformed into a professional athlete.`;
 
-  const compositionSection = matchContext
+  const compositionSection = isFanModeStyle
+    ? `Photorealistic football supporter poster for ${input.teamProfile.name}, starring ${primaryIdentityToken} as an overjoyed fan-hero in the selected team kit.
+
+COMPOSITION & POSES:
+Use Star Player Poster poster scale and drama, but make it pure supporter celebration, not football play: one huge expressive chest-up hero portrait of ${primaryIdentityToken} as the anchor, plus exactly three to four larger supporting versions of ${primaryIdentityToken} celebrating for the team. The person is still wearing the selected team kit in every pose. Supporting poses should include scarf raised above the head, flag waving or wrapped around shoulders, badge-kiss love/pride, roaring celebration, arms-up victory pose, and bouncing-in-the-stands joy. Every figure must be the same reference person, large enough for recognisable face, hands, kit, scarf, and body. Do not show the person kicking, dribbling, tackling, running with a ball, playing in a match, or posing as an active footballer.`
+    : matchContext
     ? `Photorealistic ${isPremierLeagueMatch ? "Premier League" : "football league"} VS poster. Home LEFT, away RIGHT.
 
 ${matchSection}
@@ -213,7 +220,65 @@ ${flatteringAthleticDirection}
 
 Use a premium football broadcast environment: bright stadium atmosphere with curved stands and crowd texture, clean floodlit pitch, vibrant matchday energy, electric gradient light forms across the environment. The composition should feel like official sports campaign photography — sharp, premium, broadcast-quality. The people, pitch, lights, and crowd must feel integrated in one scene. Reproduce the shirt sponsor as the exact logo style from the kit reference, not plain typed text or a generic font. No plain studio background. No dark moody fog. No shadowy back-lit cinema look. No large poster title text, slogan text, fake readable banners, random advertising boards, old sponsors, trophies, cups, medals, or isolated cutout collage.`
     : isGptImage
-      ? matchContext
+      ? isFanModeStyle
+        ? `GPT IMAGE 2 FAN MODE DIRECTION:
+Create a premium photorealistic Kitface Fan Mode poster that looks like a real app result: official football broadcast campaign artwork, national-team supporter photography, and over-the-top matchday celebration poster in one image.
+
+SUBJECT:
+The hero is the uploaded person ${primaryIdentityToken} as an ecstatic football supporter, not a professional player and not a mascot. Preserve realistic skin texture, natural facial detail, natural proportions, age, and body type while making the emotions huge, expressive, joyful, and exciting.
+
+FAN MODE CONCEPT:
+The person must still wear the selected ${input.teamProfile.name} team kit in every visible appearance: authentic shirt, collar, crest, manufacturer mark, sponsor treatment, shorts or kit styling where visible. Layer supporter styling on top of the kit, not instead of it: team or country face paint, national/team flag colours, a supporter hat, cap, bucket hat, wig, or national hat, and a raised supporter scarf. At least one large foreground torso must show the shirt front clearly.
+
+FACE PAINT:
+Make the fan styling 50% more over the top than normal supporter paint. Include full-face team/country paint on at least one visible version: bold cheek-to-cheek or forehead-to-chin team colour blocks, flag-style stripes, visible brush texture, sweat, and matchday smudges. Other versions can have heavy cheek stripes or flag colour paint, but one face must be full-face painted while preserving identity.
+
+SCARF AND FLAGS:
+Include one clear supporter scarf raised above the head or stretched across the foreground. The scarf should use the selected team or country colours and should read as an authentic football supporter scarf. If readable text is included on the scarf, it should be the selected team/country name "${input.teamProfile.name}" or the provided team slogan only. Add flags around the scene: a hand-held flag, a flag wrapped around shoulders, or background crowd flags in team/country colours. Keep flags and scarf physically believable and integrated with hands and shoulders.
+
+EXPRESSION:
+Make the expression totally maxed out and 50% more over the top than current Fan Mode: overjoyed, ecstatic, eyes wide and alive, raised eyebrows, open shouting mouth, visible teeth, huge grin, roaring happiness, laughing, explosive celebration, wild match-winning joy, badge-kiss pride, and joyful comic intensity. Add detailed facial emotion: stretched smile muscles, crinkled eyes, cheek tension, open-mouth shout shape, animated eyebrows, and real skin texture under the face paint. It should feel bigger than Star Player Poster. Theatrical is good; identity drift is not.
+
+STAR PLAYER POSE LANGUAGE:
+Use the same heroic poster scale and layered campaign drama as Star Player Poster, but convert every pose into non-playing supporter celebration: one huge central chest-up hero portrait, plus exactly three to four larger supporting fan-hero images. Supporting versions can do scarf-over-head celebration, flag-wave, badge-kiss, roaring celebration, arms-folded proud supporter stance, and bouncing-in-the-stands joy. Keep each version large, sharp, and recognisable. Do not use tiny bottom-row duplicates. Do not show match-action, player action, football skills, shots, tackles, or a ball at the person's feet.
+
+IDENTITY LOCK:
+Preserve exact recognisable likeness above all styling: head shape, hairline, eyes, nose, mouth shape, cheeks, jaw, facial hair, skin texture, age, body type, and natural facial proportions. Do not beautify, de-age, slim, bulk up, average the face with footballers, or replace the person. Extreme expression is allowed; identity drift is not.
+
+REFERENCE PRIORITY:
+The first attached image is the primary identity source. Any additional person photos are the same person and may be used for smile, body build, and lighting correction. Kit reference images are clothing only: shirt, collar, crest, manufacturer, sponsor, pattern, shorts, and socks. Never borrow faces, bodies, poses, or lighting from kit images.
+
+PHOTO ENHANCEMENT:
+If the photo has poor lighting, heavy shadows, dull expression, tired eyes, harsh phone-camera lighting, or flat indoor light, improve it naturally: lift shadows, even skin lighting, brighten eyes, correct exposure, and keep natural skin texture. Keep age, face shape, nose, eyes, jaw, facial hair, and body type.
+
+PHYSICAL INTEGRATION:
+The head, neck, shoulders, kit, scarf, hat, face paint, and flag must look photographed together in one real stadium campaign shoot, not pasted on. Match face lighting to stadium key/rim light. Add contact shadows where the chin, neck, collar, scarf, hat brim, hands, flag fabric, and shirt fabric meet. Hands must grip the scarf or flag believably.
+
+KIT:
+Use the selected kit variables and kit reference images exactly. Render authentic fabric, stitching, folds, crest, manufacturer mark, collar, trim, shorts, socks, and sponsor placement. The shirt must look physically worn under the scarf and fan accessories. If Kitface sponsor mode is active, the main chest sponsor on every clearly visible shirt front must read exactly "kitface.app" in lowercase, centered in the authentic sponsor position, with clean readable lettering integrated into the fabric. Do not let scarf, hands, watermark, lighting, or crop hide every chest sponsor; at least one large foreground kit must show "kitface.app" clearly. Otherwise keep the original sponsor.
+
+${flatteringAthleticDirection}
+
+ENVIRONMENT:
+Bright premium football stadium with crowd flags, floodlights, pitch texture, light haze, confetti-like matchday energy, and modern broadcast polish. Use selected team/country colours plus translucent Kitface cyan, lime, blue, or violet electric beams. Keep it official, electric, playful, and fan-culture focused.
+
+DESIGN AND PALETTE:
+Official tournament fan campaign meets high-end sportswear advertising. Use the selected team palette, realistic shirt colours, supporter scarf stripes, flag colour blocks, clean bright sports editorial lighting, and Kitface electric accents. The image should feel like a poster fans would share after a dramatic win.
+
+BRANDING AND TEXT:
+Readable text is allowed only for authentic shirt numbers, shirt-name personalisation, crests, maker logos, selected shirt sponsor, exact "kitface.app" chest sponsor text when Kitface sponsor mode is active, subtle Kitface LED board text, and the supporter scarf/team slogan described above. Do not add random stats, random poster titles, fake slogans, stadium copy, or extra advertising.
+
+LIGHTING AND QUALITY:
+High-detail stadium-commercial lighting, soft key light on faces, controlled rim light, natural skin tones, highly detailed face paint texture, woven scarf texture, flag fabric motion, sharp kit fabric, readable chest sponsor, realistic anatomy, hands, eyes, teeth, eyebrows, mouth shape, cheek tension, and facial proportions.
+
+MOOD:
+Overjoyed, expressive, exciting, loud, celebratory, and emotionally huge. This should be the most fanatical happy supporter option, not a calm player-card image.
+
+${motifNotes ? `CLUB PERSONALITY:\nUse club personality lightly: ${motifNotes} Subtle supporter-culture cues only; not literal mascots, large random text, or the main subject.` : ""}
+
+NEGATIVE PROMPT:
+No trophy, cup, medals, playing football, kicking, dribbling, tackling, running with a ball, match-action pose, active footballer pose, calm passport-photo expression, mild smile, bored face, under-expressive face, subtle face paint only, missing full-face paint version, stern lineup portrait, normal player-only poster, missing team kit, hidden foreground shirt sponsor when Kitface sponsor mode is active, scarf replacing the kit, cartoon, CGI, celebrity likeness, generic replacement face, face averaging, identity drift, pasted-on head, mismatched head/body lighting, distorted face paint, unreadable random scarf gibberish, unrelated flags, distorted anatomy, extra fingers, warped limbs, malformed hands, blurry faces, unrealistic body transformation, body-shaming caricature, random logos, watermarks, fake sponsor names, random titles, extra slogans, mascot costume, hooligan mood, fighting, violence, or aggressive confrontation.`
+        : matchContext
         ? `GPT IMAGE 2 VS DIRECTION:
 Create a premium photorealistic Kitface VS match poster that looks like a real app result: official football broadcast campaign artwork, pre-match programme cover, and modern tournament media-day poster in one image. This must feel more detailed and composed than a simple split-screen graphic.
 
@@ -427,7 +492,11 @@ ${matchContext?.opponentMode === "another-person" ? "* NO applying [img2]'s face
 ${matchContext ? "* NO swapping home and away sides; home is left, away is right" : ""}
 * NO trophies, cups, medals, trophy ribbons, cup finals, or central silverware props
 ${isPremierLeagueMatch ? "* NO Champions League, European Cup, FA Cup, World Cup, or UEFA badges" : ""}
-${brandPlacementMode === "kitface"
+${isFanModeStyle
+  ? brandPlacementMode === "kitface"
+    ? '* NO text except realistic shirt numbers, crests, maker logos, sleeve sponsor logos, exact "kitface.app" text on shirt sponsors and subtle pitch-side LED boards, and authentic supporter scarf text for the selected team/country'
+    : "* NO text except exact realistic shirt numbers, crests, maker logos, sponsor logos from the kit reference, and authentic supporter scarf text for the selected team/country"
+  : brandPlacementMode === "kitface"
   ? '* NO text except realistic shirt numbers, crests, maker logos, sleeve sponsor logos, and exact "kitface.app" text on shirt sponsors and subtle pitch-side LED boards'
   : "* NO text except exact realistic shirt numbers, crests, maker logos, and sponsor logos from the kit reference"}
 * NO cartoon style

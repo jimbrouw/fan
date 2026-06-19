@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" role="img" aria-label="Fan Mode poster preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5f5f7"/>
+      <stop offset=".45" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8fbff"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d7ff2f" stop-opacity=".82"/>
+      <stop offset=".42" stop-color="#31f0d5" stop-opacity=".72"/>
+      <stop offset=".74" stop-color="#4b7cff" stop-opacity=".58"/>
+      <stop offset="1" stop-color="#7b2cff" stop-opacity=".5"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="18" flood-color="#1c1936" flood-opacity=".24"/>
+    </filter>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <path d="M-120 265 944 -70l78 244L-42 510z" fill="url(#beam)"/>
+  <path d="M-90 965 980 605l74 235L8 1166z" fill="url(#beam)" opacity=".68"/>
+  <g opacity=".14" stroke="#1c1936" stroke-width="4" fill="none">
+    <path d="M84 220h732M84 998h732M158 155v890M742 155v890"/>
+    <circle cx="450" cy="600" r="210"/>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M176 272c108-62 440-62 548 0v118c-150-34-398-34-548 0z" fill="#1c1936"/>
+    <path d="M208 300c124-38 360-38 484 0v48c-128-30-356-30-484 0z" fill="#31f0d5"/>
+    <text x="450" y="347" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="52" font-weight="900" fill="#f5f5f7" letter-spacing="8">FAN MODE</text>
+  </g>
+  <g transform="translate(450 660)" filter="url(#shadow)">
+    <path d="M-268-250c-38 92-46 177-24 255 12 42 66 52 94 19l126-150-64-89z" fill="#182861"/>
+    <path d="M268-250c38 92 46 177 24 255-12 42-66 52-94 19L72-126l64-89z" fill="#182861"/>
+    <path d="M-142-162c44-70 240-70 284 0l70 354c9 44-24 84-69 84h-286c-45 0-78-40-69-84z" fill="#1c1936"/>
+    <path d="M-100-132c58 34 142 34 200 0l30 398h-260z" fill="#31f0d5"/>
+    <path d="M-88-132h176l-33 398H-55z" fill="#f5f5f7" opacity=".9"/>
+    <circle cx="0" cy="-296" r="96" fill="#d8a47d"/>
+    <path d="M-88-330c22-90 153-100 195-24 9-72-56-129-139-117-82 12-128 74-110 143 18-8 36-9 54-2z" fill="#17100b"/>
+    <path d="M-60-288h120" stroke="#f5f5f7" stroke-width="19" stroke-linecap="round"/>
+    <path d="M-61-288h54M7-288h54" stroke="#31f0d5" stroke-width="19" stroke-linecap="round"/>
+    <path d="M-52-244c32 38 76 38 104 0" stroke="#1c1936" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <path d="M-242-525h88v266h-88z" fill="#1c1936" transform="rotate(-13 -198 -392)"/>
+    <path d="M154-525h88v266h-88z" fill="#1c1936" transform="rotate(13 198 -392)"/>
+    <path d="M-287-515h134v92h-134z" fill="#31f0d5" transform="rotate(-13 -220 -469)"/>
+    <path d="M153-515h134v92H153z" fill="#d7ff2f" transform="rotate(13 220 -469)"/>
+    <path d="M-48-450c16-52 82-52 98 0l-22 62h-54z" fill="#1c1936"/>
+  </g>
+  <g font-family="Inter,Arial,sans-serif" font-weight="900" fill="#2a004f">
+    <text x="72" y="103" font-size="39" letter-spacing="8">KITFACE</text>
+    <text x="72" y="1105" font-size="76">SUPPORTER</text>
+    <text x="76" y="1152" font-size="30" fill="#69697a" font-weight="700">FACE PAINT. FLAG. SCARF. KIT.</text>
+  </g>
+</svg>

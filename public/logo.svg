@@ -1,0 +1,17 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kitface logo">
+  <rect width="1200" height="1200" rx="260" fill="#F5F5F7"/>
+  <rect x="54" y="54" width="1092" height="1092" rx="226" stroke="url(#ramp)" stroke-width="72"/>
+  <path d="M782 311L613 520L802 889H663L526 613L444 713V889H318V311H444V548L642 311H782Z" fill="#2A004F"/>
+  <path d="M680 265C797 295 890 387 922 503" stroke="#31F0D5" stroke-width="34" stroke-linecap="round"/>
+  <path d="M522 936C406 906 313 814 281 698" stroke="#D7FF2F" stroke-width="34" stroke-linecap="round"/>
+  <path d="M750 757C810 725 858 671 881 605" stroke="#4B7CFF" stroke-width="30" stroke-linecap="round"/>
+  <path d="M451 443C391 475 343 529 320 595" stroke="#7B2CFF" stroke-width="30" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="ramp" x1="100" y1="131" x2="1109" y2="1075" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7FF2F"/>
+      <stop offset="0.35" stop-color="#31F0D5"/>
+      <stop offset="0.68" stop-color="#4B7CFF"/>
+      <stop offset="1" stop-color="#7B2CFF"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -49,8 +49,8 @@ const upgradeOptions: UpgradeOption[] = [
     name: "Download — no watermark",
     price: "£3.99",
     icon: Download,
-    description: "Full-resolution file with no Kitface watermark.",
-    includes: ["High-res file", "No Kitface watermark", "Download link for your order"],
+    description: "Full-resolution file without the preview watermark.",
+    includes: ["High-res file", "No preview watermark", "Download link for your order"],
     details: "Fastest option for the group chat, socials, or printing yourself.",
   },
   {
@@ -139,7 +139,7 @@ export function UpgradeClient({ jobId }: { jobId: string }) {
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Make it theirs</p>
         <h1 className="font-display text-[36px] leading-none text-[var(--foreground)]">Send the football card they&apos;ll actually show off.</h1>
         <p className="text-sm leading-6 text-[var(--muted)]">
-          Start simple: Father&apos;s Day card, printed greeting card, no-watermark download, or the big A3 wall print.
+          Start simple: printed greeting card, clean download, or the big A3 wall print.
           Mugs, magnets, and stickers need their own artwork formats, so we&apos;re keeping them back until they look right.
         </p>
       </div>

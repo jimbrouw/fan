@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildMuapiSubmitRequest, isTransientMuapiStatusError } from "../lib/ai/providers/muapi.ts";
+import { shouldUseFalStaticGenerationProvider } from "../lib/ai/providers/staticGeneration.ts";
 
 test("wan2.7-image-edit maps to the MuAPI image-edit endpoint with image references", () => {
   const request = buildMuapiSubmitRequest({
@@ -72,4 +73,31 @@ test("MuAPI transient status errors are retryable instead of terminal failures",
   assert.equal(isTransientMuapiStatusError(502, {}), true);
   assert.equal(isTransientMuapiStatusError(429, { message: "Rate limit" }), true);
   assert.equal(isTransientMuapiStatusError(400, { error: "Invalid image URL" }), false);
+});
+
+test("static image generation defaults to MuAPI even when FAL credentials exist", () => {
+  assert.equal(
+    shouldUseFalStaticGenerationProvider({
+      isGptImage: true,
+      hasFalKey: true,
+      requestedProvider: undefined,
+    }),
+    false
+  );
+  assert.equal(
+    shouldUseFalStaticGenerationProvider({
+      isGptImage: true,
+      hasFalKey: true,
+      requestedProvider: "muapi",
+    }),
+    false
+  );
+  assert.equal(
+    shouldUseFalStaticGenerationProvider({
+      isGptImage: true,
+      hasFalKey: true,
+      requestedProvider: "fal",
+    }),
+    true
+  );
 });

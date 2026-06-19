@@ -2,10 +2,12 @@ import type Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { getCheckoutProduct, isPhysicalCheckoutOption } from "@/lib/checkout/products";
 import {
+  isProdigiCardOption,
   ProdigiFulfillmentProvider,
   readProdigiProductConfig,
   type ProdigiProductOptionId,
 } from "@/lib/fulfillment/prodigi";
+import { createProdigiCardPrintAsset } from "@/lib/fulfillment/cardPrintAsset";
 import { isPhysicalFulfillmentEnabled } from "@/lib/fulfillment/physicalFulfillment";
 import { buildAuthenticatedAppUrl, buildAppUrl, getAppUrl } from "@/lib/appLinks";
 import { sendTransactionalEmail } from "@/lib/notifications";
@@ -146,12 +148,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const recipient = buildProdigiRecipient(session);
   const config = readProdigiProductConfig(optionId);
+  const printReadyImageURL = isProdigiCardOption(optionId)
+    ? await createProdigiCardPrintAsset({
+        supabase,
+        posterUrl: job.output_url,
+        message: cardMessage,
+        assetKey: `${job.id}-${session.id}`,
+      })
+    : job.output_url;
   const provider = new ProdigiFulfillmentProvider();
   const order = await provider.createOrder({
     externalId: `kitface-${optionId}-${job.id}-${session.id}`,
     recipient,
     sku: config.sku,
-    printReadyImageURL: job.output_url
+    printReadyImageURL
   });
 
   await markOrderFulfilled(supabase, session.id, String(order.id));
@@ -317,7 +327,7 @@ async function sendPrintFulfillmentEmail(
   const to = await resolveCheckoutEmail(supabase, session);
   const appUrl = getAppUrl();
   const resultUrl = buildAuthenticatedAppUrl(`/result/${jobId}`, appUrl);
-  const productName = optionId === "poster" ? "A3 Poster" : "Greeting Card";
+  const productName = getPrintProductName(optionId);
 
   if (!to) return;
 
@@ -345,4 +355,12 @@ async function sendPrintFulfillmentEmail(
   } catch (error) {
     console.error("Print fulfillment email failed:", error instanceof Error ? error.message : error);
   }
+}
+
+function getPrintProductName(optionId: string) {
+  if (optionId === "poster") return "A3 Poster";
+  if (optionId === "mug") return "Mug";
+  if (optionId === "sticker") return "Sticker";
+  if (optionId === "magnet") return "Magnet";
+  return "Greeting Card";
 }

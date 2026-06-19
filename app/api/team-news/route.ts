@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { buildMatchdayNotesFromTeamNews, fetchTeamNewsSummaryWithFallback } from "@/lib/footballData";
+import { checkRateLimit, getIpFromRequest } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
+  const ip = getIpFromRequest(request);
+  const limitResponse = checkRateLimit(ip, "team-news", { limit: 15, windowMs: 60 * 1000 });
+  if (limitResponse) return limitResponse;
+
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
   const url = new URL(request.url);
   const selectedTeamId = url.searchParams.get("selectedTeamId");

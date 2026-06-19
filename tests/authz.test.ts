@@ -51,16 +51,16 @@ test("decideOwnedResourceAccess: orphan row (null owner) is denied once column e
   );
 });
 
-test("decideOwnedResourceAccess: fails open while user_id column is missing", () => {
-  // Pre-migration: no ownership data to enforce, so access is allowed to
-  // avoid locking legitimate owners out of their own jobs.
+test("decideOwnedResourceAccess: fails closed while user_id column is missing", () => {
+  // Post-migration / secure defaults: missing ownership column fails closed
+  // to prevent unauthorized access.
   assert.equal(
     decideOwnedResourceAccess({
       ownerColumnAvailable: false,
       resourceUserId: null,
       requesterUserId: OTHER,
     }),
-    "allow"
+    "deny"
   );
 });
 

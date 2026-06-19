@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
 import Link from "next/link";
-import { ArrowRight, Download, MailCheck, Plus, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, Download, MailCheck, Plus, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import { getStripe } from "@/lib/stripe/server";
 
 type OrderSuccessPageProps = {
@@ -8,10 +8,12 @@ type OrderSuccessPageProps = {
     session_id?: string;
     orderId?: string;
     optionId?: string;
+    kind?: string;
   }>;
 };
 
 const optionNameMap = {
+  credits: "Kitface credits",
   "fathers-day-card": "Father's Day card",
   "birthday-card": "Greeting card",
   download: "Download - no watermark",
@@ -24,18 +26,39 @@ const optionNameMap = {
 export default async function OrderSuccessPage({ searchParams }: OrderSuccessPageProps) {
   const params = await searchParams;
   const session = await retrieveCheckoutSession(params.session_id);
-  const optionId = session?.metadata?.optionId ?? params.optionId ?? "fathers-day-card";
-  const jobId = session?.metadata?.jobId;
   const isPaid = session?.payment_status === "paid";
+
+  if (process.env.VERCEL_ENV === "production" && !isPaid) {
+    return (
+      <section className="flex min-h-[75vh] flex-1 flex-col items-center justify-center gap-6 pb-6">
+        <div className="relative w-full max-w-[480px] overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_24px_50px_rgba(42,0,79,0.06)]">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-red-500" />
+          <div className="flex flex-col items-center gap-4 text-center">
+            <h1 className="font-display text-[28px] leading-tight text-[var(--foreground)]">Payment Verification Failed</h1>
+            <p className="text-sm leading-6 text-[var(--muted)]">
+              We could not verify a paid Stripe session for this order. If you just completed payment, please wait a few moments and refresh this page.
+            </p>
+            <Link href="/" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[12px] bg-[var(--accent)] px-4 text-xs font-bold text-[var(--foreground)] hover:bg-[var(--accent-strong)] transition">
+              Return Home
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const isCreditPurchase = session?.metadata?.kind === "credits" || params.kind === "credits";
+  const optionId = isCreditPurchase ? "credits" : session?.metadata?.optionId ?? params.optionId ?? "fathers-day-card";
+  const jobId = session?.metadata?.jobId;
   const isDownload = optionId === "download";
   const isPhysicalOrder =
     optionId === "fathers-day-card" || optionId === "birthday-card" || optionId === "mug" || optionId === "sticker" || optionId === "magnet" || optionId === "poster";
-  const selectedName = optionNameMap[optionId as keyof typeof optionNameMap] || "Father's Day card";
+  const selectedName = optionNameMap[optionId as keyof typeof optionNameMap] || "Kitface order";
   const orderId = params.orderId || params.session_id || "N/A";
   const receiptReference = params.session_id ? params.session_id.slice(-10).toUpperCase() : orderId;
-  const statusLabel = isPhysicalOrder ? "Fulfillment Status" : "Delivery Status";
-  const statusText = isPhysicalOrder ? "Queued" : "Digital";
-  const fulfillmentCenter = isPhysicalOrder ? "Print partner" : "Digital delivery";
+  const statusLabel = isCreditPurchase ? "Account Status" : isPhysicalOrder ? "Fulfillment Status" : "Delivery Status";
+  const statusText = isCreditPurchase ? "Added" : isPhysicalOrder ? "Queued" : "Digital";
+  const fulfillmentCenter = isCreditPurchase ? "Kitface account" : isPhysicalOrder ? "Print partner" : "Digital delivery";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kitface-app.vercel.app";
   const downloadUrl =
     isDownload && isPaid && jobId && params.session_id
@@ -54,12 +77,14 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Order Confirmed</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Purchase Confirmed</p>
             <h1 className="font-display text-[28px] leading-tight text-[var(--foreground)]">
-              {isDownload ? "Your download is ready." : "It's on the way!"}
+              {isCreditPurchase ? "Your credits are ready." : isDownload ? "Your download is ready." : "It's on the way!"}
             </h1>
             <p className="px-4 text-sm leading-6 text-[var(--muted)]">
-              {isDownload
+              {isCreditPurchase
+                ? "Your payment cleared successfully. You can now create your next Kitface poster."
+                : isDownload
                 ? "Your payment cleared successfully. Download the full-resolution file with no watermark."
                 : "Your payment cleared successfully. Your order is being registered for fulfillment."}
             </p>
@@ -72,14 +97,22 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
           <div className="flex items-center justify-between border-b border-[var(--line)] pb-2 text-xs">
             <span className="font-semibold text-[var(--muted)]">{statusLabel}</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-600">
-              {isDownload ? <Download size={10} /> : <Truck size={10} />} {statusText}
+              {isCreditPurchase ? <Sparkles size={10} /> : isDownload ? <Download size={10} /> : <Truck size={10} />} {statusText}
             </span>
           </div>
-          <ReceiptRow label={isPhysicalOrder ? "Fulfillment" : "Delivery"} value={fulfillmentCenter} uppercase />
+          <ReceiptRow label={isCreditPurchase ? "Available In" : isPhysicalOrder ? "Fulfillment" : "Delivery"} value={fulfillmentCenter} uppercase />
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
-          {downloadUrl ? (
+          {isCreditPurchase ? (
+            <Link
+              href="/create"
+              className="kitface-btn-primary inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[15px] bg-[var(--accent)] px-5 text-sm font-bold text-[var(--foreground)] shadow-[0_12px_28px_rgba(49,240,213,0.28)] transition duration-300 hover:bg-[var(--accent-strong)] active:scale-[0.98]"
+            >
+              Create poster
+              <ArrowRight size={15} />
+            </Link>
+          ) : downloadUrl ? (
             <>
               <a
                 href={downloadUrl}

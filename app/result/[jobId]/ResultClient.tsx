@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Download, Package, RefreshCw, RotateCcw, Share2 } from "lucide-react";
+import { Camera, Download, Package, RefreshCw, RotateCcw, Share2, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 
@@ -20,6 +20,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [pageUrl, setPageUrl] = useState("");
   const [showTestControls, setShowTestControls] = useState(false);
+  const [isBuyingCredits, setIsBuyingCredits] = useState(false);
 
   const loadJob = useCallback(async () => {
     setIsLoading(true);
@@ -47,7 +48,10 @@ export function ResultClient({ jobId }: { jobId: string }) {
 
   useEffect(() => {
     setPageUrl(window.location.href);
-    setShowTestControls(["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
+    setShowTestControls(
+      process.env.NODE_ENV !== "production" &&
+      ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
+    );
   }, []);
 
   const imageShareUrl = job?.outputUrl ? `/api/jobs/${jobId}/image` : "";
@@ -121,6 +125,26 @@ export function ResultClient({ jobId }: { jobId: string }) {
     await copyShareLink(absoluteImageShareUrl, "Native sharing is not available here. Image link copied.");
   }
 
+  async function buyMorePosters() {
+    setIsBuyingCredits(true);
+    setShareStatus(null);
+
+    try {
+      const response = await fetch("/api/checkout/credits", { method: "POST" });
+      if (response.status === 401) {
+        window.location.href = `/login?next=${encodeURIComponent(`/result/${jobId}`)}`;
+        return;
+      }
+
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !data.url) throw new Error(data.error ?? "Could not start checkout.");
+      window.location.href = data.url;
+    } catch (creditsError) {
+      setShareStatus(creditsError instanceof Error ? creditsError.message : "Could not start checkout.");
+      setIsBuyingCredits(false);
+    }
+  }
+
   return (
     <section className="flex flex-1 flex-col gap-6 pb-4">
       <div className="space-y-3">
@@ -170,8 +194,8 @@ export function ResultClient({ jobId }: { jobId: string }) {
             <Package size={22} className="text-[var(--foreground)]" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-[var(--foreground)]">Upgrade from £3.99</p>
-            <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">Remove the watermark, download the image, or order printed products.</p>
+            <p className="text-base font-bold text-[var(--foreground)]">Download without watermark - £3.99</p>
+            <p className="mt-0.5 text-xs leading-5 text-[var(--foreground)]/70">Keep the clean file, or choose a printed gift.</p>
           </div>
         </button>
       )}
@@ -191,8 +215,12 @@ export function ResultClient({ jobId }: { jobId: string }) {
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white active:scale-[0.98] min-[380px]:col-span-2"
                 >
                   <Download size={17} />
-                  Download
+                  Save watermarked preview
                 </a>
+                <Button type="button" variant="secondary" onClick={buyMorePosters} disabled={isBuyingCredits} className="w-full min-[380px]:col-span-2">
+                  <Zap size={17} />
+                  {isBuyingCredits ? "Opening..." : "Make 3 more - £4.99"}
+                </Button>
               </div>
               {shareStatus && <p className="text-xs leading-5 text-[var(--muted)]">{shareStatus}</p>}
             </div>

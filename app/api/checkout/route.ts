@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { decideOwnedResourceAccess } from "@/lib/authz";
 import { isExemptEmail } from "@/lib/credits";
 import { isPhysicalFulfillmentEnabled } from "@/lib/fulfillment/physicalFulfillment";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 type CheckoutRequest = {
   jobId?: string;
@@ -32,6 +33,10 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Sign in to order." }, { status: 401 });
     }
+
+    // Rate Limit (authenticated or IP)
+    const limitResponse = checkRateLimit(user.id, "checkout", { limit: 10, windowMs: 60 * 1000 });
+    if (limitResponse) return limitResponse;
 
     const body = (await request.json()) as CheckoutRequest;
 
@@ -172,7 +177,7 @@ export async function POST(request: Request) {
             allowed_countries: ["GB"]
           }
         : undefined,
-      success_url: `${appUrl}/order/success?session_id={CHECKOUT_SESSION_ID}&optionId=${product.id}`,
+      success_url: `${appUrl}/purchase-success?session_id={CHECKOUT_SESSION_ID}&optionId=${product.id}`,
       cancel_url: `${appUrl}/upgrade/${job.id}`
     });
 

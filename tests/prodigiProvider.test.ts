@@ -26,7 +26,7 @@ test("buildProdigiOrderPayload creates an order with the correct sku and image U
   });
 });
 
-test("readProdigiDraftOrderConfig defaults card orders to classic greeting card SKU", () => {
+test("readProdigiDraftOrderConfig defaults card orders to direct-delivery greeting card SKU", () => {
   const previous = snapshotProdigiEnv();
   try {
     setRecipientEnv();
@@ -35,7 +35,7 @@ test("readProdigiDraftOrderConfig defaults card orders to classic greeting card 
 
     const config = readProdigiDraftOrderConfig("fathers-day-card");
 
-    assert.equal(config.sku, "CLASSIC-GRE-FEDR-7X5-BLA");
+    assert.equal(config.sku, "GLOBAL-GRE-MOH-7X5-DIR");
     assert.equal(config.productType, "card");
   } finally {
     restoreProdigiEnv(previous);

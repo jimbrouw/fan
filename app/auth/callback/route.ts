@@ -5,7 +5,11 @@ import { upsertUserProfile } from "@/lib/users";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/create";
+  let next = requestUrl.searchParams.get("next") ?? "/create";
+
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("\\")) {
+    next = "/create";
+  }
 
   try {
     if (code) {

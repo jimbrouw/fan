@@ -3,6 +3,7 @@ import { decideOwnedResourceAccess } from "@/lib/authz";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { captureBucket, createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSignedStorageUrl, parseSupabaseStorageUri } from "@/lib/supabase/storage";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 type CaptureSessionRow = {
   id: string;
@@ -28,6 +29,10 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Sign in to restore photos." }, { status: 401 });
     }
+
+    // Rate Limit (authenticated or IP)
+    const limitResponse = checkRateLimit(user.id, "signed-urls", { limit: 30, windowMs: 60 * 1000 });
+    if (limitResponse) return limitResponse;
 
     const body = (await request.json()) as SignBody;
     const imageUrls = body.imageUrls?.filter((url): url is string => typeof url === "string") ?? [];

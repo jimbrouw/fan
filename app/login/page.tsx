@@ -18,7 +18,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     let isActive = true;
-    const nextParam = new URLSearchParams(window.location.search).get("next") ?? "/create";
+    let nextParam = new URLSearchParams(window.location.search).get("next") ?? "/create";
+    if (!nextParam.startsWith("/") || nextParam.startsWith("//") || nextParam.includes("\\")) {
+      nextParam = "/create";
+    }
     setNext(nextParam);
 
     const timeout = setTimeout(() => {

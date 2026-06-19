@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { ProdigiFulfillmentProvider, readProdigiDraftOrderConfig, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
+import { isProdigiCardOption, ProdigiFulfillmentProvider, readProdigiDraftOrderConfig, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
+import { createProdigiCardPrintAsset } from "@/lib/fulfillment/cardPrintAsset";
 import { decideOwnedResourceAccess } from "@/lib/authz";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -7,6 +8,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 type FulfillmentRequest = {
   jobId?: string;
   optionId?: ProdigiProductOptionId;
+  cardMessage?: string;
 };
 
 type JobRow = {
@@ -26,8 +28,8 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
 
 export async function POST(request: Request) {
   try {
-    if (process.env.VERCEL_ENV === "production") {
-      return NextResponse.json({ error: "Direct Prodigi test fulfillment is disabled in production." }, { status: 404 });
+    if (process.env.NODE_ENV !== "development") {
+      return NextResponse.json({ error: "Direct Prodigi test fulfillment is disabled." }, { status: 404 });
     }
 
     const user = await getCurrentUser();
@@ -43,6 +45,11 @@ export async function POST(request: Request) {
 
     if (body.optionId === "download") {
       return NextResponse.json({ error: "Download orders do not use Prodigi fulfillment." }, { status: 400 });
+    }
+
+    const cardMessage = typeof body.cardMessage === "string" ? body.cardMessage.trim() : "";
+    if (cardMessage.length > 240) {
+      return NextResponse.json({ error: "Card message must be 240 characters or fewer." }, { status: 400 });
     }
 
     const supabase = createServerSupabaseClient();
@@ -86,13 +93,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only completed jobs with an output image can be sent to Prodigi." }, { status: 409 });
     }
 
-    const config = readProdigiDraftOrderConfig(body.optionId ?? "fathers-day-card");
+    const optionId = body.optionId ?? "fathers-day-card";
+    const config = readProdigiDraftOrderConfig(optionId);
+    const printReadyImageURL = isProdigiCardOption(optionId)
+      ? await createProdigiCardPrintAsset({
+          supabase,
+          posterUrl: job.output_url,
+          message: cardMessage,
+          assetKey: `${job.id}-development`,
+        })
+      : job.output_url;
     const provider = new ProdigiFulfillmentProvider();
     const order = await provider.createOrder({
-      externalId: `kitface-${body.optionId ?? "fathers-day-card"}-${job.id}`,
+      externalId: `kitface-${optionId}-${job.id}`,
       recipient: config.recipient,
       sku: config.sku,
-      printReadyImageURL: job.output_url
+      printReadyImageURL
     });
 
     return NextResponse.json({

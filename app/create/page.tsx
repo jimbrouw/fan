@@ -153,6 +153,8 @@ function PosterStylePreview({
   const imageUrl =
     styleId === "matchday"
       ? "/style-matchday.png"
+      : styleId === "fan-mode"
+      ? "/style-fan-mode.jpg"
       : styleId === "player-reveal"
       ? "/style-player-reveal.png"
       : "/style-hero-card.png";
@@ -226,7 +228,7 @@ export default function CreatePage() {
     const params = new URLSearchParams(window.location.search);
     const credits = params.get("credits");
     if (credits === "success") {
-      setCreditMessage("Payment received — your credits have been added.");
+      setCreditMessage("Payment received — your 3 poster credits have been added.");
     } else if (credits === "cancel") {
       setCreditMessage("Checkout cancelled. No payment was taken.");
     }
@@ -598,15 +600,15 @@ export default function CreatePage() {
                   <span className="font-semibold text-[var(--foreground)]">
                     {usage.used}/{usage.freeLimit}
                   </span>{" "}
-                  <span className="text-[var(--muted)]">free posters used</span>
+                  <span className="text-[var(--muted)]">free preview used</span>
                 </>
               ) : usage.credits > 0 ? (
                 <>
                   <span className="font-semibold text-[var(--foreground)]">{usage.credits}</span>{" "}
-                  <span className="text-[var(--muted)]">credits left</span>
+                  <span className="text-[var(--muted)]">poster credits left</span>
                 </>
               ) : (
-                <span className="font-semibold text-[var(--foreground)]">Free posters used up</span>
+                <span className="font-semibold text-[var(--foreground)]">Free preview used</span>
               )}
             </div>
             <Button
@@ -617,7 +619,7 @@ export default function CreatePage() {
               className="shrink-0"
             >
               <Zap size={15} />
-              {isUpgrading ? "Opening…" : "Buy credits"}
+              {isUpgrading ? "Opening…" : "3 more - £4.99"}
             </Button>
           </div>
         )}
@@ -969,7 +971,7 @@ export default function CreatePage() {
 
           <fieldset className="space-y-2">
             <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster style</legend>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {posterStyles.map((style) => {
                 const isSelected = posterStyleId === style.id;
                 return (
@@ -977,7 +979,7 @@ export default function CreatePage() {
                     key={style.id}
                     type="button"
                     onClick={() => setPosterStyleId(style.id)}
-                    className={`min-w-0 rounded-[14px] border p-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] ${
+                    className={`flex h-full min-w-0 flex-col rounded-[14px] border p-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] ${
                       isSelected
                         ? "border-[var(--accent)] bg-[var(--accent)]/12 shadow-[0_10px_24px_rgba(49,240,213,0.18)]"
                         : "border-[var(--line)] bg-[var(--surface)] hover:border-[var(--accent)]/60"
@@ -985,7 +987,7 @@ export default function CreatePage() {
                     aria-pressed={isSelected}
                   >
                     <PosterStylePreview styleId={style.id} primary={userTeam.primary} accent={userTeam.accent} />
-                    <span className={`mt-2 block text-center text-[11px] font-bold leading-4 ${
+                    <span className={`mt-2 flex min-h-9 items-center justify-center text-center text-[11px] font-bold leading-4 ${
                       isSelected ? "text-[var(--foreground)]" : "text-[var(--muted)]"
                     }`}>
                       {style.name}

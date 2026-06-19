@@ -44,6 +44,16 @@ export default function Home() {
             </div>
             <div className="kitface-ramp absolute -inset-1 -z-10 rounded-[20px] opacity-30 blur-xl" />
           </div>
+
+          <footer className="border-t border-[var(--line)] pt-4 text-[11px] leading-5 text-[var(--muted)]">
+            <p>
+              Kitface is a fan-made poster tool for football fun. It is not an official FIFA, Premier League,
+              club, team, or competition app, and it is not endorsed by or affiliated with those organisations.
+            </p>
+            <p className="mt-2">
+              For app notices, contact <a className="font-semibold text-[var(--foreground-soft)]" href="mailto:no-reply@kitface.app">no-reply@kitface.app</a>.
+            </p>
+          </footer>
         </div>
       </section>
     </AppFrame>
