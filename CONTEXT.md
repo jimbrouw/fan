@@ -63,6 +63,17 @@ Current session follow-up:
 - `KITFACE_HEALTH_CHECK_SECRET` was added to Vercel Production and Preview for `feat/football-waiting-messages`. The generated values are encrypted/write-only, so external monitoring still needs a user-owned token or a rotation to a known value.
 - Vercel Rolling Release configuration was attempted with manual `5%`, `25%`, and `50%` stages, but Vercel returned 403: the current plan does not support Rolling Releases and requires Pro or Enterprise.
 
+Latest session update, 2026-06-19:
+
+- Replaced the self-send classic Prodigi card with UK direct-delivery SKU `GLOBAL-GRE-MOH-7X5-DIR`, which places the card in an addressed kraft envelope.
+- Added a 6118x2161, 300 DPI card compositor: blank outer-left, complete poster on outer-right, blank inner-left, and customer message on inner-right.
+- Card print files use private Supabase storage with signed URLs and eight-day cleanup; other physical products keep their existing fulfillment image path.
+- Added `npm run prodigi:card-preview` for local print-file inspection.
+- Merged current `origin/main` while preserving its marketing-service generation path and the branch's ownership, rate-limit, and atomic-credit protections.
+- Verified 87 tests, typecheck, lint, production build, live app HTTP 200, and `/api/health` HTTP 200.
+- Deployed production build: https://kitface-3doug2i85-jims-projects-b7cb6c2e.vercel.app
+- Deployment inspect URL: https://vercel.com/jims-projects-b7cb6c2e/kitface-app/ELuLNRMEL6wNCq4gXr34uiFdutrn
+
 Latest session update, 2026-06-16:
 
 - Addressed security review findings across route handlers, configuration, and helpers.
