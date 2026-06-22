@@ -14,7 +14,6 @@ type OrderSuccessPageProps = {
 
 const optionNameMap = {
   credits: "Kitface credits",
-  "fathers-day-card": "Father's Day card",
   "birthday-card": "Greeting card",
   download: "Download - no watermark",
   mug: "11oz mug",
@@ -48,7 +47,7 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
   }
 
   const isCreditPurchase = session?.metadata?.kind === "credits" || params.kind === "credits";
-  const optionId = isCreditPurchase ? "credits" : session?.metadata?.optionId ?? params.optionId ?? "fathers-day-card";
+  const optionId = isCreditPurchase ? "credits" : session?.metadata?.optionId ?? params.optionId ?? "birthday-card";
   const jobId = session?.metadata?.jobId;
   const isDownload = optionId === "download";
   const isPhysicalOrder =

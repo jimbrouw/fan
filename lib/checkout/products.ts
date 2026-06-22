@@ -9,15 +9,7 @@ export type CheckoutProduct = {
   requiresShipping: boolean;
 };
 
-export const checkoutProducts: Record<ProdigiProductOptionId, CheckoutProduct> = {
-  "fathers-day-card": {
-    id: "fathers-day-card",
-    name: "Father's Day card",
-    description: "Printed 7x5 greeting card with your Kitface poster on the front.",
-    unitAmount: 799,
-    currency: "gbp",
-    requiresShipping: true
-  },
+export const checkoutProducts: Partial<Record<ProdigiProductOptionId, CheckoutProduct>> = {
   "birthday-card": {
     id: "birthday-card",
     name: "Greeting card",

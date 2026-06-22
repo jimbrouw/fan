@@ -166,14 +166,14 @@ export function isProdigiPhysicalOption(optionId?: string) {
   return optionId === "poster" || optionId === "mug" || optionId === "sticker" || optionId === "magnet" || isProdigiCardOption(optionId);
 }
 
-export function readProdigiDraftOrderConfig(optionId: ProdigiProductOptionId = "fathers-day-card") {
+export function readProdigiDraftOrderConfig(optionId: ProdigiProductOptionId = "birthday-card") {
   return {
     ...readProdigiProductConfig(optionId),
     recipient: readProdigiRecipient()
   };
 }
 
-export function readProdigiProductConfig(optionId: ProdigiProductOptionId = "fathers-day-card") {
+export function readProdigiProductConfig(optionId: ProdigiProductOptionId = "birthday-card") {
   if (isProdigiCardOption(optionId)) {
     return {
       sku: process.env.PRODIGI_CARD_SKU || DEFAULT_GREETING_CARD_SKU,

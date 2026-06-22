@@ -33,7 +33,7 @@ test("readProdigiDraftOrderConfig defaults card orders to direct-delivery greeti
     delete process.env.PRODIGI_CARD_SKU;
     delete process.env.PRODIGI_POSTER_SKU;
 
-    const config = readProdigiDraftOrderConfig("fathers-day-card");
+    const config = readProdigiDraftOrderConfig("birthday-card");
 
     assert.equal(config.sku, "GLOBAL-GRE-MOH-7X5-DIR");
     assert.equal(config.productType, "card");

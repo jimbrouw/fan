@@ -7,7 +7,7 @@ import { Button } from "@/components/Button";
 
 type MockSessionDetails = {
   jobId: string;
-  optionId: "fathers-day-card" | "birthday-card" | "download" | "mug" | "sticker" | "magnet" | "poster";
+  optionId: "birthday-card" | "download" | "mug" | "sticker" | "magnet" | "poster";
   price: string;
   name: string;
 };
@@ -34,7 +34,6 @@ export function CheckoutClient({ sessionId }: { sessionId: string }) {
       const optionId = parts[1] as MockSessionDetails["optionId"];
 
       const optionMap = {
-        "fathers-day-card": { name: "Father's Day card", price: "£7.99" },
         "birthday-card": { name: "Greeting card", price: "£7.99" },
         download: { name: "Download — no watermark", price: "£3.99" },
         mug: { name: "11oz mug", price: "£12.99" },
@@ -43,7 +42,7 @@ export function CheckoutClient({ sessionId }: { sessionId: string }) {
         poster: { name: "A3 poster — delivered", price: "£29.99" },
       };
 
-      const selection = optionMap[optionId] || optionMap["fathers-day-card"];
+      const selection = optionMap[optionId] || optionMap["birthday-card"];
 
       setDetails({
         jobId,

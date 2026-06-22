@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only completed jobs with an output image can be sent to Prodigi." }, { status: 409 });
     }
 
-    const optionId = body.optionId ?? "fathers-day-card";
+    const optionId = body.optionId ?? "birthday-card";
     const config = readProdigiDraftOrderConfig(optionId);
     const printReadyImageURL = isProdigiCardOption(optionId)
       ? await createProdigiCardPrintAsset({
