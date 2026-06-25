@@ -1,61 +1,86 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { AppFrame } from "@/components/AppFrame";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { ArrowRight, Tv2, Users } from "lucide-react";
+import { BingoFrame } from "@/components/BingoFrame";
 import { Button } from "@/components/Button";
 
 export default function Home() {
+  const router = useRouter();
+  const [code, setCode] = useState("");
+
+  function handleJoin(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
+    router.push(`/event/evt-demo`);
+  }
+
   return (
-    <AppFrame>
-      <section className="flex flex-1 flex-col gap-6 pb-2">
-        <div className="space-y-5">
-          <div className="border-y border-[var(--line)] py-5">
-            <h1 className="font-display max-w-[11ch] text-[44px] leading-[0.94] text-[var(--foreground)] min-[390px]:text-[52px]">
-              Get your kit on.
-            </h1>
-            <p className="mt-4 max-w-[31ch] text-[15px] leading-6 text-[var(--muted)]">
-              Upload two photos, pick your team, and send the group chat a poster worth shouting about.
-            </p>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--foreground)]">
-              {["Photo", "Kit", "Poster"].map((step) => (
-                <span key={step} className="rounded-full border border-[var(--line)] bg-[var(--surface-soft)]/55 px-2 py-2">
-                  {step}
-                </span>
-              ))}
-            </div>
-            <Link href={{ pathname: "/login", query: { next: "/capture?restart=1" } }} className="mt-5 inline-block">
-              <Button className="min-w-40">
-                Make my poster
-                <ArrowRight size={17} />
+    <BingoFrame>
+      <header className="flex items-center justify-between pb-6">
+        <span className="font-display kitface-ramp-text text-[32px] leading-none">
+          AI Bingo
+        </span>
+        <Link href="/host/evt-demo" className="text-[13px] font-semibold text-[var(--muted)] hover:text-[var(--foreground)]">
+          Host →
+        </Link>
+      </header>
+
+      <section className="flex flex-1 flex-col gap-8">
+        <div className="border-y border-[var(--line)] py-6">
+          <h1 className="font-display text-[42px] leading-[0.92] text-[var(--foreground)] min-[390px]:text-[50px]">
+            Your face.{" "}
+            <span className="kitface-ramp-text">The game.</span>
+          </h1>
+          <p className="mt-3 max-w-[30ch] text-[15px] leading-[1.55] text-[var(--muted)]">
+            Get your AI portrait, receive a bingo card, and play with everyone at the event.
+          </p>
+        </div>
+
+        <form onSubmit={handleJoin} className="flex flex-col gap-3">
+          <label className="text-[13px] font-semibold uppercase tracking-[0.07em] text-[var(--muted)]">
+            Event code
+          </label>
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="e.g. BINGO01"
+            maxLength={12}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            className="h-14 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[18px] font-bold uppercase tracking-[0.12em] text-[var(--foreground)] placeholder:text-[var(--muted)]/50 placeholder:normal-case placeholder:tracking-normal focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
+          />
+          <Button type="submit" className="w-full">
+            Join event
+            <ArrowRight size={17} />
+          </Button>
+        </form>
+
+        <div className="mt-auto flex flex-col gap-2 border-t border-[var(--line)] pt-5">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.07em] text-[var(--muted)]">
+            Running the event?
+          </p>
+          <div className="flex gap-2">
+            <Link href="/host/evt-demo" className="flex-1">
+              <Button variant="secondary" className="w-full gap-2">
+                <Users size={15} />
+                Host dashboard
+              </Button>
+            </Link>
+            <Link href="/display/evt-demo" className="flex-1">
+              <Button variant="secondary" className="w-full gap-2">
+                <Tv2 size={15} />
+                Display screen
               </Button>
             </Link>
           </div>
-
-          <div className="relative mx-auto w-[82%] rotate-[-3deg] min-[390px]:w-[88%]">
-            <div className="overflow-hidden rounded-[18px] border border-white/80 bg-[var(--surface)] shadow-[0_32px_64px_rgba(42,0,79,0.22)]">
-              <Image
-                src="/hero-image.png"
-                alt="Kitface poster hero"
-                width={853}
-                height={1280}
-                className="max-h-[43vh] w-full object-cover object-top min-[390px]:max-h-none"
-                priority
-              />
-            </div>
-            <div className="kitface-ramp absolute -inset-1 -z-10 rounded-[20px] opacity-30 blur-xl" />
-          </div>
-
-          <footer className="border-t border-[var(--line)] pt-4 text-[11px] leading-5 text-[var(--muted)]">
-            <p>
-              Kitface is a fan-made poster tool for football fun. It is not an official FIFA, Premier League,
-              club, team, or competition app, and it is not endorsed by or affiliated with those organisations.
-            </p>
-            <p className="mt-2">
-              For app notices, contact <a className="font-semibold text-[var(--foreground-soft)]" href="mailto:no-reply@kitface.app">no-reply@kitface.app</a>.
-            </p>
-          </footer>
         </div>
       </section>
-    </AppFrame>
+    </BingoFrame>
   );
 }
