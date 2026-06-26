@@ -1,74 +1,109 @@
-OK I have a prompt that is used for this image 
+# AI Bingo — Portrait Style Prompts
 
-“Photorealistic modern Premier League / EFL promotional poster collage in the style of an official 2025–26 season campaign image. Clean bright off-white background with subtle pink-red gradient haze and soft atmospheric blending around the edges. High-end sports editorial aesthetic with layered cut-out portraits and dynamic overlapping composition.
+Each player uploads a selfie. The app transforms it into a stylised portrait
+using image-to-image generation. The player picks a style before generating.
 
-The image is built around the structure and composition of a modern football league poster:
-a large central silver trophy near the bottom centre, surrounded by multiple football players in different poses, expressions and kit colours. The overall layout should feel dense, energetic, celebratory and heroic.
+## Core prompt structure
 
-HOWEVER:
-Every professional footballer in the composition is replaced using the uploaded reference photographs of REAL FOOTBALL FANS instead.
+Every prompt follows this pattern:
 
-The same few fan faces appear repeatedly throughout the collage in different poses, angles, emotions and kit variations — similar to how one footballer might appear multiple times in a sports campaign poster.
+```
+Transform this person's photo into [STYLE DESCRIPTION].
+Preserve their facial features, likeness, hair colour, and expression so they
+remain clearly recognisable. [STYLE-SPECIFIC RENDERING DETAILS].
+Portrait framing, shoulders and above. High quality, professional finish.
+No background clutter. Clean, shareable result.
+```
 
-Use the uploaded people as the ONLY facial references throughout the image:
+---
 
-[take features fromt he uploaded photos]
+## Styles
 
-All faces must remain photorealistic and recognisable across the composition.
+### Pixar
+> 3D animated film character
 
-Kit styling:
+Transform this person into a Pixar 3D animated character. Preserve their
+facial structure, hair, and expression so they remain recognisable. Render as
+a high-quality 3D CGI character: smooth skin, slightly large expressive eyes,
+warm studio lighting, clean rounded surfaces. Pixar film quality. Portrait
+framing, shoulders and above.
 
-[add your team here]
+---
 
-Composition details:
+### Studio Ghibli
+> Hand-drawn anime portrait
 
-* Multiple layered figures positioned around the trophy
-* Some figures facing camera
-* Some shouting or celebrating
-* Some clapping
-* Some looking serious
-* Some side-profile poses
-* One rear-facing pose showing shirt number
-* One running pose
-* One close-up portrait near centre
-* One triumphant screaming pose
-* One thoughtful/captain-style pose
-* arms folded confidently
-* flexing muscles
-* running
-* celebrating
-* smiling
-* looking determined
+Transform this person into a Studio Ghibli anime character. Preserve their
+face shape, hair, and personality. Hand-drawn watercolour anime style: soft
+muted palette, gentle confident linework, warm Miyazaki aesthetic, expressive
+simplified features. Portrait framing, shoulders and above.
 
-Lighting:
-Bright premium stadium-commercial lighting with subtle rim light and clean facial definition.
+---
 
-Style:
-Official Premier League launch poster meets high-end sportswear advertising campaign.
+### Oil Painting
+> Classical portrait masterpiece
 
-Textures:
-Sharp fabric detail, realistic football shirts, authentic stitching, embroidered badges, sweat texture, skin pores, natural facial lighting.
+Transform this person into a classical oil painting portrait. Preserve their
+exact likeness. Old Masters technique: rich warm tones, visible confident
+brushstrokes, dramatic Rembrandt-style lighting from one side, deep shadow
+areas, museum-quality portrait on canvas texture. Shoulders and above.
 
-Camera aesthetic:
-Mixture of medium portraits, action poses and telephoto sports photography compressed into one layered collage.
+---
 
-Colour palette:
+### Pop Art
+> Andy Warhol screen-print
 
-* Kit from football team from the team seactio above, home and away kits, 
-* subtle sky blue accents
-* silver trophy reflections
-* soft pink atmospheric haze
+Transform this person into a pop art portrait in the style of Andy Warhol.
+Preserve their face structure and hair. Bold flat graphic colours, high
+contrast, halftone dot pattern visible in shadows, strong black outlines,
+limited 4-colour palette, 1960s screen-print aesthetic. Portrait framing.
 
-Important:
+---
 
-* Keep the overall structure and energy of the original football collage poster
-* Preserve the dense overlapping composition
-* Make it feel like a real official football league campaign image
-* No text except realistic shirt numbers/logos
-* No cartoon style
-* No AI-art distortion
-* No duplicated malformed limbs or hands
-* Faces must remain consistent across all appearances
-* Highly realistic sports photography aesthetic
-* 4K ultra-detailed finish” 
+### Comic Book
+> Superhero panel portrait
 
+Transform this person into a comic book character portrait. Preserve their
+features. Bold black ink outlines, flat cel-shaded colours, halftone dot
+shading in shadow areas, dynamic side lighting, Marvel or DC comic art
+quality. Portrait framing, shoulders and above.
+
+---
+
+### Watercolour
+> Soft illustrated portrait
+
+Transform this person into a watercolour illustrated portrait. Preserve their
+likeness. Soft wet-on-wet colour washes, loose expressive brushwork, delicate
+colour bleeds at edges, white paper showing through highlights, contemporary
+portrait illustration style. Shoulders and above.
+
+---
+
+### Cyberpunk
+> Neon-lit future portrait
+
+Transform this person into a cyberpunk neon portrait. Preserve their face and
+identity. Dark moody background, vivid neon pink and electric cyan rim
+lighting, futuristic edge details, rain-slicked atmospheric depth, high
+contrast editorial photography meets sci-fi concept art. Shoulders and above.
+
+---
+
+### Pencil Sketch
+> Hand-drawn graphite portrait
+
+Transform this person into a detailed pencil sketch portrait. Preserve their
+likeness. Graphite pencil on white paper: realistic shading with hatching and
+cross-hatching, fine line detail on facial features, clean white highlights,
+classical portrait drawing technique. Shoulders and above.
+
+---
+
+## Notes
+
+- Always use image-to-image mode with the selfie as the input reference
+- Strength / denoising: 0.65–0.75 (preserve identity, allow style transformation)
+- If the selfie is low quality, run a face-restoration pass first
+- Output: square 1:1 or portrait 3:4 crop, minimum 512×512
+- No text, logos, or bingo grid overlays — the portrait is used as a bingo card cell

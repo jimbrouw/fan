@@ -1,35 +1,88 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 import { BingoFrame } from "@/components/BingoFrame";
 import { Button } from "@/components/Button";
 
-type GenState = "generating" | "done" | "failed";
+type JobStatus = "queued" | "processing" | "completed" | "failed";
+
+type PollResult = {
+  status?: JobStatus;
+  outputUrl?: string | null;
+  error?: string | null;
+};
+
+const POLL_INTERVAL_MS = 3000;
+const MOCK_JOB_ID = "job-demo";
 
 export default function GeneratingPage() {
-  const { eventId } = useParams<{ eventId: string; jobId: string }>();
+  const { eventId, jobId } = useParams<{ eventId: string; jobId: string }>();
   const router = useRouter();
-  const [state, setState] = useState<GenState>("generating");
+
+  const [status, setStatus] = useState<JobStatus>("queued");
+  const [outputImageUrl, setOutputImageUrl] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [dots, setDots] = useState(1);
+  const pollRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Animated dots while generating
+  useEffect(() => {
+    if (status === "queued" || status === "processing") {
+      const timer = setInterval(() => setDots((d) => (d % 3) + 1), 500);
+      return () => clearInterval(timer);
+    }
+  }, [status]);
 
   useEffect(() => {
-    const dotTimer = setInterval(() => setDots((d) => (d % 3) + 1), 500);
-    const doneTimer = setTimeout(() => setState("done"), 3000);
+    // Mock job for demo — skip polling
+    if (jobId === MOCK_JOB_ID) {
+      const t = setTimeout(() => setStatus("completed"), 3000);
+      return () => clearTimeout(t);
+    }
+
+    async function poll() {
+      try {
+        const res = await fetch(`/api/bingo/jobs/${jobId}`, { cache: "no-store" });
+        const data = (await res.json()) as PollResult;
+        const nextStatus = data.status ?? "processing";
+        setStatus(nextStatus);
+
+        if (nextStatus === "completed") {
+          // Use the image proxy so we stay on 'self' and avoid CSP issues
+          setOutputImageUrl(`/api/bingo/jobs/${jobId}/image`);
+        } else if (nextStatus === "failed") {
+          setErrorMsg(data.error ?? "Generation failed.");
+        } else {
+          // Still running — schedule next poll
+          pollRef.current = setTimeout(poll, POLL_INTERVAL_MS);
+        }
+      } catch {
+        // Network hiccup — retry after a longer delay
+        pollRef.current = setTimeout(poll, POLL_INTERVAL_MS * 2);
+      }
+    }
+
+    poll();
     return () => {
-      clearInterval(dotTimer);
-      clearTimeout(doneTimer);
+      if (pollRef.current) clearTimeout(pollRef.current);
     };
-  }, []);
+  }, [jobId]);
+
+  const isGenerating = status === "queued" || status === "processing";
+
+  // Derive which step is active for the progress list
+  const stepIndex = status === "queued" ? 0 : status === "processing" ? 1 : 2;
 
   return (
     <BingoFrame>
       <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
-        {state === "generating" && (
+
+        {/* ── Generating ── */}
+        {isGenerating && (
           <>
             <div className="relative flex h-36 w-36 items-center justify-center">
-              {/* Spinning gradient ring */}
               <div
                 className="absolute inset-0 rounded-full"
                 style={{
@@ -48,33 +101,48 @@ export default function GeneratingPage() {
                 Making your portrait{".".repeat(dots)}
               </h1>
               <p className="mt-2 text-[14px] text-[var(--muted)]">
-                Your AI bingo portrait is being generated. This takes about 30 seconds.
+                Your AI bingo portrait is being generated. This takes about 30–60 seconds.
               </p>
             </div>
 
             <div className="flex flex-col gap-2 text-center">
               {["Analysing your selfie", "Generating portrait", "Adding bingo magic"].map((step, i) => (
                 <div key={step} className="flex items-center gap-2 text-[13px]">
-                  <div className={`h-4 w-4 rounded-full border-2 ${i === 1 ? "border-[var(--accent)] bg-[var(--accent)]/20" : i === 0 ? "border-[var(--accent-lime)] bg-[var(--accent-lime)]/20" : "border-[var(--line)]"}`} />
-                  <span className={i <= 1 ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>{step}</span>
+                  <div
+                    className={`h-4 w-4 rounded-full border-2 ${
+                      i < stepIndex
+                        ? "border-[var(--accent-lime)] bg-[var(--accent-lime)]/20"
+                        : i === stepIndex
+                        ? "border-[var(--accent)] bg-[var(--accent)]/20"
+                        : "border-[var(--line)]"
+                    }`}
+                  />
+                  <span className={i <= stepIndex ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
+                    {step}
+                  </span>
                 </div>
               ))}
             </div>
           </>
         )}
 
-        {state === "done" && (
+        {/* ── Done ── */}
+        {status === "completed" && (
           <>
             <div className="relative">
-              <div
-                className="h-52 w-40 rounded-[18px] shadow-[0_24px_48px_rgba(204,0,0,0.35)]"
-                style={{ background: "linear-gradient(135deg, #CC0000, #880000)" }}
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-end rounded-[18px] p-3">
-                <span className="rounded-full bg-white/20 px-2.5 py-1 text-[13px] font-bold text-white">
-                  You
-                </span>
-              </div>
+              {outputImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={outputImageUrl}
+                  alt="Your AI portrait"
+                  className="h-52 w-40 rounded-[18px] object-cover shadow-[0_24px_48px_rgba(204,0,0,0.35)]"
+                />
+              ) : (
+                <div
+                  className="h-52 w-40 rounded-[18px] shadow-[0_24px_48px_rgba(204,0,0,0.35)]"
+                  style={{ background: "linear-gradient(135deg, #CC0000, #880000)" }}
+                />
+              )}
               <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent-lime)] text-[16px] shadow-lg">
                 ✓
               </div>
@@ -94,7 +162,8 @@ export default function GeneratingPage() {
           </>
         )}
 
-        {state === "failed" && (
+        {/* ── Failed ── */}
+        {status === "failed" && (
           <>
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-50">
               <AlertCircle size={40} className="text-red-400" />
@@ -102,15 +171,12 @@ export default function GeneratingPage() {
             <div className="text-center">
               <h1 className="font-display text-[24px] text-[var(--foreground)]">Generation failed</h1>
               <p className="mt-2 text-[14px] text-[var(--muted)]">
-                Something went wrong. Please try again with a clearer photo.
+                {errorMsg ?? "Something went wrong. Please try again with a clearer photo."}
               </p>
             </div>
-            <div className="flex flex-col gap-3 w-full max-w-[280px]">
-              <Button onClick={() => setState("generating")} className="w-full">
-                <RefreshCw size={16} />
-                Try again
-              </Button>
+            <div className="flex w-full max-w-[280px] flex-col gap-3">
               <Button variant="secondary" onClick={() => router.push(`/event/${eventId}/capture`)} className="w-full">
+                <RefreshCw size={16} />
                 Retake photo
               </Button>
             </div>
