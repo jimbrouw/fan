@@ -4,7 +4,7 @@ const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://accounts.google.com;
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://js.stripe.com https://*.vercel.app https://app.kitface.app;
+  img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://js.stripe.com https://*.vercel.app https://app.kitface.app https://*.muapi.ai https://fal.media https://*.fal.media;
   font-src 'self' data:;
   object-src 'none';
   base-uri 'self';
