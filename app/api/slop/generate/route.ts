@@ -56,7 +56,7 @@ async function callMuapi(prompt: string, imageUrl: string): Promise<string> {
   const apiKey = process.env.MUAPI_API_KEY;
   if (!apiKey) throw new Error("Missing MUAPI_API_KEY.");
 
-  const response = await fetch(`${MUAPI_BASE_URL}/wan2.7-image-edit`, {
+  const response = await fetch(`${MUAPI_BASE_URL}/nano-banana-2-edit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

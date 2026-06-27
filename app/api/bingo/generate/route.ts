@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const { providerJobId } = await provider.submitJob({
       prompt,
       referenceImageUrls: [signed.signedUrl],
-      model: "wan2.7-image-edit",
+      model: "nano-banana-2",
     });
 
     return NextResponse.json({ jobId: providerJobId });
