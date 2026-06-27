@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef } from "react";
 import { Camera, ImageIcon, RefreshCw, ArrowRight, ChevronLeft, Loader2 } from "lucide-react";
 import { BingoFrame } from "@/components/BingoFrame";
@@ -17,6 +17,8 @@ function randomIndex(len: number) {
 export default function CapturePage() {
   const { eventId } = useParams<{ eventId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const playerName = searchParams.get("name") ?? "Player";
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
@@ -90,7 +92,8 @@ export default function CapturePage() {
         throw new Error(data.error ?? "Generation request failed.");
       }
 
-      router.push(`/event/${eventId}/generating/${data.jobId}`);
+      const nameParam = encodeURIComponent(playerName);
+      router.push(`/event/${eventId}/generating/${data.jobId}?name=${nameParam}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setIsUploading(false);

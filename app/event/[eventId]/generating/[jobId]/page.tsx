@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 import { BingoFrame } from "@/components/BingoFrame";
 import { Button } from "@/components/Button";
@@ -20,6 +20,8 @@ const MOCK_JOB_ID = "job-demo";
 export default function GeneratingPage() {
   const { eventId, jobId } = useParams<{ eventId: string; jobId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const playerName = searchParams.get("name") ?? "Player";
 
   const [status, setStatus] = useState<JobStatus>("queued");
   const [outputImageUrl, setOutputImageUrl] = useState<string | null>(null);
@@ -50,8 +52,20 @@ export default function GeneratingPage() {
         setStatus(nextStatus);
 
         if (nextStatus === "completed") {
-          // Use the image proxy so we stay on 'self' and avoid CSP issues
           setOutputImageUrl(`/api/bingo/jobs/${jobId}/image`);
+          // Save portrait to DB (best-effort — don't block the UI)
+          if (data.outputUrl) {
+            fetch("/api/bingo/portraits", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                eventCode: eventId,
+                playerName,
+                jobId,
+                outputUrl: data.outputUrl,
+              }),
+            }).catch(() => {/* non-fatal */});
+          }
         } else if (nextStatus === "failed") {
           setErrorMsg(data.error ?? "Generation failed.");
         } else {

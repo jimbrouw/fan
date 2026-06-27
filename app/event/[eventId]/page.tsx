@@ -8,7 +8,7 @@ import { Button } from "@/components/Button";
 import { MOCK_EVENT } from "@/lib/bingo/mockData";
 
 export default function JoinEventPage() {
-  useParams();
+  const { eventId } = useParams<{ eventId: string }>();
   const router = useRouter();
   const [name, setName] = useState("");
   const event = MOCK_EVENT;
@@ -16,7 +16,7 @@ export default function JoinEventPage() {
   function handleJoin(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    router.push(`/event/${event.id}/capture`);
+    router.push(`/event/${eventId}/capture?name=${encodeURIComponent(name.trim())}`);
   }
 
   return (
