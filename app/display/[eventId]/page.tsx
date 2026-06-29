@@ -1,101 +1,144 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState } from "react";
-import { ChevronRight } from "lucide-react";
-import { MOCK_PORTRAITS, MOCK_CALLED_IDS, MOCK_EVENT } from "@/lib/bingo/mockData";
+import { useEffect, useState, useCallback } from "react";
+
+type Portrait = {
+  id: string;
+  player_name: string;
+  output_url: string | null;
+  job_id: string;
+};
+
+const POLL_INTERVAL_MS = 3000;
 
 export default function DisplayPage() {
-  useParams();
-  const portraits = MOCK_PORTRAITS;
-  const event = MOCK_EVENT;
+  const { eventId } = useParams<{ eventId: string }>();
 
-  const [calledIdx, setCalledIdx] = useState(MOCK_CALLED_IDS.length - 1);
-  const [calledIds, setCalledIds] = useState<string[]>(MOCK_CALLED_IDS);
+  const [portraits, setPortraits] = useState<Portrait[]>([]);
+  const [calledIds, setCalledIds] = useState<string[]>([]);
 
-  const currentPortrait = portraits.find((p) => p.id === calledIds[calledIdx]) ?? portraits[0];
-  const remaining = portraits.filter((p) => !calledIds.includes(p.id));
+  const fetchData = useCallback(async () => {
+    const [portraitsRes, eventRes] = await Promise.all([
+      fetch(`/api/bingo/portraits?eventCode=${eventId}`, { cache: "no-store" }),
+      fetch(`/api/bingo/events/${eventId}`, { cache: "no-store" }),
+    ]);
+    const [portraitsData, eventData] = await Promise.all([
+      portraitsRes.json() as Promise<{ portraits?: Portrait[] }>,
+      eventRes.json() as Promise<{ calledPortraitIds?: string[] }>,
+    ]);
+    if (portraitsData.portraits) setPortraits(portraitsData.portraits);
+    if (eventData.calledPortraitIds) setCalledIds(eventData.calledPortraitIds);
+  }, [eventId]);
 
-  function callNext() {
-    if (remaining.length === 0) return;
-    const next = remaining[Math.floor(Math.random() * remaining.length)];
-    const nextIds = [...calledIds, next.id];
-    setCalledIds(nextIds);
-    setCalledIdx(nextIds.length - 1);
-  }
+  useEffect(() => {
+    void fetchData();
+    const interval = setInterval(fetchData, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const currentPortrait = calledIds.length > 0
+    ? portraits.find((p) => p.id === calledIds[calledIds.length - 1]) ?? null
+    : null;
+
+  const previousIds = calledIds.slice(0, -1);
 
   return (
     <main
       className="relative flex h-[100dvh] w-full flex-col items-center justify-center overflow-hidden text-white"
-      style={{
-        background: `linear-gradient(135deg, ${currentPortrait.colors[0]}22, ${currentPortrait.colors[1]}22), #1A0000`,
-      }}
+      style={{ background: "#1A0000" }}
     >
-      {/* Background glow */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-30 blur-[80px]"
-        style={{ background: `radial-gradient(ellipse at 50% 40%, ${currentPortrait.colors[0]}, ${currentPortrait.colors[1]}, transparent 70%)` }}
-      />
+      {/* Background glow — red accent when something is called */}
+      {currentPortrait && (
+        <div className="pointer-events-none absolute inset-0 opacity-20 blur-[100px]"
+          style={{ background: "radial-gradient(ellipse at 50% 40%, #FF5500, #CC0000, transparent 70%)" }}
+        />
+      )}
 
       {/* Event name top */}
       <div className="absolute left-0 right-0 top-6 flex items-center justify-between px-8 text-white/60">
         <span className="font-display text-[22px] font-black tracking-tight text-white/80">AI Bingo</span>
-        <span className="text-[16px]">{event.name}</span>
+        <span className="font-mono text-[16px] font-bold tracking-widest text-white/60">{eventId}</span>
       </div>
 
       {/* Portrait */}
       <div className="relative z-10 flex flex-col items-center gap-6">
-        <div
-          className="rounded-[28px] shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
-          style={{
-            background: `linear-gradient(135deg, ${currentPortrait.colors[0]}, ${currentPortrait.colors[1]})`,
-            width: "clamp(180px, 30vw, 340px)",
-            aspectRatio: "3/4",
-          }}
-        />
+        {currentPortrait ? (
+          <>
+            <div
+              className="overflow-hidden rounded-[28px] shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
+              style={{
+                width: "clamp(180px, 30vw, 340px)",
+                aspectRatio: "3/4",
+              }}
+            >
+              {currentPortrait.output_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`/api/bingo/jobs/${currentPortrait.job_id}/image`}
+                  alt={currentPortrait.player_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-[#330000]" />
+              )}
+            </div>
 
-        <div className="text-center">
-          <p className="font-display text-[clamp(36px,6vw,80px)] font-black leading-none tracking-tight text-white">
-            {currentPortrait.name}
-          </p>
-          <p className="mt-2 text-[clamp(16px,2.5vw,28px)] font-semibold text-white/60">
-            Portrait #{calledIds.length}
-          </p>
-        </div>
+            <div className="text-center">
+              <p className="font-display text-[clamp(36px,6vw,80px)] font-black leading-none tracking-tight text-white">
+                {currentPortrait.player_name}
+              </p>
+              <p className="mt-2 text-[clamp(16px,2.5vw,28px)] font-semibold text-white/60">
+                Portrait #{calledIds.length}
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="text-center">
+            <p className="font-display text-[clamp(32px,5vw,64px)] font-black text-white/30">
+              Waiting to start…
+            </p>
+            <p className="mt-3 font-mono text-[clamp(14px,2vw,24px)] tracking-widest text-white/20">
+              {eventId}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Called history strip */}
-      <div className="absolute bottom-20 left-0 right-0 overflow-hidden px-8">
-        <div className="flex items-center gap-2">
-          <span className="shrink-0 text-[12px] font-bold uppercase tracking-[0.08em] text-white/40">Called</span>
-          <div className="flex gap-1.5">
-            {calledIds.slice(0, -1).map((id) => {
-              const p = portraits.find((pp) => pp.id === id);
-              if (!p) return null;
-              return (
-                <div
-                  key={id}
-                  className="h-9 w-7 shrink-0 rounded-[6px] opacity-60"
-                  style={{ background: `linear-gradient(135deg, ${p.colors[0]}, ${p.colors[1]})` }}
-                  title={p.name}
-                />
-              );
-            })}
+      {previousIds.length > 0 && (
+        <div className="absolute bottom-20 left-0 right-0 overflow-hidden px-8">
+          <div className="flex items-center gap-3">
+            <span className="shrink-0 text-[12px] font-bold uppercase tracking-[0.08em] text-white/40">Called</span>
+            <div className="flex gap-1.5 overflow-x-auto">
+              {previousIds.map((id) => {
+                const p = portraits.find((pp) => pp.id === id);
+                if (!p) return null;
+                return p.output_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={id}
+                    src={`/api/bingo/jobs/${p.job_id}/image`}
+                    alt={p.player_name}
+                    className="h-9 w-7 shrink-0 rounded-[6px] object-cover opacity-60"
+                    title={p.player_name}
+                  />
+                ) : (
+                  <div
+                    key={id}
+                    className="h-9 w-7 shrink-0 rounded-[6px] bg-[#330000] opacity-60"
+                    title={p.player_name}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Controls — subtle, bottom right */}
-      <div className="absolute bottom-6 right-8 flex items-center gap-3">
-        <span className="text-[13px] text-white/30">{remaining.length} remaining</span>
-        <button
-          onClick={callNext}
-          disabled={remaining.length === 0}
-          className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[14px] font-semibold text-white/70 transition hover:bg-white/20 disabled:opacity-30"
-        >
-          Next
-          <ChevronRight size={15} />
-        </button>
+      {/* Stats bottom right */}
+      <div className="absolute bottom-6 right-8 text-[13px] text-white/30">
+        {calledIds.length} called · {portraits.length - calledIds.length} remaining
       </div>
     </main>
   );
