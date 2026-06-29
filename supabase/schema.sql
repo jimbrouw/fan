@@ -78,6 +78,10 @@ create table if not exists public.purchase_orders (
   customer_email text,
   customer_message text,
   printful_order_id text,
+  dispatch_email_sent_at timestamptz,
+  tracking_carrier text,
+  tracking_number text,
+  tracking_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -129,6 +133,7 @@ create index if not exists video_jobs_generation_job_id_idx on public.video_jobs
 create index if not exists video_jobs_user_id_idx on public.video_jobs(user_id);
 create index if not exists video_jobs_provider_job_id_idx on public.video_jobs(provider_job_id);
 create index if not exists purchase_orders_generation_job_id_idx on public.purchase_orders(generation_job_id);
+create index if not exists purchase_orders_printful_order_id_idx on public.purchase_orders(printful_order_id);
 create index if not exists credit_purchases_user_id_idx on public.credit_purchases(user_id);
 create index if not exists notifications_user_id_created_at_idx on public.notifications(user_id, created_at desc);
 create index if not exists generation_analytics_created_at_idx on public.generation_analytics(created_at desc);

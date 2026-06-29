@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isExemptEmail } from "@/lib/credits";
 import { getDefaultMuapiVideoModel, isMuapiVideoModelId } from "@/lib/ai/providers/muapiVideo";
 import { createVideoProvider } from "@/lib/ai/providers/videoProvider";
 import { isMissingVideoJobsTable, saveMemoryVideoJob } from "@/lib/ai/videoJobMemory";
@@ -10,6 +11,7 @@ import {
   createSignedVideoTestImageUrl,
   isSupportedVideoTestImagePath,
 } from "@/lib/supabase/videoTestImages";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 type CreateVideoBody = {
   generationJobId?: string;
@@ -34,11 +36,21 @@ function isMissingSchemaColumn(error: { message?: string }, column: string) {
 }
 
 export async function POST(request: Request) {
+  let shouldRefundCredit = false;
+  let userId: string | null = null;
+  let userEmail: string | null = null;
+
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Sign in to animate this poster." }, { status: 401 });
     }
+    userId = user.id;
+    userEmail = user.email ?? null;
+
+    // Rate Limit (authenticated or IP)
+    const limitResponse = checkRateLimit(userId, "video-jobs", { limit: 10, windowMs: 60 * 1000 });
+    if (limitResponse) return limitResponse;
 
     const body = (await request.json()) as CreateVideoBody;
     if (!body.generationJobId) {
@@ -71,7 +83,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: imageJobError?.message ?? "Poster job not found." }, { status: 404 });
     }
 
-    if (imageJob.user_id && imageJob.user_id !== user.id) {
+    if (imageJob.user_id && imageJob.user_id !== userId) {
       return NextResponse.json({ error: "You can only animate your own posters." }, { status: 403 });
     }
 
@@ -86,6 +98,9 @@ export async function POST(request: Request) {
     const testSourceImagePath = body.testSourceImagePath?.trim();
 
     if (testSourceImagePath) {
+      if (process.env.VERCEL_ENV === "production") {
+        return NextResponse.json({ error: "Test source images are not available in production." }, { status: 403 });
+      }
       if (!isSupportedVideoTestImagePath(testSourceImagePath)) {
         return NextResponse.json({ error: "Test source image must be a JPG, PNG, or WebP file." }, { status: 400 });
       }
@@ -115,6 +130,18 @@ export async function POST(request: Request) {
       });
     }
 
+    // Spend the credit securely before submission
+    if (!isExemptEmail(userEmail)) {
+      const { data: newCredits, error: creditError } = await supabase.rpc("consume_user_credit", { p_user_id: userId });
+      if (creditError || newCredits === null) {
+        return NextResponse.json(
+          { error: "Buy 3 more posters to animate this result.", code: "credits_required" },
+          { status: 402 }
+        );
+      }
+      shouldRefundCredit = true;
+    }
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const webhookUrl = appUrl ? `${appUrl}/api/webhooks/video` : undefined;
     const videoPrompt = body.posterType === "vs" ? KITFACE_VS_VIDEO_PROMPT_4_SECONDS : KITFACE_VIDEO_PROMPT_4_SECONDS;
@@ -131,7 +158,7 @@ export async function POST(request: Request) {
     const videoJobInsert = {
       id: videoJobId,
       generation_job_id: imageJob.id,
-      user_id: user.id,
+      user_id: userId,
       source_poster_url: sourcePosterUrl,
       provider: provider.id,
       provider_job_id: providerJobId,
@@ -162,6 +189,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ videoJobId, providerJobId, provider: provider.id, status: "processing" });
   } catch (error) {
+    if (shouldRefundCredit && userId) {
+      const fallbackSupabase = createServerSupabaseClient();
+      await fallbackSupabase.rpc("add_user_credits", { p_user_id: userId, p_amount: 1 });
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Video job creation failed." },
       { status: 500 }

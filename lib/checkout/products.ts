@@ -1,4 +1,4 @@
-import { isProdigiCardOption, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
+import { isProdigiPhysicalOption, type ProdigiProductOptionId } from "@/lib/fulfillment/prodigi";
 
 export type CheckoutProduct = {
   id: ProdigiProductOptionId;
@@ -9,18 +9,10 @@ export type CheckoutProduct = {
   requiresShipping: boolean;
 };
 
-export const checkoutProducts: Record<ProdigiProductOptionId, CheckoutProduct> = {
-  "fathers-day-card": {
-    id: "fathers-day-card",
-    name: "Father's Day card",
-    description: "Printed 7x5 greeting card with your Kitface poster on the front.",
-    unitAmount: 799,
-    currency: "gbp",
-    requiresShipping: true
-  },
+export const checkoutProducts: Partial<Record<ProdigiProductOptionId, CheckoutProduct>> = {
   "birthday-card": {
     id: "birthday-card",
-    name: "Birthday card",
+    name: "Greeting card",
     description: "Printed 7x5 greeting card with your Kitface poster on the front.",
     unitAmount: 799,
     currency: "gbp",
@@ -33,6 +25,30 @@ export const checkoutProducts: Record<ProdigiProductOptionId, CheckoutProduct> =
     unitAmount: 399,
     currency: "gbp",
     requiresShipping: false
+  },
+  mug: {
+    id: "mug",
+    name: "11oz mug",
+    description: "White ceramic mug printed with your Kitface poster artwork.",
+    unitAmount: 1299,
+    currency: "gbp",
+    requiresShipping: true
+  },
+  sticker: {
+    id: "sticker",
+    name: "Sticker",
+    description: "Small kiss-cut vinyl sticker printed with your Kitface poster artwork.",
+    unitAmount: 499,
+    currency: "gbp",
+    requiresShipping: true
+  },
+  magnet: {
+    id: "magnet",
+    name: "Fridge magnet",
+    description: "Square photo magnet printed with your Kitface poster artwork.",
+    unitAmount: 699,
+    currency: "gbp",
+    requiresShipping: true
   },
   poster: {
     id: "poster",
@@ -49,5 +65,5 @@ export function getCheckoutProduct(optionId: ProdigiProductOptionId) {
 }
 
 export function isPhysicalCheckoutOption(optionId: ProdigiProductOptionId) {
-  return optionId === "poster" || isProdigiCardOption(optionId);
+  return isProdigiPhysicalOption(optionId);
 }

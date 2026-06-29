@@ -55,6 +55,7 @@ export async function isUsableRemoteImageUrl(url: string) {
     const headResponse = await fetch(url, {
       method: "HEAD",
       cache: "no-store",
+      redirect: "error",
     }).catch(() => null);
 
     if (headResponse?.ok) {
@@ -68,6 +69,7 @@ export async function isUsableRemoteImageUrl(url: string) {
     // Now do a GET but only read the start of the body
     const response = await fetch(url, {
       cache: "no-store",
+      redirect: "error",
     });
 
     if (!response.ok) return false;

@@ -5,6 +5,10 @@ import { listSignedVideoTestImages } from "@/lib/supabase/videoTestImages";
 
 export async function GET() {
   try {
+    if (process.env.VERCEL_ENV === "production") {
+      return new NextResponse("Not Found", { status: 404 });
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Sign in to load test images." }, { status: 401 });

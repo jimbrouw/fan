@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPosterStyle } from "@/lib/posterTemplates";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
-import { FalGptImage2GenerationProvider } from "@/lib/ai/providers/fal";
+import { createServerSupabaseClient, captureBucket } from "@/lib/supabase/server";
 import { buildPosterPrompt, normalizeKitBrandPlacementMode } from "@/lib/ai/promptBuilder";
 import { getKitSpec, type KitVariant } from "@/lib/kitSpecs";
 import { buildUsableReferenceImageUrls } from "@/lib/remoteImages";
@@ -11,8 +9,11 @@ import { upsertUserProfile } from "@/lib/users";
 import type { TeamProfile } from "@/lib/teamProfiles";
 import type { MatchContext } from "@/lib/ai/promptBuilder";
 import type { MuapiGptImageTestMode } from "@/lib/ai/providers/muapi";
+import { submitStaticGenerationJob } from "@/lib/ai/providers/staticGeneration";
 import { FREE_TIER_GENERATIONS, isExemptEmail, isValidMarketingKey } from "@/lib/credits";
 import { validatePosterPersonalisation } from "@/lib/safety/profanity";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { parseSupabaseStorageUri } from "@/lib/supabase/storage";
 
 type GenerateBody = {
   sessionId: string;
@@ -42,6 +43,11 @@ type GenerateBody = {
   };
 };
 
+type CaptureSessionRow = {
+  id: string;
+  user_id: string | null;
+};
+
 function isMissingSchemaColumn(error: { message?: string }, column: string) {
   return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
 }
@@ -54,9 +60,27 @@ function uniqueUrls(urls: string[]) {
   return [...new Set(urls)];
 }
 
+function validateClientImageUrl(url: string, sessionId: string, supabaseUrl: string, bucket: string): boolean {
+  if (!url) return true;
+
+  const parsedUri = parseSupabaseStorageUri(url);
+  if (parsedUri) {
+    if (parsedUri.bucket !== bucket) return false;
+    return parsedUri.path.startsWith(`${sessionId}/`);
+  }
+
+  if (url.startsWith(supabaseUrl)) {
+    const expectedPrefix = `${bucket}/${sessionId}/`;
+    return url.includes(expectedPrefix);
+  }
+
+  return false;
+}
+
 export async function POST(request: Request) {
   let consumeCreditAfterSuccess = false;
   let userId: string | null = null;
+  let preInsertedJobId: string | null = null;
 
   try {
     const marketingKey = request.headers.get("x-marketing-key");
@@ -67,36 +91,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in with Google before generating your poster." }, { status: 401 });
     }
     userId = isMarketingServiceRequest ? "marketing-service" : user!.id;
-    if (!isMarketingServiceRequest) await upsertUserProfile(user!);
+    if (user) {
+      await upsertUserProfile(user);
+    }
 
-    const isExempt = isMarketingServiceRequest || isExemptEmail(user?.email);
-    if (!isExempt) {
-      const usageClient = createServerSupabaseClient();
-      const { count, error: usageError } = await usageClient
-        .from("generation_jobs")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user!.id);
-
-      // Fail open if the user_id column isn't migrated yet so we never falsely block.
-      if (!usageError && (count ?? 0) >= FREE_TIER_GENERATIONS) {
-        // Free posters used up — this generation must be paid for with a credit.
-        const { data: profile } = await usageClient
-          .from("users")
-          .select("credits")
-          .eq("id", user!.id)
-          .single<{ credits: number }>();
-
-        if ((profile?.credits ?? 0) <= 0) {
-          return NextResponse.json(
-            {
-              error: `You've used all ${FREE_TIER_GENERATIONS} of your free posters. Add credits to keep creating.`,
-              code: "free_tier_exhausted",
-            },
-            { status: 402 }
-          );
-        }
-        consumeCreditAfterSuccess = true; // We will consume the credit before submission
-      }
+    if (!isMarketingServiceRequest) {
+      const limitResponse = checkRateLimit(userId, "generate", { limit: 10, windowMs: 60 * 1000 });
+      if (limitResponse) return limitResponse;
     }
 
     const body = (await request.json()) as GenerateBody;
@@ -105,6 +106,42 @@ export async function POST(request: Request) {
         { error: "Missing sessionId, sourceImageUrl, teamName, kitNotes, or teamProfile." },
         { status: 400 }
       );
+    }
+
+    const supabase = createServerSupabaseClient();
+    if (!isMarketingServiceRequest) {
+      const sessionQuery = await supabase
+        .from("capture_sessions")
+        .select("id,user_id")
+        .eq("id", body.sessionId)
+        .maybeSingle<CaptureSessionRow>();
+
+      if (sessionQuery.error) {
+        console.error("Session lookup error:", sessionQuery.error.message);
+        return NextResponse.json({ error: "Service temporarily unavailable. Please try again." }, { status: 503 });
+      }
+
+      if (!sessionQuery.data) {
+        return NextResponse.json({ error: "Capture session not found." }, { status: 404 });
+      }
+
+      const resourceUserId = sessionQuery.data.user_id;
+      if (resourceUserId && resourceUserId !== userId) {
+        return NextResponse.json({ error: "Capture session not found." }, { status: 404 });
+      }
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+      const clientUrls = [
+        body.sourceImageUrl,
+        ...(body.personReferenceImageUrls ?? []),
+        body.matchContext?.opponentSourceImageUrl
+      ].filter((url): url is string => Boolean(url));
+
+      for (const url of clientUrls) {
+        if (!validateClientImageUrl(url, body.sessionId, supabaseUrl, captureBucket)) {
+          return NextResponse.json({ error: "Access denied to reference images." }, { status: 403 });
+        }
+      }
     }
 
     const personalisationSafetyError = validatePosterPersonalisation({
@@ -131,7 +168,7 @@ export async function POST(request: Request) {
     const kitSpec = body.teamId ? getKitSpec(body.teamId, kitVariant) : undefined;
     const homeKitSpec = body.matchContext ? getKitSpec(body.matchContext.homeTeam.id, body.matchContext.homeTeam.kitVariant) : undefined;
     const awayKitSpec = body.matchContext ? getKitSpec(body.matchContext.awayTeam.id, body.matchContext.awayTeam.kitVariant) : undefined;
-    const brandPlacementMode = normalizeKitBrandPlacementMode(process.env.KITFACE_BRAND_PLACEMENT_MODE);
+    const previewBrandPlacementMode = normalizeKitBrandPlacementMode(process.env.KITFACE_BRAND_PLACEMENT_MODE);
     if (body.matchContext?.opponentMode === "another-person" && !body.matchContext.opponentSourceImageUrl) {
       return NextResponse.json(
         { error: "Add the other person's photo before generating this VS poster." },
@@ -139,22 +176,94 @@ export async function POST(request: Request) {
       );
     }
 
-    // Spend the credit securely before submission
-    if (consumeCreditAfterSuccess) {
-      const usageClient = createServerSupabaseClient();
-      const { data: newCredits, error: creditError } = await usageClient.rpc("consume_user_credit", { p_user_id: user!.id });
-      if (creditError || newCredits === null) {
-        return NextResponse.json(
-          {
-            error: `You've used all ${FREE_TIER_GENERATIONS} of your free posters. Add credits to keep creating.`,
-            code: "free_tier_exhausted",
-          },
-          { status: 402 }
-        );
+    const brandPlacementMode = previewBrandPlacementMode;
+    const requestedModel = body.model || "gpt-image-2";
+    const requestedGptImageMode = normalizeGptImageMode(body.gptImageTestMode);
+
+    const now = new Date().toISOString();
+    let jobId = "";
+
+    if (!isMarketingServiceRequest) {
+      jobId = crypto.randomUUID();
+      preInsertedJobId = jobId;
+
+      const jobInsert = {
+        id: jobId,
+        session_id: body.sessionId,
+        user_id: userId,
+        team_name: body.teamName,
+        kit_notes: [
+          body.kitNotes,
+          `Kit variant: ${kitVariant}`,
+          kitSpec ? `Kit spec: ${kitSpec.season} ${kitSpec.team} ${kitSpec.variant}` : undefined,
+          body.matchContext
+            ? `Match: ${body.matchContext.homeTeam.name} vs ${body.matchContext.awayTeam.name}; user side: ${body.matchContext.userSide}; opponent mode: ${body.matchContext.opponentMode}`
+            : undefined,
+          body.matchContext?.matchdayNotes ? `Matchday notes: ${body.matchContext.matchdayNotes}` : undefined,
+          `Brand placement mode: ${brandPlacementMode}`,
+          `Model: ${requestedModel}`,
+          requestedModel === "gpt-image-2" || requestedModel === "gpt-image-2-fast" ? `GPT Image test mode: ${requestedGptImageMode}` : undefined,
+          `Poster style: ${posterStyle.name}`
+        ].filter(Boolean).join("\n"),
+        target_poster_url: "",
+        provider_job_id: "pending",
+        status: "processing",
+        created_at: now,
+        updated_at: now
+      };
+
+      let insert = await supabase.from("generation_jobs").insert(jobInsert);
+
+      if (insert.error && isMissingSchemaColumn(insert.error, "user_id")) {
+        const legacyJobInsert: Omit<typeof jobInsert, "user_id"> = { ...jobInsert };
+        delete (legacyJobInsert as Partial<typeof jobInsert>).user_id;
+        insert = await supabase.from("generation_jobs").insert(legacyJobInsert);
+      }
+
+      if (insert.error) {
+        throw new Error(insert.error.message);
       }
     }
 
-    const requestedGptImageMode = normalizeGptImageMode(body.gptImageTestMode);
+    const isExempt = isMarketingServiceRequest || isExemptEmail(user?.email);
+    if (!isExempt) {
+      // Get all jobs for the user ordered deterministically
+      const { data: userJobs, error: jobsError } = await supabase
+        .from("generation_jobs")
+        .select("id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (jobsError) {
+        console.error("Usage check failed:", jobsError.message);
+        throw new Error("Service temporarily unavailable. Please try again.");
+      }
+
+      const jobIndex = userJobs ? userJobs.findIndex(j => j.id === jobId) : -1;
+      if (jobIndex === -1) {
+        throw new Error("Job verification failed.");
+      }
+
+      if (jobIndex >= FREE_TIER_GENERATIONS) {
+        // Spend the credit securely before submission
+        const { data: newCredits, error: creditError } = await supabase.rpc("consume_user_credit", { p_user_id: userId });
+
+        if (creditError || newCredits === null) {
+          await supabase.from("generation_jobs").delete().eq("id", jobId);
+          preInsertedJobId = null;
+          return NextResponse.json(
+            {
+              error: `You've used your free preview. Buy 3 more posters to keep creating.`,
+              code: "free_tier_exhausted",
+            },
+            { status: 402 }
+          );
+        }
+        consumeCreditAfterSuccess = true;
+      }
+    }
+
     const referenceImageUrls = await buildUsableReferenceImageUrls({
       requiredSourceImageUrl: body.sourceImageUrl,
       optionalReferenceImageUrls: uniqueUrls([
@@ -165,6 +274,7 @@ export async function POST(request: Request) {
         awayKitSpec?.referenceImageUrl
       ].filter((url): url is string => Boolean(url))),
     });
+
     const prompt = buildPosterPrompt({
       teamProfile: body.teamProfile,
       posterStyle,
@@ -172,7 +282,7 @@ export async function POST(request: Request) {
       homeKitSpec,
       awayKitSpec,
       matchContext: body.matchContext,
-      model: body.model,
+      model: requestedModel,
       correctionPrompt: body.correctionPrompt,
       brandPlacementMode,
       shirtName: body.shirtName,
@@ -186,7 +296,7 @@ export async function POST(request: Request) {
     const { providerJobId, provider: jobProvider } = await submitStaticGenerationJob({
       prompt,
       referenceImageUrls,
-      model: body.model,
+      model: requestedModel,
       gptImageTestMode: requestedGptImageMode,
       webhookUrl,
     });
@@ -196,54 +306,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ requestId: providerJobId, provider: jobProvider, status: "processing" });
     }
 
-    const supabase = createServerSupabaseClient();
-    const now = new Date().toISOString();
-    const jobId = crypto.randomUUID();
-    const jobInsert = {
-      id: jobId,
-      session_id: body.sessionId,
-      user_id: userId as string,
-      team_name: body.teamName,
-      kit_notes: [
-        body.kitNotes,
-        `Kit variant: ${kitVariant}`,
-        kitSpec ? `Kit spec: ${kitSpec.season} ${kitSpec.team} ${kitSpec.variant}` : undefined,
-        body.matchContext
-          ? `Match: ${body.matchContext.homeTeam.name} vs ${body.matchContext.awayTeam.name}; user side: ${body.matchContext.userSide}; opponent mode: ${body.matchContext.opponentMode}`
-          : undefined,
-        body.matchContext?.matchdayNotes ? `Matchday notes: ${body.matchContext.matchdayNotes}` : undefined,
-        `Brand placement mode: ${brandPlacementMode}`,
-        `Model: ${body.model || "wan2.7-image-edit"}`,
-        body.model === "gpt-image-2" || body.model === "gpt-image-2-fast" ? `GPT Image test mode: ${requestedGptImageMode}` : undefined,
-        `Poster style: ${posterStyle.name}`
-      ].filter(Boolean).join("\n"),
-      target_poster_url: "", // Not used in this generation mode, but required by schema
-      provider_job_id: providerJobId, // Storing the provider job ID
-      status: "processing",
-      created_at: now,
-      updated_at: now
-    };
+    // Update pre-inserted job with providerJobId
+    const jobUpdate = await supabase
+      .from("generation_jobs")
+      .update({ provider_job_id: providerJobId })
+      .eq("id", jobId);
 
-    let insert = await supabase.from("generation_jobs").insert(jobInsert);
-
-    if (insert.error && isMissingSchemaColumn(insert.error, "user_id")) {
-      const legacyJobInsert: Omit<typeof jobInsert, "user_id"> = { ...jobInsert };
-      delete (legacyJobInsert as Partial<typeof jobInsert>).user_id;
-      insert = await supabase.from("generation_jobs").insert(legacyJobInsert);
-    }
-
-    if (insert.error) {
-      throw new Error(insert.error.message);
+    if (jobUpdate.error) {
+      throw new Error(jobUpdate.error.message);
     }
 
     // Analytics logging
     const analyticsInsert = {
       generation_job_id: jobId,
-      user_id: userId as string,
+      user_id: userId,
       team_name: body.teamName,
       kit_variant: kitVariant,
       poster_style: posterStyle.name,
-      model: body.model || "wan2.7-image-edit",
+      model: requestedModel,
       status: "processing",
     };
     
@@ -254,11 +334,9 @@ export async function POST(request: Request) {
       await supabase.from("generation_analytics").insert(legacyAnalyticsInsert);
     }
 
-
-
     const sessionUpdate = await supabase
       .from("capture_sessions")
-      .update({ user_id: userId as string, status: "generating" })
+      .update({ user_id: userId, status: "generating" })
       .eq("id", body.sessionId);
 
     if (sessionUpdate.error && isMissingSchemaColumn(sessionUpdate.error, "user_id")) {
@@ -270,10 +348,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ jobId, requestId: providerJobId, status: "processing" });
   } catch (error) {
+    const supabase = createServerSupabaseClient();
     if (consumeCreditAfterSuccess && userId) {
       // Refund the credit if generation failed synchronously
-      const supabase = createServerSupabaseClient();
       await supabase.rpc("add_user_credits", { p_user_id: userId, p_amount: 1 });
+    }
+
+    if (preInsertedJobId) {
+      await supabase.from("generation_jobs").delete().eq("id", preInsertedJobId);
     }
 
     const message = error instanceof Error ? error.message : "Generation request failed.";
@@ -286,61 +368,5 @@ export async function POST(request: Request) {
       { error: message },
       { status: 500 }
     );
-  }
-}
-
-async function submitStaticGenerationJob(input: {
-  prompt: string;
-  referenceImageUrls: string[];
-  model?: string;
-  gptImageTestMode?: MuapiGptImageTestMode;
-  webhookUrl?: string;
-}): Promise<{ providerJobId: string; provider: "fal" | "muapi" }> {
-  const isGptImage = input.model === "gpt-image-2" || input.model === "gpt-image-2-fast";
-  const useFalPrimary = process.env.FAL_KEY && isGptImage;
-
-  if (useFalPrimary) {
-    try {
-      const falProvider = new FalGptImage2GenerationProvider();
-      const { providerJobId } = await falProvider.submitJob({
-        prompt: input.prompt,
-        referenceImageUrls: input.referenceImageUrls,
-      });
-      return { providerJobId, provider: "fal" };
-    } catch (error) {
-      console.warn("FAL GPT Image 2 submission failed; falling back to MUAPI.", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      const muapiProvider = new MuapiGenerationProvider();
-      const { providerJobId } = await muapiProvider.submitJob(input);
-      return { providerJobId, provider: "muapi" };
-    }
-  }
-
-  // Default MUAPI behavior for other models
-  const muapiProvider = new MuapiGenerationProvider();
-  try {
-    const { providerJobId } = await muapiProvider.submitJob(input);
-    return { providerJobId, provider: "muapi" };
-  } catch (error) {
-    const shouldFallbackToFal =
-      input.model === "gpt-image-2" &&
-      input.gptImageTestMode === "final-2k-high" &&
-      Boolean(process.env.FAL_KEY);
-
-    if (!shouldFallbackToFal) {
-      throw error;
-    }
-
-    console.warn("MUAPI 2K GPT Image 2 submission failed; falling back to fal GPT Image 2.", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-
-    const falProvider = new FalGptImage2GenerationProvider();
-    const { providerJobId } = await falProvider.submitJob({
-      prompt: input.prompt,
-      referenceImageUrls: input.referenceImageUrls,
-    });
-    return { providerJobId, provider: "fal" };
   }
 }

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { BadgeCheck, ImagePlus, WandSparkles, Zap } from "lucide-react";
-import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
@@ -154,6 +153,8 @@ function PosterStylePreview({
   const imageUrl =
     styleId === "matchday"
       ? "/style-matchday.png"
+      : styleId === "fan-mode"
+      ? "/style-fan-mode.jpg"
       : styleId === "player-reveal"
       ? "/style-player-reveal.png"
       : "/style-hero-card.png";
@@ -227,7 +228,7 @@ export default function CreatePage() {
     const params = new URLSearchParams(window.location.search);
     const credits = params.get("credits");
     if (credits === "success") {
-      setCreditMessage("Payment received — your credits have been added.");
+      setCreditMessage("Payment received — your 3 poster credits have been added.");
     } else if (credits === "cancel") {
       setCreditMessage("Checkout cancelled. No payment was taken.");
     }
@@ -599,15 +600,15 @@ export default function CreatePage() {
                   <span className="font-semibold text-[var(--foreground)]">
                     {usage.used}/{usage.freeLimit}
                   </span>{" "}
-                  <span className="text-[var(--muted)]">free posters used</span>
+                  <span className="text-[var(--muted)]">free preview used</span>
                 </>
               ) : usage.credits > 0 ? (
                 <>
                   <span className="font-semibold text-[var(--foreground)]">{usage.credits}</span>{" "}
-                  <span className="text-[var(--muted)]">credits left</span>
+                  <span className="text-[var(--muted)]">poster credits left</span>
                 </>
               ) : (
-                <span className="font-semibold text-[var(--foreground)]">Free posters used up</span>
+                <span className="font-semibold text-[var(--foreground)]">Free preview used</span>
               )}
             </div>
             <Button
@@ -618,7 +619,7 @@ export default function CreatePage() {
               className="shrink-0"
             >
               <Zap size={15} />
-              {isUpgrading ? "Opening…" : "Buy credits"}
+              {isUpgrading ? "Opening…" : "3 more - £4.99"}
             </Button>
           </div>
         )}
@@ -925,7 +926,7 @@ export default function CreatePage() {
           )}
 
           {(createMode === "vs" || selectedTeamId !== "") && <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {kitPreviewTiles.map(({ label, team, imageUrl }) => {
+            {kitPreviewTiles.map(({ label, team, base, trim, imageUrl }) => {
               const visibleImageUrl = imageUrl && !failedKitImages[imageUrl] ? imageUrl : undefined;
 
               return (
@@ -943,15 +944,25 @@ export default function CreatePage() {
                         onError={() => setFailedKitImages((current) => ({ ...current, [visibleImageUrl]: true }))}
                       />
                     ) : (
-                      <span className="px-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                        No kit image yet
-                      </span>
+                      <div
+                        className="relative flex h-full w-full items-center justify-center overflow-hidden"
+                        style={{
+                          background: `linear-gradient(135deg, ${base} 0 58%, ${trim} 58% 100%)`
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.24)_0_1px,transparent_1px_18px)] opacity-60" />
+                        <div className="relative flex h-[68%] w-[62%] items-start justify-center rounded-t-[28px] border border-white/55 bg-white/25 pt-8 shadow-[0_18px_36px_rgba(42,0,79,0.18)] backdrop-blur-sm">
+                          <div className="absolute left-[-24%] top-[18%] h-[38%] w-[34%] -rotate-12 rounded-[18px] border border-white/45 bg-white/20" />
+                          <div className="absolute right-[-24%] top-[18%] h-[38%] w-[34%] rotate-12 rounded-[18px] border border-white/45 bg-white/20" />
+                          <div className="h-12 w-16 rounded-b-full border-x border-b border-white/55 bg-[rgba(245,245,247,0.72)]" />
+                        </div>
+                      </div>
                     )}
                   </div>
                   <div className="mt-3 min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{label}</p>
                     <p className="mt-1 text-sm font-semibold leading-5 text-[var(--foreground)]">{team}</p>
-                    <p className="mt-1 text-xs leading-4 text-[var(--muted)]">{visibleImageUrl ? "Reference image" : "Kit image needed"}</p>
+                    <p className="mt-1 text-xs leading-4 text-[var(--muted)]">{visibleImageUrl ? "Reference image" : "Colour preview"}</p>
                   </div>
                 </div>
               );
@@ -960,7 +971,7 @@ export default function CreatePage() {
 
           <fieldset className="space-y-2">
             <legend className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Poster style</legend>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {posterStyles.map((style) => {
                 const isSelected = posterStyleId === style.id;
                 return (
@@ -968,7 +979,7 @@ export default function CreatePage() {
                     key={style.id}
                     type="button"
                     onClick={() => setPosterStyleId(style.id)}
-                    className={`min-w-0 rounded-[14px] border p-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] ${
+                    className={`flex h-full min-w-0 flex-col rounded-[14px] border p-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] ${
                       isSelected
                         ? "border-[var(--accent)] bg-[var(--accent)]/12 shadow-[0_10px_24px_rgba(49,240,213,0.18)]"
                         : "border-[var(--line)] bg-[var(--surface)] hover:border-[var(--accent)]/60"
@@ -976,7 +987,7 @@ export default function CreatePage() {
                     aria-pressed={isSelected}
                   >
                     <PosterStylePreview styleId={style.id} primary={userTeam.primary} accent={userTeam.accent} />
-                    <span className={`mt-2 block text-center text-[11px] font-bold leading-4 ${
+                    <span className={`mt-2 flex min-h-9 items-center justify-center text-center text-[11px] font-bold leading-4 ${
                       isSelected ? "text-[var(--foreground)]" : "text-[var(--muted)]"
                     }`}>
                       {style.name}

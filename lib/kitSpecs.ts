@@ -33,14 +33,32 @@ export const kitVariants: Array<{ id: KitVariant; label: string }> = [
 
 const premierLeague2026SourceUrl = "https://www.footballkitarchive.com/premier-league-kits-2026-27-l224/";
 
+const premierLeagueHomePreviewFallbacks: Record<string, string> = {
+  "arsenal": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/arsenal/home.jpg",
+  "aston-villa": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/aston-villa/home.jpg",
+  "chelsea": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/chelsea/home.jpg",
+  "leeds": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/leeds/home.jpg",
+  "liverpool": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/liverpool/home.jpg",
+  "man-city": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/man-city/home.jpg",
+  "man-united": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/man-united/home.jpg",
+  "newcastle": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/newcastle/home.jpg",
+  "nottingham-forest": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/nottingham-forest/home.jpg",
+  "tottenham": "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/tottenham/home.jpg"
+};
+
 function makePremierLeague2026KitSpec(
   spec: Omit<KitSpec, "season" | "collar" | "cuffs" | "crestPlacement" | "sponsorPlacement" | "shorts" | "socks" | "sourceUrls" | "confidence"> & {
     sourceUrls?: string[];
     confidence?: KitSpec["confidence"];
   },
 ): KitSpec {
+  const referenceImageUrl = spec.referenceImageUrl ?? (
+    spec.variant === "home" ? premierLeagueHomePreviewFallbacks[spec.teamId] : undefined
+  );
+
   return {
     ...spec,
+    referenceImageUrl,
     season: "2026/27",
     collar: "not fully confirmed from launch imagery",
     cuffs: "not fully confirmed from launch imagery",
@@ -1338,7 +1356,7 @@ const fallbackKitSpecs: KitSpec[] = [
 export const internationalKitSpecs: KitSpec[] = [
   { teamId: "canada", team: "Canada", season: kitSeason, variant: "home", manufacturer: "unknown", mainSponsor: "unknown", baseColor: "red", accentColors: ["white"], pattern: "red home shirt", collar: "unknown", cuffs: "unknown", crestPlacement: "unknown", sponsorPlacement: "unknown", shorts: "unknown", socks: "unknown", referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/canada/home.jpg", sourceUrls: ["https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/FIFA_Women%27s_World_Cup_Canada_2015_-_Edmonton.jpg/1280px-FIFA_Women%27s_World_Cup_Canada_2015_-_Edmonton.jpg"], confidence: "low" },
   { teamId: "mexico", team: "Mexico", season: kitSeason, variant: "home", manufacturer: "unknown", mainSponsor: "unknown", baseColor: "green", accentColors: ["white", "red"], pattern: "green home shirt", collar: "unknown", cuffs: "unknown", crestPlacement: "unknown", sponsorPlacement: "unknown", shorts: "unknown", socks: "unknown", referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/mexico/home.jpg", sourceUrls: ["https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/FIFA_World_Cup_2010_France_Mexico.jpg/1280px-FIFA_World_Cup_2010_France_Mexico.jpg"], confidence: "low" },
-  { teamId: "usa", team: "United States", season: kitSeason, variant: "home", manufacturer: "unknown", mainSponsor: "unknown", baseColor: "white", accentColors: ["blue", "red"], pattern: "white home shirt", collar: "unknown", cuffs: "unknown", crestPlacement: "unknown", sponsorPlacement: "unknown", shorts: "unknown", socks: "unknown", referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/usa/home.jpg", sourceUrls: ["https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/U.S._soccer_team%2C_1916.jpg/1280px-U.S._soccer_team%2C_1916.jpg"], confidence: "low" },
+  { teamId: "usa", team: "United States", season: kitSeason, variant: "home", manufacturer: "Nike", mainSponsor: "none", baseColor: "white with bold red wave hoops", accentColors: ["red", "navy", "white"], pattern: "USA home shirt from the replacement reference: white base covered with wide red wavy horizontal hoops across the front and sleeves", collar: "navy V-neck collar insert", cuffs: "navy sleeve cuffs", crestPlacement: "USA crest on the wearer's left chest", sponsorPlacement: "no main shirt sponsor", shorts: "navy match shorts when visible", socks: "white or navy national-team socks when visible", referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/usa/home-2026-wave.jpg", sourceUrls: ["https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/usa/home-2026-wave.jpg"], confidence: "high" },
   { teamId: "england", team: "England", season: kitSeason, variant: "home", manufacturer: "Nike", mainSponsor: "none", baseColor: "white", accentColors: ["navy", "red"], pattern: "white home shirt with navy and red trim", collar: "unknown", cuffs: "unknown", crestPlacement: "unknown", sponsorPlacement: "unknown", shorts: "unknown", socks: "unknown", referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/england/home.jpg", sourceUrls: ["https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/England_team.jpg/500px-England_team.jpg"], confidence: "low" },
   { teamId: "france", team: "France", season: kitSeason, variant: "home", manufacturer: "Nike", mainSponsor: "none", baseColor: "royal blue", accentColors: ["white", "red"], pattern: "royal blue home shirt", collar: "unknown", cuffs: "unknown", crestPlacement: "unknown", sponsorPlacement: "unknown", shorts: "unknown", socks: "unknown", referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/france/home.jpg", sourceUrls: ["https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Zidane-France-2006-home-shirt.jpg/500px-Zidane-France-2006-home-shirt.jpg"], confidence: "low" },
   { teamId: "germany", team: "Germany", season: kitSeason, variant: "home", manufacturer: "adidas", mainSponsor: "none", baseColor: "white", accentColors: ["black", "red", "gold"], pattern: "white home shirt with tricolour V-design", collar: "unknown", cuffs: "unknown", crestPlacement: "unknown", sponsorPlacement: "unknown", shorts: "unknown", socks: "unknown", referenceImageUrl: "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/germany/home.jpg", sourceUrls: ["https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/2022_FIFA_World_Cup_Germany_1%E2%80%932_Japan_-_Germany_lineup.jpg/500px-2022_FIFA_World_Cup_Germany_1%E2%80%932_Japan_-_Germany_lineup.jpg"], confidence: "low" },

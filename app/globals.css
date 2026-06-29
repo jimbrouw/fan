@@ -2,20 +2,20 @@
 
 :root {
   color-scheme: light;
-  --background: #F5F5F7;
-  --foreground: #2A004F;
-  --foreground-soft: #2A1767;
-  --muted: #8C86A3;
-  --line: #E9E7EF;
+  --background: #FFF5F5;
+  --foreground: #1C0808;
+  --foreground-soft: #3D1212;
+  --muted: #A07878;
+  --line: #EEDCDC;
   --surface: #FFFFFF;
-  --surface-soft: #EDEAF4;
-  --accent: #31F0D5;
-  --accent-strong: #1dcfba;
-  --accent-lime: #D7FF2F;
-  --accent-blue: #4B7CFF;
-  --accent-violet: #7B2CFF;
-  --ramp: linear-gradient(100deg, #D7FF2F 0%, #31F0D5 34%, #4B7CFF 68%, #7B2CFF 100%);
-  --paper-shadow: 0 22px 55px rgba(42, 0, 79, 0.10);
+  --surface-soft: #FFF0F0;
+  --accent: #CC0000;
+  --accent-strong: #990000;
+  --accent-lime: #FF5500;
+  --accent-blue: #DD1111;
+  --accent-violet: #880000;
+  --ramp: linear-gradient(100deg, #FF5500 0%, #CC0000 40%, #990000 70%, #550000 100%);
+  --paper-shadow: 0 22px 55px rgba(150, 0, 0, 0.10);
 }
 
 * {
@@ -30,7 +30,7 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background: #F5F5F7;
+  background: #FFF5F5;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, sans-serif;
 }
@@ -49,7 +49,7 @@ button {
 :where(a, button, input, select, textarea, summary):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px rgba(49, 240, 213, 0.18);
+  box-shadow: 0 0 0 5px rgba(204, 0, 0, 0.18);
 }
 
 /* Suppress Safari's native video overlay controls (play/pause, PiP button) */
@@ -61,33 +61,33 @@ video::-webkit-media-controls-start-playback-button {
   -webkit-appearance: none;
 }
 
-/* Heavy display type — replaces the old Georgia serif */
+/* Heavy display type */
 .font-display {
   font-weight: 900;
   letter-spacing: -0.03em;
 }
 
-/* Light canvas with translucent electric-ramp beam graphics */
+/* Light canvas with red-tinted beam graphics */
 .kitface-shell {
   background:
-    linear-gradient(135deg, rgba(215, 255, 47, 0.14) 0%, rgba(49, 240, 213, 0.10) 35%, transparent 60%),
-    linear-gradient(315deg, rgba(123, 44, 255, 0.10) 0%, rgba(75, 124, 255, 0.07) 35%, transparent 60%),
-    #F5F5F7;
+    linear-gradient(135deg, rgba(204, 0, 0, 0.10) 0%, rgba(255, 85, 0, 0.07) 35%, transparent 60%),
+    linear-gradient(315deg, rgba(136, 0, 0, 0.08) 0%, rgba(204, 0, 0, 0.05) 35%, transparent 60%),
+    #FFF5F5;
 }
 
-/* Clean white panel on the light canvas */
+/* Clean white panel */
 .paper-panel {
-  border: 1px solid rgba(42, 0, 79, 0.07);
-  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(150, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.98);
   box-shadow: var(--paper-shadow);
 }
 
-/* Electric gradient ramp — use as fill */
+/* Red gradient ramp — use as fill */
 .kitface-ramp {
   background: var(--ramp);
 }
 
-/* Ramp as text fill — for expressive wordmark moments */
+/* Ramp as text fill — for wordmark moments */
 .kitface-ramp-text {
   background: var(--ramp);
   -webkit-background-clip: text;
@@ -103,7 +103,7 @@ video::-webkit-media-controls-start-playback-button {
     var(--ramp) border-box;
 }
 
-/* Primary button — animated gradient sweep on hover */
+/* Primary button — sweep on hover */
 .kitface-btn-primary {
   position: relative;
   overflow: hidden;
@@ -113,7 +113,7 @@ video::-webkit-media-controls-start-playback-button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(215, 255, 47, 0.28), rgba(75, 124, 255, 0.22));
+  background: linear-gradient(90deg, rgba(255, 85, 0, 0.25), rgba(136, 0, 0, 0.20));
   opacity: 0;
   transition: opacity 0.35s ease;
   pointer-events: none;
@@ -121,4 +121,32 @@ video::-webkit-media-controls-start-playback-button {
 
 .kitface-btn-primary:hover::before {
   opacity: 1;
+}
+
+/* AI Bingo game shell */
+.bingo-shell {
+  background:
+    linear-gradient(135deg, rgba(204, 0, 0, 0.12) 0%, rgba(255, 85, 0, 0.08) 40%, transparent 65%),
+    linear-gradient(315deg, rgba(136, 0, 0, 0.09) 0%, rgba(204, 0, 0, 0.06) 40%, transparent 65%),
+    #FFF5F5;
+}
+
+/* Portrait square — called state ring */
+.portrait-called {
+  box-shadow: 0 0 0 2.5px var(--accent), 0 0 12px rgba(204, 0, 0, 0.45);
+}
+
+/* Portrait square — marked (player confirmed) */
+.portrait-marked {
+  box-shadow: 0 0 0 2.5px var(--accent-lime), 0 0 14px rgba(255, 85, 0, 0.50);
+}
+
+/* Bingo row glow */
+.bingo-glow {
+  animation: bingo-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes bingo-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--accent-lime), 0 0 18px rgba(255, 85, 0, 0.6); }
+  50%       { box-shadow: 0 0 0 3px var(--accent-lime), 0 0 30px rgba(255, 85, 0, 0.9); }
 }

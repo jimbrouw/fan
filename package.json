@@ -1,18 +1,15 @@
 {
-  "name": "fan",
+  "name": "ai-bingo-app",
   "version": "1.0.0",
-  "description": "Fan Hero identity capture and MUAPI image generation web app.",
+  "description": "Mobile-first AI Bingo event app using Supabase and MUAPI image generation.",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "demo:prompts": "node --experimental-strip-types scratch/make_demo_prompts.ts",
-    "demo:prompts:vs": "node --experimental-strip-types scratch/make_vs_demo_prompts.ts",
     "ci": "npm run typecheck && npm run lint && npm test && npm run build",
     "lint": "eslint .",
     "test": "node --test --experimental-strip-types tests/*.test.ts",
-    "test:kits": "node --test --experimental-strip-types tests/kitSpecs.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

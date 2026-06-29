@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/Button";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { Clock, Loader2, LogOut, Sparkles, AlertTriangle, RefreshCw, Eye } from "lucide-react";
+import { Camera, Clock, Loader2, LogOut, Sparkles, AlertTriangle, RefreshCw, Eye } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 type GenerationJob = {
@@ -102,15 +102,21 @@ export default function HistoryPage() {
         </div>
 
         {/* Use same photos CTA */}
-        <div className="flex items-center justify-between rounded-[18px] bg-[var(--surface-soft)]/50 p-4 border border-[var(--line)]">
+        <div className="flex flex-col gap-3 rounded-[18px] bg-[var(--surface-soft)]/50 p-4 border border-[var(--line)]">
           <div>
             <h3 className="text-sm font-bold text-[var(--foreground)]">Make another poster</h3>
             <p className="text-xs text-[var(--muted)]">Use your saved photos for another poster.</p>
           </div>
-          <Link href="/create">
-            <Button className="h-10 text-xs px-4 flex items-center gap-1.5">
+          <Link href="/create" className="w-full">
+            <Button className="h-10 w-full text-xs px-4 flex items-center gap-1.5">
               Use same photos
               <Sparkles size={13} />
+            </Button>
+          </Link>
+          <Link href="/capture?restart=1" className="w-full">
+            <Button variant="secondary" className="h-10 w-full text-xs px-4 flex items-center gap-1.5">
+              Retake photos
+              <Camera size={13} />
             </Button>
           </Link>
         </div>

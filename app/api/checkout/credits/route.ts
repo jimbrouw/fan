@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe/server";
 import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { CREDIT_PACK } from "@/lib/credits";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST() {
   try {
@@ -9,6 +10,10 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: "Sign in to buy credits." }, { status: 401 });
     }
+
+    // Rate Limit (authenticated or IP)
+    const limitResponse = checkRateLimit(user.id, "checkout-credits", { limit: 10, windowMs: 60 * 1000 });
+    if (limitResponse) return limitResponse;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl) {
@@ -40,7 +45,7 @@ export async function POST() {
       metadata: creditMetadata,
       payment_intent_data: { metadata: creditMetadata },
       customer_email: user.email ?? undefined,
-      success_url: `${appUrl}/create?credits=success`,
+      success_url: `${appUrl}/purchase-success?session_id={CHECKOUT_SESSION_ID}&kind=credits`,
       cancel_url: `${appUrl}/create?credits=cancel`,
     });
 

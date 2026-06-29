@@ -2,12 +2,16 @@ import type Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { getCheckoutProduct, isPhysicalCheckoutOption } from "@/lib/checkout/products";
 import {
+  isProdigiCardOption,
   ProdigiFulfillmentProvider,
   readProdigiProductConfig,
   type ProdigiProductOptionId,
-  type ProdigiRecipient
 } from "@/lib/fulfillment/prodigi";
+import { createProdigiCardPrintAsset } from "@/lib/fulfillment/cardPrintAsset";
+import { isPhysicalFulfillmentEnabled } from "@/lib/fulfillment/physicalFulfillment";
+import { buildAuthenticatedAppUrl, buildAppUrl, getAppUrl } from "@/lib/appLinks";
 import { sendTransactionalEmail } from "@/lib/notifications";
+import { buildProdigiRecipient, isDemoCheckoutSession } from "@/lib/stripe/checkoutRecipient";
 import { getStripe } from "@/lib/stripe/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -73,6 +77,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const jobId = session.metadata?.jobId;
   const optionId = session.metadata?.optionId as ProdigiProductOptionId | undefined;
   const cardMessage = session.metadata?.cardMessage?.trim() || null;
+  const isDemoMode = isDemoCheckoutSession(session);
 
   if (!jobId || !optionId) {
     throw new Error("Stripe session is missing jobId or optionId metadata.");
@@ -117,6 +122,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
+  if (isDemoMode) {
+    await markOrderFulfilled(supabase, session.id, null);
+    return;
+  }
+
+  if (!isPhysicalFulfillmentEnabled()) {
+    await markOrderFailed(supabase, session.id, null);
+    return;
+  }
+
   const { data: job, error } = await supabase
     .from("generation_jobs")
     .select("id,status,output_url")
@@ -133,12 +148,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const recipient = buildProdigiRecipient(session);
   const config = readProdigiProductConfig(optionId);
+  const printReadyImageURL = isProdigiCardOption(optionId)
+    ? await createProdigiCardPrintAsset({
+        supabase,
+        posterUrl: job.output_url,
+        message: cardMessage,
+        assetKey: `${job.id}-${session.id}`,
+      })
+    : job.output_url;
   const provider = new ProdigiFulfillmentProvider();
   const order = await provider.createOrder({
     externalId: `kitface-${optionId}-${job.id}-${session.id}`,
     recipient,
     sku: config.sku,
-    printReadyImageURL: job.output_url
+    printReadyImageURL
   });
 
   await markOrderFulfilled(supabase, session.id, String(order.id));
@@ -218,6 +241,25 @@ async function markOrderFulfilled(
   }
 }
 
+async function markOrderFailed(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  stripeSessionId: string,
+  printfulOrderId: string | null
+) {
+  const { error } = await supabase
+    .from("purchase_orders")
+    .update({
+      status: "failed",
+      printful_order_id: printfulOrderId,
+      updated_at: new Date().toISOString()
+    })
+    .eq("stripe_session_id", stripeSessionId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 async function resolveCheckoutEmail(
   supabase: ReturnType<typeof createServerSupabaseClient>,
   session: Stripe.Checkout.Session
@@ -243,9 +285,9 @@ async function sendDownloadFulfillmentEmail(
   jobId: string
 ) {
   const to = await resolveCheckoutEmail(supabase, session);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kitface-app.vercel.app";
-  const downloadUrl = `${appUrl}/api/jobs/${jobId}/image?download=1&noWatermark=1&session_id=${encodeURIComponent(session.id)}`;
-  const resultUrl = `${appUrl}/result/${jobId}`;
+  const appUrl = getAppUrl();
+  const downloadUrl = `${buildAppUrl(`/api/jobs/${jobId}/image`, appUrl)}?download=1&noWatermark=1&session_id=${encodeURIComponent(session.id)}`;
+  const resultUrl = buildAuthenticatedAppUrl(`/result/${jobId}`, appUrl);
 
   if (!to) return;
 
@@ -283,9 +325,9 @@ async function sendPrintFulfillmentEmail(
   optionId: string
 ) {
   const to = await resolveCheckoutEmail(supabase, session);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kitface-app.vercel.app";
-  const resultUrl = `${appUrl}/result/${jobId}`;
-  const productName = optionId === "poster" ? "A3 Poster" : "Greeting Card";
+  const appUrl = getAppUrl();
+  const resultUrl = buildAuthenticatedAppUrl(`/result/${jobId}`, appUrl);
+  const productName = getPrintProductName(optionId);
 
   if (!to) return;
 
@@ -315,49 +357,10 @@ async function sendPrintFulfillmentEmail(
   }
 }
 
-function buildProdigiRecipient(session: Stripe.Checkout.Session): ProdigiRecipient {
-  const sessionObj = session as unknown as {
-    collected_information?: {
-      shipping_details?: {
-        name?: string;
-        address?: {
-          line1?: string;
-          line2?: string;
-          city?: string;
-          state?: string;
-          country?: string;
-          postal_code?: string;
-        };
-      };
-    };
-    shipping_details?: {
-      name?: string;
-      address?: {
-        line1?: string;
-        line2?: string;
-        city?: string;
-        state?: string;
-        country?: string;
-        postal_code?: string;
-      };
-    };
-  };
-  const shipping = sessionObj.collected_information?.shipping_details || sessionObj.shipping_details;
-  const address = shipping?.address;
-
-  if (!shipping?.name || !address?.line1 || !address.city || !address.country || !address.postal_code) {
-    throw new Error("Stripe checkout session is missing a complete shipping address.");
-  }
-
-  return {
-    name: shipping.name,
-    addressLine1: address.line1,
-    addressLine2: address.line2 ?? undefined,
-    city: address.city,
-    stateOrCounty: address.state ?? undefined,
-    countryCode: address.country,
-    postalOrZipCode: address.postal_code,
-    phoneNumber: session.customer_details?.phone ?? undefined,
-    email: session.customer_details?.email ?? undefined
-  };
+function getPrintProductName(optionId: string) {
+  if (optionId === "poster") return "A3 Poster";
+  if (optionId === "mug") return "Mug";
+  if (optionId === "sticker") return "Sticker";
+  if (optionId === "magnet") return "Magnet";
+  return "Greeting Card";
 }

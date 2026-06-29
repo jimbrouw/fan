@@ -14,8 +14,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kitface",
-  description: "Create official-looking football poster art from your photo in minutes."
+  metadataBase: new URL("https://app.aibingo.app"),
+  title: "AI Bingo",
+  description: "Your face. The game. Get your AI portrait and play bingo at your next event.",
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" }
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }]
+  },
+  openGraph: {
+    title: "AI Bingo",
+    description: "Your face. The game. Get your AI portrait and play bingo at your next event.",
+    images: [{ url: "/logo.png", width: 1200, height: 1200, alt: "AI Bingo logo" }]
+  }
 };
 
 export const viewport: Viewport = {

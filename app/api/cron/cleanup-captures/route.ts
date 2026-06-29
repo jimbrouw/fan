@@ -1,16 +1,22 @@
 import { NextResponse } from "next/server";
 import { captureBucket, createServerSupabaseClient } from "@/lib/supabase/server";
+import { PRINT_ASSET_PREFIX, PRINT_ASSET_RETENTION_MS } from "@/lib/fulfillment/cardPrintAsset";
 
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
+    if (!cronSecret && process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "CRON_SECRET is not configured." }, { status: 500 });
+    }
+
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
     const supabase = createServerSupabaseClient();
+    const deletedPrintAssetCount = await cleanupExpiredPrintAssets(supabase);
     
     // Find captures older than 48 hours
     const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
@@ -26,7 +32,12 @@ export async function GET(request: Request) {
     }
 
     if (!oldCaptures || oldCaptures.length === 0) {
-      return NextResponse.json({ ok: true, deletedCount: 0, message: "No old captures to clean up." });
+      return NextResponse.json({
+        ok: true,
+        deletedCount: 0,
+        deletedPrintAssetCount,
+        message: "No old captures to clean up.",
+      });
     }
 
     // Extract storage paths from storage URIs (supabase://bucketName/path)
@@ -70,6 +81,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ 
       ok: true, 
       deletedCount: captureIds.length,
+      deletedPrintAssetCount,
       message: `Successfully cleaned up ${captureIds.length} old captures.`
     });
 
@@ -80,4 +92,33 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
+}
+
+async function cleanupExpiredPrintAssets(
+  supabase: ReturnType<typeof createServerSupabaseClient>
+) {
+  const { data, error } = await supabase.storage.from(captureBucket).list(PRINT_ASSET_PREFIX, {
+    limit: 1000,
+    sortBy: { column: "created_at", order: "asc" },
+  });
+
+  if (error) {
+    console.error("Failed to list temporary print assets:", error.message);
+    return 0;
+  }
+
+  const cutoff = Date.now() - PRINT_ASSET_RETENTION_MS;
+  const expiredPaths = (data ?? [])
+    .filter((asset) => asset.created_at && new Date(asset.created_at).getTime() < cutoff)
+    .map((asset) => `${PRINT_ASSET_PREFIX}/${asset.name}`);
+
+  if (expiredPaths.length === 0) return 0;
+
+  const { error: removeError } = await supabase.storage.from(captureBucket).remove(expiredPaths);
+  if (removeError) {
+    console.error("Failed to delete temporary print assets:", removeError.message);
+    return 0;
+  }
+
+  return expiredPaths.length;
 }
