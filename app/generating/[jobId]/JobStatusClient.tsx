@@ -2,8 +2,9 @@
 
 import { AlertTriangle, LoaderCircle, RotateCcw, Bell, Mail, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/Button";
+import { getGenerationFailureMessage } from "@/lib/ai/generationErrors";
 
 type JobResponse = {
   status?: "queued" | "processing" | "completed" | "failed";
@@ -11,30 +12,33 @@ type JobResponse = {
   error?: string | null;
 };
 
-type NotificationPreferences = {
-  emailEnabled: boolean;
-  pushEnabled: boolean;
-  webPushSubscription?: Record<string, unknown>;
-  available: boolean;
-};
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
 const waitingMessages = [
   { emoji: "⏱️", text: "The fourth official is holding up the board… just one more minute." },
-  { emoji: "🧤", text: "Keeper's time-wasting on every goal kick. Classic." },
+  { emoji: "🧤", text: "Keeper's on the eight-second countdown. Everyone's counting with the ref." },
   { emoji: "📺", text: "VAR is checking this. And checking. And checking…" },
   { emoji: "🎙️", text: "Even the commentator has run out of things to say." },
   { emoji: "🥤", text: "Tactical water break. Nobody's actually thirsty." },
+  { emoji: "🥤", text: "Mandatory hydration break. Three minutes, two sips, one tactical team talk." },
+  { emoji: "🔥", text: "North America heat check. The ref has ordered everyone to drink something." },
+  { emoji: "📺", text: "Broadcast has gone to a hydration-break replay package. Your poster stays live." },
+  { emoji: "🎙️", text: "Commentator voice: this has 104-match tournament energy." },
+  { emoji: "🌎", text: "Forty-eight teams, one poster. The group chat is not ready." },
+  { emoji: "📋", text: "Best third-place maths are being calculated somewhere in the stadium." },
+  { emoji: "🏟️", text: "Round of 32 nerves. Even the tunnel camera looks stressed." },
+  { emoji: "🇨🇦", text: "Canada, Mexico, USA. Three hosts, one very dramatic poster reveal." },
+  { emoji: "🇲🇽", text: "Azteca opener energy: loud, bright, and slightly unhinged." },
+  { emoji: "🇺🇸", text: "MetLife final lighting is being tested on your poster." },
+  { emoji: "🧊", text: "Cooling towels are out. The touchline looks like a spa with shin pads." },
+  { emoji: "🧃", text: "Hydration break discourse is already louder than the vuvuzelas." },
+  { emoji: "🎙️", text: "And if you're just joining us, the poster is still being checked for vibes." },
+  { emoji: "🧤", text: "Keeper held it too long. Corner given. Internet argument unlocked." },
+  { emoji: "👑", text: "Captain-only chat with the ref. Everyone else is doing the walk-away shuffle." },
+  { emoji: "📐", text: "Semi-automated offside lines are drawing themselves like stadium laser art." },
+  { emoji: "🔢", text: "Twelve groups, too many permutations, and somehow your mate still thinks they're through." },
+  { emoji: "🪄", text: "VAR says clear and obvious poster magic." },
+  { emoji: "📣", text: "The co-commentator has just said momentum for the sixth time." },
+  { emoji: "🕶️", text: "Pitch-side camera caught the manager pretending this was always the plan." },
+  { emoji: "🧢", text: "Fourth official is explaining stoppage time like a group-stage tiebreaker." },
   { emoji: "🧱", text: "Ten men in the wall and the ref is still counting." },
   { emoji: "🟨", text: "Ref's lost his cards. Patting every pocket." },
   { emoji: "⚽", text: "Ball's gone out for a throw. Nobody knows whose it is." },
@@ -42,8 +46,7 @@ const waitingMessages = [
   { emoji: "🎺", text: "The away fans are making more noise than the home end." },
 ];
 
-const notificationUnavailableMessage =
-  "Notifications are currently disabled. You can still keep this window open to track progress.";
+const missingJobGracePeriodMs = 2 * 60 * 1000;
 
 function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
@@ -54,14 +57,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<JobResponse>({ status: "processing" });
   const [error, setError] = useState<string | null>(null);
   const [showTestControls, setShowTestControls] = useState(false);
-
-  // Notification states
-  const [preferences, setPreferences] = useState<NotificationPreferences>({
-    emailEnabled: false,
-    pushEnabled: false,
-    available: false,
-  });
-  const [preferenceMessage, setPreferenceMessage] = useState<string | null>(null);
+  const firstPollAtRef = useRef<number | null>(null);
 
   const waitingMessage = useMemo(() => pickRandom(waitingMessages), []);
 
@@ -70,8 +66,16 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
 
     async function pollJob() {
       try {
+        firstPollAtRef.current ??= Date.now();
         const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" });
         const data = (await response.json()) as JobResponse & { error?: string };
+        if (response.status === 404 && Date.now() - firstPollAtRef.current < missingJobGracePeriodMs) {
+          if (isActive) {
+            setJob((currentJob) => ({ ...currentJob, status: currentJob.status ?? "processing" }));
+            setError(null);
+          }
+          return;
+        }
         if (!response.ok) throw new Error(data.error ?? "Job lookup failed.");
         if (!isActive) return;
 
@@ -98,115 +102,11 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
   }, [jobId, router]);
 
   useEffect(() => {
-    let isActive = true;
-
-    async function loadPreferences() {
-      try {
-        const response = await fetch("/api/notification-preferences", { cache: "no-store" });
-        const data = (await response.json()) as Partial<NotificationPreferences> & { error?: string };
-        if (!response.ok || !isActive) return;
-
-        setPreferences({
-          emailEnabled: Boolean(data.emailEnabled),
-          pushEnabled: Boolean(data.pushEnabled),
-          webPushSubscription: data.webPushSubscription,
-          available: Boolean(data.available),
-        });
-      } catch {
-        // Notification preferences should never block the generation screen.
-      }
-    }
-
-    loadPreferences();
-
-    return () => {
-      isActive = false;
-    };
+    setShowTestControls(
+      process.env.NODE_ENV !== "production" &&
+      ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
+    );
   }, []);
-
-  useEffect(() => {
-    setShowTestControls(["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
-  }, []);
-
-  async function savePreferences(nextPreferences: NotificationPreferences) {
-    setPreferences(nextPreferences);
-    setPreferenceMessage(null);
-
-    try {
-      const response = await fetch("/api/notification-preferences", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          emailEnabled: nextPreferences.emailEnabled,
-          pushEnabled: nextPreferences.pushEnabled,
-          webPushSubscription: nextPreferences.webPushSubscription,
-        }),
-      });
-      const data = (await response.json()) as Partial<NotificationPreferences> & { error?: string };
-
-      if (!response.ok) throw new Error(data.error ?? "Notification preference update failed.");
-
-      setPreferences({
-        emailEnabled: Boolean(data.emailEnabled),
-        pushEnabled: Boolean(data.pushEnabled),
-        webPushSubscription: data.webPushSubscription,
-        available: Boolean(data.available),
-      });
-
-      if (!data.available) {
-        setPreferenceMessage(notificationUnavailableMessage);
-      }
-    } catch (preferenceError) {
-      setPreferenceMessage(preferenceError instanceof Error ? preferenceError.message : "Notification preference update failed.");
-    }
-  }
-
-  async function toggleEmail() {
-    await savePreferences({
-      ...preferences,
-      emailEnabled: !preferences.emailEnabled,
-    });
-  }
-
-  async function togglePush() {
-    if (preferences.pushEnabled) {
-      await savePreferences({ ...preferences, pushEnabled: false });
-      return;
-    }
-
-    try {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        throw new Error("Push notifications are not supported in this browser.");
-      }
-
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidKey) throw new Error("Push configuration missing.");
-
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        throw new Error("Notification permission denied. Please enable them in your browser settings.");
-      }
-
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      await navigator.serviceWorker.ready;
-
-      let subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidKey),
-        });
-      }
-
-      await savePreferences({
-        ...preferences,
-        pushEnabled: true,
-        webPushSubscription: subscription as unknown as Record<string, unknown>,
-      });
-    } catch (err) {
-      setPreferenceMessage(err instanceof Error ? err.message : "Could not enable push notifications.");
-    }
-  }
 
   return (
     <section className="flex flex-1 flex-col justify-center gap-7 pb-4 text-center">
@@ -227,7 +127,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         </h1>
         <p className="mx-auto max-w-[19rem] text-base leading-6 text-[var(--muted)]">
           {job.status === "failed"
-            ? "The image service hit an internal error. Try again with the same photos."
+            ? getGenerationFailureMessage(job.error)
             : "Keep this page open, or choose a notification for when it is ready."}
         </p>
         <p className="text-xs leading-5 text-[var(--muted)]">
@@ -245,7 +145,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         </div>
       )}
 
-      {/* Notification Toggle Panel */}
+      {/* Notification status panel */}
       <div className="rounded-[18px] border border-[var(--line)] bg-[var(--surface-soft)]/65 p-4 text-left">
         <div className="flex items-center gap-3">
           <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--accent)]/20 text-[var(--foreground)]">
@@ -258,38 +158,32 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         </div>
 
         <div className="mt-4 space-y-2">
-          <button
-            type="button"
-            onClick={toggleEmail}
-            disabled={!preferences.available}
-            className="flex min-h-12 w-full items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <div className="flex min-h-12 w-full items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)]">
             <span className="flex items-center gap-2">
               <Mail size={16} className="text-[var(--accent)]" />
               Email me when it&apos;s ready
             </span>
-            {preferences.emailEnabled ? <CheckCircle2 size={18} className="text-[var(--accent)]" /> : <span className="text-xs text-[var(--muted)]">Off</span>}
-          </button>
+            <span className="flex items-center gap-1 text-xs font-semibold text-[var(--foreground)]">
+              <CheckCircle2 size={18} className="text-[var(--accent)]" />
+              On
+            </span>
+          </div>
           
-          <button
-            type="button"
-            onClick={togglePush}
-            disabled={!preferences.available}
-            className="flex min-h-12 w-full items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <div className="flex min-h-12 w-full items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--foreground)]">
             <span className="flex items-center gap-2">
               <Bell size={16} className="text-[var(--accent)]" />
-              Notify me on this device
+              App notification
             </span>
-            {preferences.pushEnabled ? <CheckCircle2 size={18} className="text-[var(--accent)]" /> : <span className="text-xs text-[var(--muted)]">Off</span>}
-          </button>
+            <span className="flex items-center gap-1 text-xs font-semibold text-[var(--foreground)]">
+              <CheckCircle2 size={18} className="text-[var(--accent)]" />
+              On
+            </span>
+          </div>
         </div>
 
-        {(preferenceMessage || !preferences.available) && (
-          <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
-            {preferenceMessage ?? notificationUnavailableMessage}
-          </p>
-        )}
+        <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+          Notifications are on by default. You can also keep this window open to track progress.
+        </p>
       </div>
 
       {showTestControls && (

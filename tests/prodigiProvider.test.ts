@@ -26,16 +26,16 @@ test("buildProdigiOrderPayload creates an order with the correct sku and image U
   });
 });
 
-test("readProdigiDraftOrderConfig defaults card orders to classic greeting card SKU", () => {
+test("readProdigiDraftOrderConfig defaults card orders to direct-delivery greeting card SKU", () => {
   const previous = snapshotProdigiEnv();
   try {
     setRecipientEnv();
     delete process.env.PRODIGI_CARD_SKU;
     delete process.env.PRODIGI_POSTER_SKU;
 
-    const config = readProdigiDraftOrderConfig("fathers-day-card");
+    const config = readProdigiDraftOrderConfig("birthday-card");
 
-    assert.equal(config.sku, "CLASSIC-GRE-FEDR-7X5-BLA");
+    assert.equal(config.sku, "GLOBAL-GRE-MOH-7X5-DIR");
     assert.equal(config.productType, "card");
   } finally {
     restoreProdigiEnv(previous);
@@ -57,6 +57,45 @@ test("readProdigiDraftOrderConfig defaults poster orders to A3 budget paper SKU"
     restoreProdigiEnv(previous);
   }
 });
+
+test("readProdigiDraftOrderConfig maps small gift products to Prodigi SKUs", () => {
+  const previous = snapshotProdigiEnv();
+  try {
+    setRecipientEnv();
+    delete process.env.PRODIGI_MUG_SKU;
+    delete process.env.PRODIGI_STICKER_SKU;
+    delete process.env.PRODIGI_MAGNET_SKU;
+
+    assert.deepEqual(
+      ["mug", "sticker", "magnet"].map((optionId) => readProdigiDraftOrderConfig(optionId as "mug" | "sticker" | "magnet")),
+      [
+        expectProdigiConfig("H-MUG-W", "mug"),
+        expectProdigiConfig("M-STI-3X4", "sticker"),
+        expectProdigiConfig("MAG-1-10X10", "magnet")
+      ]
+    );
+  } finally {
+    restoreProdigiEnv(previous);
+  }
+});
+
+function expectProdigiConfig(sku: string, productType: string) {
+  return {
+    sku,
+    productType,
+    recipient: {
+      name: "John Doe",
+      addressLine1: "1 Test Street",
+      addressLine2: undefined,
+      city: "London",
+      stateOrCounty: undefined,
+      countryCode: "GB",
+      postalOrZipCode: "SW1A 1AA",
+      phoneNumber: undefined,
+      email: "test@example.com"
+    }
+  };
+}
 
 function setRecipientEnv() {
   process.env.PRINTFUL_TEST_RECIPIENT_ADDRESS1 = "1 Test Street";

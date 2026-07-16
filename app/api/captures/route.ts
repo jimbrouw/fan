@@ -4,6 +4,9 @@ import { getCurrentUser } from "@/lib/supabase/auth-server";
 import { decideOwnedResourceAccess } from "@/lib/authz";
 import { buildSupabaseStorageUri, createSignedStorageUrl } from "@/lib/supabase/storage";
 import type { CaptureStepType } from "@/types/capture";
+import sharp from "sharp";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { hasSupportedImageSignature } from "@/lib/remoteImages";
 
 const captureStepTypes = [
   "neutral_front",
@@ -44,6 +47,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in to upload photos." }, { status: 401 });
     }
 
+    // Rate Limit (authenticated or IP)
+    const limitResponse = checkRateLimit(user.id, "upload", { limit: 20, windowMs: 60 * 1000 });
+    if (limitResponse) return limitResponse;
+
     const form = await request.formData();
     const file = form.get("file");
     const sessionId = String(form.get("sessionId") ?? "");
@@ -61,6 +68,29 @@ export async function POST(request: Request) {
 
     if (!isCaptureStepType(type)) {
       return NextResponse.json({ error: "Unsupported capture photo type." }, { status: 400 });
+    }
+
+    // Validate size (limit to 10MB)
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ error: "File size exceeds 10MB limit." }, { status: 400 });
+    }
+
+    // Read bytes and check magic numbers
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    if (!hasSupportedImageSignature(fileBytes)) {
+      return NextResponse.json({ error: "Unsupported or corrupt image format." }, { status: 400 });
+    }
+
+    // Decode and transcode using sharp to secure against polyglot files / payloads
+    let processedBuffer: Buffer;
+    try {
+      processedBuffer = await sharp(fileBytes)
+        .jpeg({ quality: 90 })
+        .toBuffer();
+    } catch (err) {
+      console.error("Image processing with sharp failed:", err);
+      return NextResponse.json({ error: "Invalid image content." }, { status: 400 });
     }
 
     let parsedValidationResults: unknown;
@@ -136,8 +166,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: sessionUpsert.error.message }, { status: 500 });
     }
 
-    const upload = await supabase.storage.from(captureBucket).upload(path, file, {
-      contentType: file.type || "image/jpeg",
+    const upload = await supabase.storage.from(captureBucket).upload(path, processedBuffer, {
+      contentType: "image/jpeg",
       upsert: true
     });
 

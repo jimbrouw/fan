@@ -11,10 +11,10 @@ export default function Home() {
         <div className="space-y-5">
           <div className="border-y border-[var(--line)] py-5">
             <h1 className="font-display max-w-[11ch] text-[44px] leading-[0.94] text-[var(--foreground)] min-[390px]:text-[52px]">
-              Turn your photo into a football poster.
+              Get your kit on.
             </h1>
             <p className="mt-4 max-w-[31ch] text-[15px] leading-6 text-[var(--muted)]">
-              Upload two photos, pick a team, and get an official-style poster.
+              Upload two photos, pick your team, and send the group chat a poster worth shouting about.
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--foreground)]">
               {["Photo", "Kit", "Poster"].map((step) => (
@@ -44,6 +44,16 @@ export default function Home() {
             </div>
             <div className="kitface-ramp absolute -inset-1 -z-10 rounded-[20px] opacity-30 blur-xl" />
           </div>
+
+          <footer className="border-t border-[var(--line)] pt-4 text-[11px] leading-5 text-[var(--muted)]">
+            <p>
+              Kitface is a fan-made poster tool for football fun. It is not an official FIFA, Premier League,
+              club, team, or competition app, and it is not endorsed by or affiliated with those organisations.
+            </p>
+            <p className="mt-2">
+              For app notices, contact <a className="font-semibold text-[var(--foreground-soft)]" href="mailto:no-reply@kitface.app">no-reply@kitface.app</a>.
+            </p>
+          </footer>
         </div>
       </section>
     </AppFrame>

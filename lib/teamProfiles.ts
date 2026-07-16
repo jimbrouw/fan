@@ -16,7 +16,7 @@ export const teamProfiles: TeamProfile[] = [
   // World Cup 2026
   { id: "canada", name: "Canada", group: "World Cup 2026", primary: "#FF0000", accent: "#FFFFFF", kitNotes: "Red home shirt with white accents, white shorts, red socks. FIFA World Cup logo on sleeve.", trophy: "FIFA World Cup" },
   { id: "mexico", name: "Mexico", group: "World Cup 2026", primary: "#006847", accent: "#FFFFFF", kitNotes: "Green shirt with white shorts and red socks. FIFA World Cup logo on sleeve.", trophy: "FIFA World Cup" },
-  { id: "usa", name: "USA", group: "World Cup 2026", primary: "#FFFFFF", accent: "#002868", kitNotes: "White shirt with navy and red accents, navy shorts. FIFA World Cup logo on sleeve.", trophy: "FIFA World Cup" },
+  { id: "usa", name: "USA", group: "World Cup 2026", primary: "#FFFFFF", accent: "#BA0C2F", kitNotes: "White Nike shirt with bold red wavy horizontal hoops, navy V-neck/cuffs, USA crest, and navy shorts.", trophy: "FIFA World Cup" },
   { id: "australia", name: "Australia", group: "World Cup 2026", primary: "#FFCD00", accent: "#00843D", kitNotes: "Gold shirt with green shorts and gold socks." },
   { id: "iraq", name: "Iraq", group: "World Cup 2026", primary: "#FFFFFF", accent: "#007A33", kitNotes: "White shirt with green accents, white shorts." },
   { id: "iran", name: "IR Iran", group: "World Cup 2026", primary: "#FFFFFF", accent: "#DA291C", kitNotes: "White shirt with red and green accents." },

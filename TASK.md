@@ -2,6 +2,8 @@
 
 ## Finished
 
+- Fixed Prodigi greeting-card fulfillment: direct-delivery UK SKU, four-panel 6118x2161 artwork compositor, full poster on the outer-right panel, message on the inner-right panel, private signed print assets, retention cleanup, and a local preview CLI. Deployed to production: https://kitface-3doug2i85-jims-projects-b7cb6c2e.vercel.app
+- Completed comprehensive Security Hardening & Bug Fixes based on the security review: implemented in-app rate limiting, session and image IDOR validation, concurrency-safe free tier limit check with atomic RPC credit consumption, Prodigi webhook authentication, SSRF redirect hardening, captures upload transcoding to clean JPEGs via sharp, production environment restrictions on test endpoints and mock checkout simulator, success page validation, security headers in next.config.ts, and fixed unit tests. Deployed the verified build to Vercel Production: https://kitface-cydb1jgin-jims-projects-b7cb6c2e.vercel.app
 - Shifted Kitface from the previous warm editorial keepsake direction to the new `BRANDING.md` system: official football media, light broadcast canvas, deep indigo ink, cyan CTA accents, and translucent lime/cyan/blue/violet gradient beams.
 - Restyled shared chrome and the main app flow across `/`, `/capture`, `/review`, `/create`, `/generating/[jobId]`, and `/result/[jobId]` so the UI no longer depends on old `--mist`, `--accent-green`, paper, sage, burgundy, or serif-era tokens.
 - Updated homepage copy and poster preview language to “official football media” and removed leftover “made to keep” / “matchday memories” wording from the live hero.

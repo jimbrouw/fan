@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { buildAuthenticatedAppUrl, getAppUrl } from "@/lib/appLinks";
 import webpush from "web-push";
 
 export type NotificationType = "image_completed" | "image_failed" | "video_completed" | "video_failed";
@@ -94,12 +95,8 @@ async function sendEmailNotification(input: NotifyInput) {
   }
 
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.kitface.app";
-    const absoluteActionUrl = input.actionUrl
-      ? input.actionUrl.startsWith("http")
-        ? input.actionUrl
-        : `${appUrl}${input.actionUrl}`
-      : appUrl;
+    const appUrl = getAppUrl();
+    const absoluteActionUrl = buildAuthenticatedAppUrl(input.actionUrl ?? "/", appUrl);
 
     const emailHtml = `
       <!DOCTYPE html>

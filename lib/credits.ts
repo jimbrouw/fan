@@ -1,6 +1,6 @@
 // Single source of truth for the free tier and paid credit pack.
 
-export const FREE_TIER_GENERATIONS = 3;
+export const FREE_TIER_GENERATIONS = 1;
 
 // Accounts that bypass the free-tier cap entirely (internal testing).
 const EXEMPT_EMAILS = new Set(["jimbrouwer@gmail.com"]);
@@ -17,9 +17,9 @@ export function isValidMarketingKey(headerValue: string | null): boolean {
 
 // The single credit pack offered at checkout. Amounts are in pence (GBP).
 export const CREDIT_PACK = {
-  credits: 10,
+  credits: 3,
   unitAmount: 499,
   currency: "gbp" as const,
-  name: "10 Kitface poster credits",
-  description: "Create 10 more posters. Credits never expire.",
+  name: "3 more Kitface posters",
+  description: "Create 3 more premium posters. Credits never expire.",
 };

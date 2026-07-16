@@ -14,8 +14,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://app.kitface.app"),
   title: "Kitface",
-  description: "Create official-looking football poster art from your photo in minutes."
+  description: "Create official-looking football poster art from your photo in minutes.",
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" }
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }]
+  },
+  openGraph: {
+    title: "Kitface",
+    description: "Create official-looking football poster art from your photo in minutes.",
+    images: [{ url: "/logo.png", width: 1200, height: 1200, alt: "Kitface logo" }]
+  }
 };
 
 export const viewport: Viewport = {

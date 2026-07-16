@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getKitSpec } from "../lib/kitSpecs.ts";
 import { buildPosterPrompt, normalizeKitBrandPlacementMode } from "../lib/ai/promptBuilder.ts";
-import { getDefaultPosterStyleIdForCreateMode } from "../lib/posterTemplates.ts";
+import { getDefaultPosterStyleIdForCreateMode, posterStyles } from "../lib/posterTemplates.ts";
 
 const posterStyle = {
   id: "hero-card",
@@ -16,6 +16,21 @@ const starPlayerPosterStyle = {
   description: "Bold media-day poster with official campaign lighting."
 };
 
+const fanModePosterStyle = {
+  id: "fan-mode",
+  name: "Fan Mode",
+  description: "Overjoyed supporter poster with kit, face paint, flags, hats, and scarf."
+};
+
+test("poster style registry includes Fan Mode as the fourth style", () => {
+  assert.equal(posterStyles.length, 4);
+  assert.deepEqual(
+    posterStyles.map((style) => style.id),
+    ["hero-card", "player-reveal", "matchday", "fan-mode"]
+  );
+  assert.equal(posterStyles.find((style) => style.id === "fan-mode")?.name, "Fan Mode");
+});
+
 test("Nottingham Forest home kit uses the current 2026/27 Premier League overlay", () => {
   const spec = getKitSpec("nottingham-forest", "home");
 
@@ -26,6 +41,42 @@ test("Nottingham Forest home kit uses the current 2026/27 Premier League overlay
   assert.equal(spec?.sleeveSponsor, "Ideagen");
   assert.match(spec?.pattern ?? "", /2026\/27 Nottingham Forest home shirt/i);
   assert.match(spec?.sourceUrls.join(" ") ?? "", /premier-league-kits-2026-27/i);
+  assert.equal(
+    spec?.referenceImageUrl,
+    "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/nottingham-forest/home.jpg"
+  );
+});
+
+test("2026/27 Premier League home overlays keep working preview image fallbacks where curated images exist", () => {
+  const expectedFallbackTeams = [
+    "arsenal",
+    "aston-villa",
+    "chelsea",
+    "leeds",
+    "liverpool",
+    "man-city",
+    "man-united",
+    "newcastle",
+    "nottingham-forest",
+    "tottenham"
+  ];
+
+  for (const teamId of expectedFallbackTeams) {
+    const spec = getKitSpec(teamId, "home");
+
+    assert.equal(spec?.season, "2026/27", teamId);
+    assert.equal(spec?.variant, "home", teamId);
+    assert.match(spec?.referenceImageUrl ?? "", new RegExp(`/kit-images/${teamId}/home\\.jpg$`), teamId);
+  }
+});
+
+test("2026/27 promoted Premier League teams remain image-reference-free until exact images are curated", () => {
+  for (const teamId of ["coventry", "hull", "ipswich"]) {
+    const spec = getKitSpec(teamId, "home");
+
+    assert.equal(spec?.season, "2026/27", teamId);
+    assert.equal(spec?.referenceImageUrl, undefined, teamId);
+  }
 });
 
 test("poster prompt includes current 2026/27 kit mandate", () => {
@@ -49,8 +100,7 @@ test("poster prompt includes current 2026/27 kit mandate", () => {
   assert.match(prompt, /Bally's/i);
   assert.match(prompt, /Ideagen/i);
   assert.match(prompt, /2026\/27 Nottingham Forest home shirt/i);
-  assert.doesNotMatch(prompt, /attached kit reference image/i);
-  assert.match(prompt, /No kit reference image is attached/i);
+  assert.match(prompt, /Use the attached kit reference image/i);
 });
 
 test("World Cup teams can fall back to away kit metadata", () => {
@@ -63,6 +113,20 @@ test("World Cup teams can fall back to away kit metadata", () => {
   assert.equal(spec.referenceImageUrl, undefined);
   assert.match(spec.pattern, /away shirt/i);
   assert.match(spec.pattern, /national-team trim/i);
+});
+
+test("USA home kit uses the replacement red wave reference", () => {
+  const spec = getKitSpec("usa", "home");
+
+  assert.ok(spec);
+  assert.equal(spec.manufacturer, "Nike");
+  assert.equal(spec.mainSponsor, "none");
+  assert.equal(spec.confidence, "high");
+  assert.match(spec.pattern, /red wavy horizontal hoops/i);
+  assert.equal(
+    spec.referenceImageUrl,
+    "https://gldtjiofbokiqcordale.supabase.co/storage/v1/object/public/kit-images/international/usa/home-2026-wave.jpg"
+  );
 });
 
 test("poster prompt can replace the main shirt sponsor with Kitface branding", () => {
@@ -91,8 +155,8 @@ test("poster prompt can replace the main shirt sponsor with Kitface branding", (
   assert.match(prompt, /NO text except .*exact "kitface\.app" text/i);
 });
 
-test("Kitface sponsor mode is the default unless original sponsors are explicitly requested", () => {
-  assert.equal(normalizeKitBrandPlacementMode(undefined), "kitface");
+test("original sponsor mode is the default unless Kitface sponsor mode is explicitly requested", () => {
+  assert.equal(normalizeKitBrandPlacementMode(undefined), "original");
   assert.equal(normalizeKitBrandPlacementMode("kitface"), "kitface");
   assert.equal(normalizeKitBrandPlacementMode("original"), "original");
 });
@@ -272,6 +336,118 @@ test("GPT Image 2 star player prompt uses the older campaign collage structure w
   assert.ok(prompt.length <= 10000, `GPT Image 2 prompt length ${prompt.length} exceeds expected budget`);
 });
 
+test("GPT Image 2 fan mode prompt keeps the kit and adds over-the-top supporter styling", () => {
+  const kitSpec = getKitSpec("england-wc", "home");
+  assert.ok(kitSpec);
+
+  const prompt = buildPosterPrompt({
+    teamProfile: {
+      name: "England",
+      group: "World Cup 2026",
+      primary: "#ffffff",
+      accent: "#1d4ed8",
+      kitNotes: "White shirt, navy shorts, red and blue trim, England crest.",
+      trophy: "World Cup",
+      nickname: "Three Lions",
+      visualMotifs: ["subtle three-lions pattern", "St George flag colour blocks"]
+    },
+    posterStyle: fanModePosterStyle,
+    kitSpec,
+    model: "gpt-image-2",
+    teamSlogan: "COME ON ENGLAND"
+  });
+
+  assert.match(prompt, /GPT IMAGE 2 FAN MODE DIRECTION/i);
+  assert.match(prompt, /official football broadcast campaign artwork/i);
+  assert.match(prompt, /national-team supporter photography/i);
+  assert.match(prompt, /over-the-top matchday celebration poster/i);
+  assert.match(prompt, /not a professional player and not a mascot/i);
+  assert.match(prompt, /must still wear the selected England team kit in every visible appearance/i);
+  assert.match(prompt, /At least one large foreground torso must show the shirt front clearly/i);
+  assert.match(prompt, /Layer supporter styling on top of the kit, not instead of it/i);
+  assert.match(prompt, /team or country face paint/i);
+  assert.match(prompt, /FACE PAINT/i);
+  assert.match(prompt, /50% more over the top/i);
+  assert.match(prompt, /full-face team\/country paint on at least one visible version/i);
+  assert.match(prompt, /forehead-to-chin team colour blocks/i);
+  assert.match(prompt, /visible brush texture, sweat, and matchday smudges/i);
+  assert.match(prompt, /national\/team flag colours/i);
+  assert.match(prompt, /supporter hat, cap, bucket hat, wig, or national hat/i);
+  assert.match(prompt, /one clear supporter scarf raised above the head/i);
+  assert.match(prompt, /selected team or country colours/i);
+  assert.match(prompt, /selected team\/country name "England"/i);
+  assert.match(prompt, /hand-held flag/i);
+  assert.match(prompt, /flag wrapped around shoulders/i);
+  assert.match(prompt, /Make the expression totally maxed out/i);
+  assert.match(prompt, /totally maxed out/i);
+  assert.match(prompt, /eyes wide and alive/i);
+  assert.match(prompt, /raised eyebrows/i);
+  assert.match(prompt, /open shouting mouth/i);
+  assert.match(prompt, /stretched smile muscles/i);
+  assert.match(prompt, /cheek tension/i);
+  assert.match(prompt, /real skin texture under the face paint/i);
+  assert.match(prompt, /overjoyed, ecstatic/i);
+  assert.match(prompt, /huge grin/i);
+  assert.match(prompt, /wild match-winning joy/i);
+  assert.match(prompt, /bigger than Star Player Poster/i);
+  assert.match(prompt, /same heroic poster scale and layered campaign drama as Star Player Poster/i);
+  assert.match(prompt, /pure supporter celebration, not football play/i);
+  assert.match(prompt, /exactly three to four larger supporting fan-hero images/i);
+  assert.match(prompt, /scarf-over-head celebration/i);
+  assert.match(prompt, /flag-wave/i);
+  assert.match(prompt, /badge-kiss/i);
+  assert.match(prompt, /bouncing-in-the-stands joy/i);
+  assert.match(prompt, /Do not show match-action, player action, football skills, shots, tackles, or a ball at the person's feet/i);
+  assert.match(prompt, /No trophy, cup, medals, playing football/i);
+  assert.match(prompt, /No trophy, cup, medals, playing football, kicking/i);
+  assert.match(prompt, /dribbling, tackling, running with a ball/i);
+  assert.match(prompt, /active footballer pose/i);
+  assert.match(prompt, /under-expressive face/i);
+  assert.match(prompt, /subtle face paint only/i);
+  assert.match(prompt, /missing full-face paint version/i);
+  assert.match(prompt, /missing team kit/i);
+  assert.match(prompt, /scarf replacing the kit/i);
+  assert.match(prompt, /authentic supporter scarf text for the selected team\/country/i);
+  assert.match(prompt, /Team slogan: weave "COME ON ENGLAND"/i);
+  assert.match(prompt, /Three Lions/i);
+  assert.match(prompt, /St George flag colour blocks/i);
+  assert.doesNotMatch(prompt, /GPT IMAGE 2 STAR PLAYER DIRECTION/i);
+  assert.doesNotMatch(prompt, /GPT IMAGE 2 FOOTBALL CARD DIRECTION/i);
+  assert.doesNotMatch(prompt, /running or match-action/i);
+  assert.doesNotMatch(prompt, /running or bouncing celebration/i);
+  assert.ok(prompt.length <= 12000, `GPT Image 2 Fan Mode prompt length ${prompt.length} exceeds expected budget`);
+});
+
+test("GPT Image 2 fan mode prompt reinforces Kitface sponsor visibility when sponsor mode is active", () => {
+  const kitSpec = getKitSpec("england-wc", "home");
+  assert.ok(kitSpec);
+
+  const prompt = buildPosterPrompt({
+    teamProfile: {
+      name: "England",
+      group: "World Cup 2026",
+      primary: "#ffffff",
+      accent: "#1d4ed8",
+      kitNotes: "White shirt, navy shorts, red and blue trim, England crest.",
+      trophy: "World Cup"
+    },
+    posterStyle: fanModePosterStyle,
+    kitSpec,
+    model: "gpt-image-2",
+    brandPlacementMode: "kitface"
+  });
+
+  assert.match(prompt, /BRAND PLACEMENT MODE: Kitface sponsor experiment/i);
+  assert.match(prompt, /replace the real main chest sponsor with exact text "kitface\.app"/i);
+  assert.match(prompt, /main chest sponsor on every clearly visible shirt front must read exactly "kitface\.app"/i);
+  assert.match(prompt, /centered in the authentic sponsor position/i);
+  assert.match(prompt, /Do not let scarf, hands, watermark, lighting, or crop hide every chest sponsor/i);
+  assert.match(prompt, /at least one large foreground kit must show "kitface\.app" clearly/i);
+  assert.match(prompt, /readable chest sponsor/i);
+  assert.match(prompt, /exact "kitface\.app" chest sponsor text/i);
+  assert.match(prompt, /hidden foreground shirt sponsor when Kitface sponsor mode is active/i);
+});
+
 test("poster prompt can frame an away VS match with the reference person on the selected side", () => {
   const kitSpec = getKitSpec("nottingham-forest", "away");
   assert.ok(kitSpec);
@@ -327,10 +503,11 @@ test("poster prompt can frame an away VS match with the reference person on the 
   assert.match(prompt, /NO swapping home and away sides/i);
   assert.match(prompt, /Primary reference person \[img1\] plays for Nottingham Forest/i);
   assert.match(prompt, /never apply \[img1\] to Manchester United/i);
-  assert.match(prompt, /MATCHDAY SQUAD NOTES/i);
-  assert.match(prompt, /Allowed Manchester United players: Bruno Fernandes, Kobbie Mainoo/i);
-  assert.match(prompt, /Do not show Marcus Rashford or Scott McTominay/i);
-  assert.match(prompt, /Only depict named real opposition players/i);
+  assert.match(prompt, /anonymous current-squad-style opposition players/i);
+  assert.match(prompt, /Do not depict or imitate named real players/i);
+  assert.doesNotMatch(prompt, /Bruno Fernandes/i);
+  assert.doesNotMatch(prompt, /Kobbie Mainoo/i);
+  assert.doesNotMatch(prompt, /Marcus Rashford/i);
   assert.match(prompt, /GPT IMAGE 2 VS DIRECTION/i);
   assert.match(prompt, /official football broadcast campaign artwork/i);
   assert.match(prompt, /pre-match programme cover/i);

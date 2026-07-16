@@ -26,7 +26,7 @@ export function decideOwnedResourceAccess(opts: {
   requesterUserId: string;
 }): AccessDecision {
   if (!opts.ownerColumnAvailable) {
-    return "allow";
+    return "deny";
   }
   return isResourceOwner(opts.resourceUserId, opts.requesterUserId) ? "allow" : "deny";
 }
