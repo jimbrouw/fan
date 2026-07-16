@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Camera, Download, Package, RefreshCw, RotateCcw, Share2, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
+import { getGenerationFailureMessage } from "@/lib/ai/generationErrors";
 
 type JobResponse = {
   status?: "queued" | "processing" | "completed" | "failed";
@@ -178,7 +179,7 @@ export function ResultClient({ jobId }: { jobId: string }) {
         ) : (
           <div className="p-8">
             {job?.status === "failed"
-              ? "The image service hit an internal error. Try again with the same photos."
+              ? getGenerationFailureMessage(job.error)
               : error ?? job?.error ?? "The generated poster image is not available yet."}
           </div>
         )}

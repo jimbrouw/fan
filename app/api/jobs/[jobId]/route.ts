@@ -6,6 +6,7 @@ import { decideOwnedResourceAccess } from "@/lib/authz";
 import { MuapiGenerationProvider } from "@/lib/ai/providers/muapi";
 import { decodeFalGptImageProviderJobId, FalGptImage2GenerationProvider } from "@/lib/ai/providers/fal";
 import type { GenerationResponse } from "@/lib/ai/types";
+import { isTransientGenerationError } from "@/lib/ai/generationErrors";
 
 type JobRow = {
   id: string;
@@ -32,10 +33,6 @@ type VideoSummaryRow = {
 
 function isMissingSchemaColumn(error: { message?: string }, column: string) {
   return new RegExp(`Could not find the '${column}' column`, "i").test(error.message ?? "");
-}
-
-function isTransientProviderStatusError(error?: string | null) {
-  return /internal error|please try again later|try again later|temporar|timeout|timed out|rate limit/i.test(error ?? "");
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ jobId: string }> }) {
@@ -81,7 +78,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
       return NextResponse.json({ error: "Job not found." }, { status: 404 });
     }
 
-    const shouldRetryTransientFailure = job.status === "failed" && isTransientProviderStatusError(job.error) && Boolean(job.provider_job_id);
+    const shouldRetryTransientFailure = job.status === "failed" && isTransientGenerationError(job.error) && Boolean(job.provider_job_id);
 
     if ((job.status === "completed" && job.output_url) || (job.status === "failed" && !shouldRetryTransientFailure) || !job.provider_job_id) {
       return NextResponse.json(await toResponse(job, supabase));
@@ -92,7 +89,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
       providerStatus = await getStaticGenerationStatus(job.provider_job_id);
     } catch (providerError) {
       const message = providerError instanceof Error ? providerError.message : "Provider status check failed.";
-      if (!isTransientProviderStatusError(message)) throw providerError;
+      if (!isTransientGenerationError(message)) throw providerError;
 
       console.warn("Transient generation provider status check failed:", message, { jobId: job.id });
       if (shouldRetryTransientFailure) {

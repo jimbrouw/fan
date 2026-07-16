@@ -77,10 +77,6 @@ function compactMatchKitSpec(spec: KitSpec, brandPlacementMode: KitBrandPlacemen
   ].join("; ");
 }
 
-function compactMatchdayNotes(notes?: string) {
-  return notes?.replace(/\s+/g, " ").trim().slice(0, 420);
-}
-
 function kitReferenceInstruction(spec: KitSpec) {
   return spec.referenceImageUrl
     ? "Use the attached kit reference image as the source of truth."
@@ -115,18 +111,15 @@ export function buildPosterPrompt(input: {
       ? matchContext.homeTeam
       : matchContext.awayTeam
     : undefined;
-  const matchdayNotes = compactMatchdayNotes(matchContext?.matchdayNotes);
   const primaryIdentityToken = matchContext ? "[img1]" : "[img]";
   const moodTeam = userMatchTeam ?? input.teamProfile;
   const motifNotes = [
     moodTeam.nickname ? `Nickname: ${moodTeam.nickname}.` : undefined,
     moodTeam.visualMotifs?.length ? `Optional playful visual motifs: ${moodTeam.visualMotifs.join(", ")}.` : undefined
   ].filter(Boolean).join(" ");
-  const matchdaySection = matchdayNotes
-    ? `MATCHDAY SQUAD NOTES:
-${matchdayNotes}
-Only depict named real opposition players.`
-    : "Use anonymous current-squad-style opponents unless matchday notes name players.";
+  const matchdaySection = matchContext?.opponentMode === "club-players"
+    ? "Use anonymous current-squad-style opposition players. Do not depict or imitate named real players."
+    : "The second uploaded person is the only opposition identity source.";
   const matchSection = matchContext && userMatchTeam && opponentMatchTeam
     ? `MATCH:
 Competition: ${isPremierLeagueMatch ? "Premier League" : `${matchContext.homeTeam.group} vs ${matchContext.awayTeam.group}`}.
@@ -292,7 +285,7 @@ SELECTED-SIDE HERO:
 Use [img1] only for ${userMatchTeam?.name ?? input.teamProfile.name} on the ${matchContext.userSide === "away" ? "RIGHT" : "LEFT"} side. Make one clear chest-up hero portrait of [img1] dominate the selected side, and add one or two smaller selected-side action versions of [img1]. Every selected-side figure must clearly be [img1].
 
 OPPOSITION HANDLING:
-Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side. ${matchContext.opponentMode === "another-person" ? "Use [img2] for all opposing players. Mirror the selected-side structure: make one clear chest-up portrait of [img2] on the opposition side, and add one or two smaller action versions of [img2] wearing the opposition kit." : "Use one to three varied anonymous current-squad-style opposition players or named matchday players only when matchday notes allow them. Do not copy [img1] onto opposition players."} Both sides must have a balanced layout of players. Keep opposition figures visually separated.
+Opponents stay on the ${matchContext.userSide === "away" ? "LEFT" : "RIGHT"} side. ${matchContext.opponentMode === "another-person" ? "Use [img2] for all opposing players. Mirror the selected-side structure: make one clear chest-up portrait of [img2] on the opposition side, and add one or two smaller action versions of [img2] wearing the opposition kit." : "Use one to three varied anonymous current-squad-style opposition players. Do not depict or imitate named real players, and do not copy [img1] onto opposition players."} Both sides must have a balanced layout of players. Keep opposition figures visually separated.
 
 IDENTITY LOCK:
 Preserve exact recognisable likeness for [img1]: head shape, hairline, eyes, nose, mouth, cheeks, jaw, skin texture, facial hair, age, body type, and natural proportions. Keep [img1] consistent across every selected-side appearance as if photographed in one football media-day shoot. Expressions can be happier and more match-winning, but [img1] must still clearly look like the uploaded photo. ${matchContext.opponentMode === "another-person" ? "For [img2], preserve the second person's exact identity for all players on the opposition side. Never blend [img1] and [img2], never average their faces, and never swap kits or sides." : "Opposition faces must not resemble [img1]."} Do not beautify, de-age, slim, bulk up, average faces with footballers, or replace either uploaded person.

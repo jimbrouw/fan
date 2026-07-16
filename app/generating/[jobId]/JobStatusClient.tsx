@@ -4,6 +4,7 @@ import { AlertTriangle, LoaderCircle, RotateCcw, Bell, Mail, CheckCircle2 } from
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/Button";
+import { getGenerationFailureMessage } from "@/lib/ai/generationErrors";
 
 type JobResponse = {
   status?: "queued" | "processing" | "completed" | "failed";
@@ -126,7 +127,7 @@ export function JobStatusClient({ jobId }: { jobId: string }) {
         </h1>
         <p className="mx-auto max-w-[19rem] text-base leading-6 text-[var(--muted)]">
           {job.status === "failed"
-            ? "The image service hit an internal error. Try again with the same photos."
+            ? getGenerationFailureMessage(job.error)
             : "Keep this page open, or choose a notification for when it is ready."}
         </p>
         <p className="text-xs leading-5 text-[var(--muted)]">

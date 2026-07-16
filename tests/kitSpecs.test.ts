@@ -503,10 +503,11 @@ test("poster prompt can frame an away VS match with the reference person on the 
   assert.match(prompt, /NO swapping home and away sides/i);
   assert.match(prompt, /Primary reference person \[img1\] plays for Nottingham Forest/i);
   assert.match(prompt, /never apply \[img1\] to Manchester United/i);
-  assert.match(prompt, /MATCHDAY SQUAD NOTES/i);
-  assert.match(prompt, /Allowed Manchester United players: Bruno Fernandes, Kobbie Mainoo/i);
-  assert.match(prompt, /Do not show Marcus Rashford or Scott McTominay/i);
-  assert.match(prompt, /Only depict named real opposition players/i);
+  assert.match(prompt, /anonymous current-squad-style opposition players/i);
+  assert.match(prompt, /Do not depict or imitate named real players/i);
+  assert.doesNotMatch(prompt, /Bruno Fernandes/i);
+  assert.doesNotMatch(prompt, /Kobbie Mainoo/i);
+  assert.doesNotMatch(prompt, /Marcus Rashford/i);
   assert.match(prompt, /GPT IMAGE 2 VS DIRECTION/i);
   assert.match(prompt, /official football broadcast campaign artwork/i);
   assert.match(prompt, /pre-match programme cover/i);
